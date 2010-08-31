@@ -1,0 +1,359 @@
+<?xml version="1.0"?>
+<V-Control xmlns:vcontrol="http://www.openv.de/vcontrol">
+  <unix>
+     <config>
+	<serial>
+		<tty>192.168.1.153:3002</tty>
+	</serial>
+	<net>
+		<port>3002</port>
+		<allow ip='127.0.0.1'/>
+		<allow ip='192.168.1.0/24'/>
+	</net>
+	<logging>
+		<file>/tmp/vcontrold.log</file>
+		<syslog>n</syslog>
+		<debug>n</debug>
+	</logging>
+	<device ID="2053"/>
+     </config>
+  </unix>
+  <units>
+	<unit name='Temperatur'>
+	   <abbrev>UT</abbrev>
+	   <calc get='V/10' set='V*10'/>
+	   <type>short</type>
+	   <entity>Grad Celsius</entity>
+	</unit>
+	<unit name='Neigung'>
+	   <abbrev>UN</abbrev>
+	   <calc get='V/10' set='V*10'/>
+	   <type>short</type>
+	   <entity></entity>
+	</unit>	
+	<unit name='Temperatur 1Byte'>
+          <abbrev>UT1</abbrev>
+          <calc get='V/2' set='V*2'/>
+          <type>char</type>
+          <entity>Grad Celsius</entity>
+        </unit>
+	<unit name='Temperatur 1Byte unsigned'>
+          <abbrev>UT1U</abbrev>
+          <calc get='V/2' set='V*2'/>
+          <type>uchar</type>
+          <entity>Grad Celsius</entity>
+        </unit>
+	<unit name='Temperatur 1Byte ganzzahlig'>
+          <abbrev>UTI</abbrev>
+          <calc get='V' set='V'/>
+          <type>uchar</type>
+          <entity>Grad Celsius</entity>
+        </unit>
+	<unit name='Status'>
+	   <abbrev>ST</abbrev>
+	   <calc get='V' set='V'/>
+	   <type>char</type>
+	   <entity></entity>
+	</unit>
+	<unit name='Counter'>
+	   <abbrev>CO</abbrev>
+	   <calc get='V' set='V'/>
+	   <type>int</type>
+	   <entity></entity>
+	</unit>
+	<unit name='Prozent'>
+	   <abbrev>PR</abbrev>
+	   <calc get='V/2' set='V*2'/>
+	   <type>short</type>
+	   <entity>%</entity>
+	</unit>
+	<unit name='Prozent 1 Byte ganzzahlig'>
+	   <abbrev>PR1</abbrev>
+	   <calc get='V' set='V'/>
+	   <type>uchar</type>
+	   <entity>%</entity>
+	</unit>
+	<unit name='CounterS'>
+	   <abbrev>CS</abbrev>
+	   <calc get='V/3600' set='V*3600'/>
+	   <type>uint</type>
+	   <entity>Stunden</entity>
+	</unit>
+	<unit name='CycleTime'>
+	   <abbrev>CT</abbrev>
+	   <type>cycletime</type>
+	</unit>
+	<unit name='ReturnStatus'>
+	   <abbrev>RT</abbrev>
+	   <type>enum</type>
+	   <enum bytes='00' text='0'/>
+	   <enum bytes='01' text='1'/>
+	   <enum text='NOT OK'/>
+	</unit>
+	<unit name='BetriebsArt'>
+	   <abbrev>BA</abbrev>
+	   <type>enum</type>
+	   <enum bytes='00' text='WW'/>
+	   <enum bytes='01' text='RED'/>
+	   <enum bytes='02' text='NORM'/>
+	   <enum bytes='04' text='H+WW'/>
+	   <enum bytes='03' text='H+WW'/>
+	   <enum bytes='05' text='ABSCHALT'/>
+	   <enum text='UNKNOWN'/>
+	</unit>	   
+	 <unit name='SetReturnStatus'>
+           <abbrev>SR</abbrev>
+           <type>enum</type>
+           <enum bytes='00' text='OK'/>
+           <enum bytes='05' text='SYNC (NOT OK)'/>
+           <enum text='NOT OK'/>
+        </unit>
+        <unit name='SystemTime'>
+	   <abbrev>TI</abbrev>
+	   <type>systime</type>
+	</unit>
+	<unit name='ErrorState'>
+	   <abbrev>ES</abbrev>
+	   <type>errstate</type>
+	   <enum bytes='00' text='Regelbetrieb (kein Fehler)'/>
+	   <enum bytes='0F' text='Wartung (fuer Reset Codieradresse 24 auf 0 stellen)'/>
+	   <enum bytes='10' text='Kurzschluss Aussentemperatursensor'/>
+	   <enum bytes='18' text='Unterbrechung Aussentemperatursensor'/>
+	   <enum bytes='20' text='Kurzschluss Vorlauftemperatursensor'/>
+	   <enum bytes='21' text='Kurzschluss Ruecklauftemperatursensor'/>
+	   <enum bytes='28' text='Unterbrechung Aussentemperatursensor'/>
+	   <enum bytes='29' text='Unterbrechung Ruecklauftemperatursensor'/>
+	   <enum bytes='30' text='Kurzschluss Kesseltemperatursensor'/>
+	   <enum bytes='38' text='Unterbrechung Kesseltemperatursensor'/>
+	   <enum bytes='40' text='Kurzschluss Vorlauftemperatursensor M2'/>
+	   <enum bytes='42' text='Unterbrechung Vorlauftemperatursensor M2'/>
+	   <enum bytes='50' text='Kurzschluss Speichertemperatursensor'/>
+	   <enum bytes='58' text='Unterbrechung Speichertemperatursensor'/>
+	   <enum bytes='92' text='Solar: Kurzschluss Kollektortemperatursensor'/>
+	   <enum bytes='93' text='Solar: Kurzschluss Sensor S3'/>
+	   <enum bytes='94' text='Solar: Kurzschluss Speichertemperatursensor'/>
+	   <enum bytes='9A' text='Solar: Unterbrechung Kollektortemperatursensor'/>
+	   <enum bytes='9B' text='Solar: Unterbrechung Sensor S3'/>
+	   <enum bytes='9C' text='Solar: Unterbrechung Speichertemperatursensor'/>
+	   <enum bytes='9F' text='Solar: Fehlermeldung Solarteil (siehe Solarregler)'/>
+	   <enum bytes='A7' text='Bedienteil defekt'/>
+	   <enum bytes='B0' text='Kurzschluss Abgastemperatursensor'/>
+	   <enum bytes='B1' text='Kommunikationsfehler Bedieneinheit'/>
+	   <enum bytes='B4' text='Interner Fehler (Elektronik)'/>
+	   <enum bytes='B5' text='Interner Fehler (Elektronik)'/>
+	   <enum bytes='B6' text='Ungueltige Hardwarekennung (Elektronik)'/>
+	   <enum bytes='B7' text='Interner Fehler (Kesselkodierstecker)'/>
+	   <enum bytes='B8' text='Unterbrechung Abgastemperatursensor'/>
+	   <enum bytes='B9' text='Interner Fehler (Dateneingabe wiederholen)'/>
+	   <enum bytes='BA' text='Kommunikationsfehler Erweiterungssatz fuer Mischerkreis M2'/>
+	   <enum bytes='BC' text='Kommunikationsfehler Fernbedienung Vitorol, Heizkreis M1'/>
+	   <enum bytes='BD' text='Kommunikationsfehler Fernbedienung Vitorol, Heizkreis M2'/>
+	   <enum bytes='BE' text='Falsche Codierung Fernbedienung Vitorol'/>
+	   <enum bytes='C1' text='Externe Sicherheitseinrichtung (Kessel kuehlt aus)'/>
+	   <enum bytes='C2' text='Kommunikationsfehler Solarregelung'/>
+	   <enum bytes='C5' text='Kommunikationsfehler drehzahlgeregelte Heizkreispumpe, Heizkreis M1'/>
+	   <enum bytes='C6' text='Kommunikationsfehler drehzahlgeregelte Heizkreispumpe, Heizkreis M2'/>
+	   <enum bytes='C7' text='Falsche Codierung der Heizkreispumpe'/>
+	   <enum bytes='C9' text='Stoermeldeeingang am Schaltmodul-V aktiv'/>
+	   <enum bytes='CD' text='Kommunikationsfehler Vitocom 100 (KM-BUS)'/>
+	   <enum bytes='CE' text='Kommunikationsfehler Schaltmodul-V'/>
+	   <enum bytes='CF' text='Kommunikationsfehler LON Modul'/>
+	   <enum bytes='D1' text='Brennerstoerung'/>
+	   <enum bytes='D4' text='Sicherheitstemperaturbegrenzer hat ausgeloest oder Stoermeldemodul nicht richtig gesteckt'/>
+	   <enum bytes='DA' text='Kurzschluss Raumtemperatursensor, Heizkreis M1'/>
+	   <enum bytes='DB' text='Kurzschluss Raumtemperatursensor, Heizkreis M2'/>
+	   <enum bytes='DD' text='Unterbrechung Raumtemperatursensor, Heizkreis M1'/>
+	   <enum bytes='DE' text='Unterbrechung Raumtemperatursensor, Heizkreis M2'/>
+	   <enum bytes='E4' text='Fehler Versorgungsspannung'/>
+	   <enum bytes='E5' text='Interner Fehler (Ionisationselektrode)'/>
+	   <enum bytes='E6' text='Abgas- / Zuluftsystem verstopft'/>
+	   <enum bytes='F0' text='Interner Fehler (Regelung tauschen)'/>
+	   <enum bytes='F1' text='Abgastemperaturbegrenzer ausgeloest'/>
+	   <enum bytes='F2' text='Temperaturbegrenzer ausgeloest'/>
+	   <enum bytes='F3' text='Flammensigal beim Brennerstart bereits vorhanden'/>
+	   <enum bytes='F4' text='Flammensigal nicht vorhanden'/>
+	   <enum bytes='F7' text='Differenzdrucksensor defekt'/>
+	   <enum bytes='F8' text='Brennstoffventil schliesst zu spaet'/>
+	   <enum bytes='F9' text='Geblaesedrehzahl beim Brennerstart zu niedrig'/>
+	   <enum bytes='FA' text='Geblaesestillstand nicht erreicht'/>
+	   <enum bytes='FD' text='Fehler Gasfeuerungsautomat'/>
+	   <enum bytes='FE' text='Starkes Stoerfeld (EMV) in der Naehe oder Elektronik defekt'/>
+	   <enum bytes='FF' text='Starkes Stoerfeld (EMV) in der Naehe oder interner Fehler'/>
+	   <enum text='UNKNOWN'/>
+	</unit>
+	<unit name='DeviceType'>
+           <abbrev>DT</abbrev>
+           <type>enum</type>
+           <enum bytes='20 53 01 2B' text='V200WB2 ID=2053 Protokoll:GWG_VBEM'/>
+	   <enum bytes='20 98' text='V200KW2 ID=2098 Protokoll:KW'/>
+           <enum text='UNKNOWN'/>
+	</unit>
+	<unit name='Brenner Stunden'>
+           <abbrev>BH</abbrev>
+           <type>uchar</type>
+	   <calc get='(B1 * 100)+B0'/>
+	   <entity>h</entity>
+	</unit>
+	<unit name='ErrorStateGWG'>
+	   <abbrev>ESG</abbrev>
+	   <type>enum</type>
+	   <enum bytes='00' text='Keine Stoerung'/>
+	   <enum bytes='02' text='Fehler Sicherheitskette'/>
+	   <enum bytes='04' text='Brennerstoerung 04'/>
+	   <enum bytes='05' text='Brennerstoerung 05'/>
+	   <enum bytes='07' text='Brennerstoerung 07'/>
+	   <enum bytes='08' text='Brennerstoerung 09'/>
+	   <enum bytes='08' text='Brennerstoerung 09'/>
+	   <enum bytes='0A' text='Brennerstoerung 10'/>
+	   <enum  text='UNKNOWN'/>
+	</unit>
+	<unit name='Bitstatus'>
+           <abbrev>BST</abbrev>
+           <type>uchar</type>
+           <icalc get="(B0 &amp; (0x01&lt;&lt;BP))&gt;&gt; BP"/>
+           <enum bytes='00' text='0'/>
+           <enum bytes='01' text='1'/>
+           <enum text='UNKNOWN'/>
+        </unit>
+	<unit name='HKP Pumpentyp'>
+           <abbrev>HKT</abbrev>
+           <type>uchar</type>
+           <icalc get="(B0 &amp; (0x01&lt;&lt;BP))&gt;&gt; BP"/>
+           <enum bytes='00' text='stufig'/>
+           <enum bytes='01' text='drehzahlgeregelt'/>
+           <enum text='UNKNOWN'/>
+        </unit>
+  </units>
+  <protocols>
+      <protocol name='KW2'>
+	  <macros>
+		<macro name='SYNC'>
+		    <command>SEND 04;WAIT 05</command>
+		</macro>
+		<macro name='GETADDR'>
+		    <command>SEND 01 F7</command>
+		</macro>
+		<macro name='SETADDR'>
+		    <command>SEND 01 F4</command>
+		</macro>
+	  </macros>
+	  <commands>
+		<command name="getaddr">
+		     <send>SYNC;GETADDR $addr $hexlen;RECV $len $unit</send>
+		</command>
+		<command name="setaddr">
+		     <send>SYNC;SETADDR $addr $hexlen;SEND BYTES $unit;RECV 1 SR</send>
+		</command>
+	  </commands>
+      </protocol>
+      <protocol name='GWG'>
+	  <macros>
+		<macro name='SYNC'>
+		    <command>SEND 04;WAIT 05</command>
+		</macro>
+		<macro name='GETADDR'>
+		    <command>SEND 01 CB</command>
+		</macro>
+                <macro name='GETBADDR'>
+                    <command>SEND 01 9E</command>
+                </macro>
+		<macro name='GETVADDR'>
+                    <command>SEND 01 C7</command>
+                </macro>
+                <macro name='GETPADDR'>
+                    <command>SEND 01 6E</command>
+                </macro>
+                <macro name='GETEADDR'>
+                    <command>SEND 01 AE</command>
+                </macro>
+                <macro name='GETXADDR'>
+                    <command>SEND 01 C5</command>
+                </macro>
+                <macro name='GETKMADDR'>
+                    <command>SEND 01 43</command>
+                </macro>
+	  </macros>
+	  <commands>
+		<command name="getaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+	   	     <send>SYNC;GETADDR $addr $hexlen 04;RECV $len $unit</send>
+		</command>
+		<command name="gettestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+	   	     <send>SYNC;GETADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+		</command>
+		<command name="getbaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETBADDR $addr $hexlen 04;RECV $len $unit</send>
+                </command>
+                <command name="getbtestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETBADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+                </command>
+               <command name="getpaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETPADDR $addr $hexlen 04;RECV $len $unit</send>
+                </command>
+                <command name="getptestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETPADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+                </command>
+		 <command name="getvaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETVADDR $addr $hexlen 04;RECV $len $unit</send>
+                </command>
+		<command name="getvtestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+	   	     <send>SYNC;GETVADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+		</command>
+		 <command name="geteaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETEADDR $addr $hexlen 04;RECV $len $unit</send>
+                </command>
+		<command name="getetestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+	   	     <send>SYNC;GETEADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+		</command>
+		 <command name="getxaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                     <send>SYNC;GETXADDR $addr $hexlen 04;RECV $len $unit</send>
+                </command>
+		<command name="getxtestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+	   	     <send>SYNC;GETXADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+		</command>
+		 <command name="getkmaddr">
+                     <send>SYNC;GETKMDDR $addr $hexlen 04;RECV $len $unit</send>
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+                </command>
+		<command name="getkmtestaddr">
+		     <retry>3</retry>
+		     <recvTimeout>150</recvTimeout>
+	   	     <send>SYNC;GETKMADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+		</command>
+                <command name="init">
+                     <send>SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100</send>
+                </command>
+		<command name="setaddr">
+		     <send>SYNC;RECV 1</send>
+		</command>
+	  </commands>
+      </protocol>
+  </protocols>
+  <extern xmlns:xi="http://www.w3.org/2003/XInclude">
+     <xi:include href="vito.xml" parse="xml"/>
+  </extern>
+</V-Control>
