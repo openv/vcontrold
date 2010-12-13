@@ -1,0 +1,310 @@
+/* socket.c */
+/* $Id: socket.c 13 2008-03-02 13:13:41Z marcust $ */
+
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <linux/tcp.h>
+#include <sys/time.h>
+#include <time.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syslog.h>
+#include <time.h>
+#include <setjmp.h>
+#include <signal.h>
+#include <arpa/inet.h>
+
+
+#include "socket.h"
+
+
+static void sig_alrm(int);
+static jmp_buf  env_alrm;
+
+
+
+int openSocket(int tcpport) {
+	int listenfd;
+	socklen_t clilen;
+	struct sockaddr_in cliaddr, servaddr;
+	char string[1000];
+	char buf[1000];
+	int cliport;
+
+	listenfd=socket(AF_INET,SOCK_STREAM,0);
+	
+	bzero(&servaddr,sizeof(servaddr));
+	servaddr.sin_family =AF_INET;
+	servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
+	servaddr.sin_port=htons(tcpport);
+	
+	
+	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
+			sprintf(string,"bind auf port %d gescheitert (in use / closewait)",tcpport);
+			logIT(LOG_ERR,string);
+			exit(1);
+	}
+	sprintf(string,"TCP socket %d geoeffnet",tcpport);
+	logIT(LOG_NOTICE,string);
+	listen(listenfd, LISTENQ);
+	return(listenfd);
+}
+
+int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
+	int connfd;
+	pid_t	childpid;
+	socklen_t clilen;
+	struct sockaddr_in cliaddr, servaddr;
+	char string[1000];
+	char buf[1000];
+	int cliport;
+
+	signal(SIGCHLD,SIG_IGN);
+
+	for( ;;) {
+		clilen=sizeof(cliaddr);
+		connfd=accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);	
+		inet_ntop(AF_INET,&cliaddr.sin_addr, buf, sizeof(buf));
+		cliport=ntohs(cliaddr.sin_port);
+		if(checkP && !(*checkP)(buf)) {
+			sprintf(string,"Access denied %s:%d",buf,cliport);
+			logIT(LOG_NOTICE,string);
+			close(connfd);
+			continue;
+		}
+		sprintf(string,"Client verbunden %s:%d (FD:%d)",buf,cliport,connfd);
+		logIT(LOG_NOTICE,string);
+		if (!makeChild) {
+			return(connfd);
+		}
+		else if ( (childpid=fork())==0) { /* unser Kind */
+			close(listenfd);
+			return(connfd);
+		}
+		else {
+			sprintf(string,"Child Prozess mit pid:%d gestartet",childpid);
+			logIT(LOG_INFO,string);
+		}
+		close(connfd);
+	}
+}
+
+void closeSocket(int sockfd) {
+	char string[1000];
+        sprintf(string,"Verbindung beendet (fd:%d)",sockfd);
+	logIT(LOG_INFO,string);
+	close(sockfd);
+}
+
+int openCliSocket(char *host,int port, int noTCPdelay) {
+	struct hostent *hp;
+	struct in_addr **pptr;
+	struct sockaddr_in servaddr;
+	int sockfd;
+	extern int errno;
+	char *errstr;
+	char string[1000];
+
+
+	if ((hp=gethostbyname(host))== NULL) {	
+		sprintf(string,"Fehler gethostbyname: %s:%s",host,hstrerror(h_errno));
+		logIT(LOG_ERR,string);
+		exit(1);
+	}
+	pptr= (struct in_addr **) hp->h_addr_list;
+	for( ; *pptr != NULL; pptr++) {
+		sockfd=socket(AF_INET,SOCK_STREAM,0);
+		bzero(&servaddr,sizeof(servaddr));
+		servaddr.sin_family=AF_INET;
+		servaddr.sin_port=htons(port);
+		memcpy(&servaddr.sin_addr,*pptr,sizeof(struct in_addr));
+		if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+			logIT(LOG_ERR,"SIGALRM error");
+		if(setjmp(env_alrm) !=0) {
+			sprintf(string,"connect timeout %s:%d",host,port);
+			logIT(LOG_ERR,string);
+			close(sockfd); /* anscheinend besteht manchmal schon noch eine Verbindung??? */
+			alarm(0);
+                        return(-1);
+                }
+                alarm(CONNECT_TIMEOUT);
+		if(connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == 0) {
+			alarm(0);
+			break; /* wir haben eine Verbindung */
+		}
+		alarm(0);
+		close(sockfd);
+	}
+	if (*pptr == NULL) {
+		sprintf(string,"TTY Net: Keine Verbingung zu %s:%d",host,port);
+		logIT(LOG_ERR,string);
+		return(-1);
+	}
+	sprintf(string,"ClI Net: verbunden %s:%d (FD:%d)",host,port,sockfd);
+	logIT(LOG_INFO,string);
+	int flag=1;
+	if (noTCPdelay && (setsockopt(sockfd,IPPROTO_TCP,TCP_NODELAY, (char*) &flag,sizeof(int)))) {
+		errstr=strerror(errno);
+		sprintf(string,"Fehler setsockopt TCP_NODELAY (%s)",errstr);
+		logIT(LOG_ERR,string);
+	}
+	
+
+	return(sockfd);
+}
+
+static void sig_alrm(int signo) {
+	longjmp(env_alrm,1);
+}
+		
+		
+		
+	
+
+/* Stuff aus Unix Network Programming Vol 1*/
+
+/* include writen */
+
+ssize_t						/* Write "n" bytes to a descriptor. */
+writen(int fd, const void *vptr, size_t n)
+{
+	size_t		nleft;
+	ssize_t		nwritten;
+	const char	*ptr;
+
+	ptr = vptr;
+	nleft = n;
+	while (nleft > 0) {
+		if ( (nwritten = write(fd, ptr, nleft)) <= 0) {
+			if (errno == EINTR)
+				nwritten = 0;		/* and call write() again */
+			else
+				return(-1);			/* error */
+		}
+
+		nleft -= nwritten;
+		ptr   += nwritten;
+	}
+	return(n);
+}
+/* end writen */
+
+ssize_t 
+Writen(int fd, void *ptr, size_t nbytes)
+{
+	if (writen(fd, ptr, nbytes) != nbytes) {
+		logIT(LOG_ERR,"Fehler beim schreiben auf socket");
+		return(0);
+	}
+	return(nbytes);
+}
+
+
+/* include readn */
+
+ssize_t						/* Read "n" bytes from a descriptor. */
+readn(int fd, void *vptr, size_t n)
+{
+	size_t	nleft;
+	ssize_t	nread;
+	char	*ptr;
+
+	ptr = vptr;
+	nleft = n;
+	while (nleft > 0) {
+		if ( (nread = read(fd, ptr, nleft)) < 0) {
+			if (errno == EINTR)
+				nread = 0;		/* and call read() again */
+			else
+				return(-1);
+		} else if (nread == 0)
+			break;				/* EOF */
+
+		nleft -= nread;
+		ptr   += nread;
+	}
+	return(n - nleft);		/* return >= 0 */
+}
+/* end readn */
+
+ssize_t
+Readn(int fd, void *ptr, size_t nbytes)
+{
+	ssize_t		n;
+
+	if ( (n = readn(fd, ptr, nbytes)) < 0) {
+		logIT(LOG_ERR,"Fehler beim lesen von socket");
+		return(0);
+	}
+	return(n);
+}
+
+
+/* include readline */
+
+static ssize_t
+my_read(int fd, char *ptr)
+{
+	static int	read_cnt = 0;
+	static char	*read_ptr;
+	static char	read_buf[MAXLINE];
+
+	if (read_cnt <= 0) {
+again:
+		if ( (read_cnt = read(fd, read_buf, sizeof(read_buf))) < 0) {
+			if (errno == EINTR)
+				goto again;
+			return(-1);
+		} else if (read_cnt == 0)
+			return(0);
+		read_ptr = read_buf;
+	}
+
+	read_cnt--;
+	*ptr = *read_ptr++;
+	return(1);
+}
+
+ssize_t
+readline(int fd, void *vptr, size_t maxlen)
+{
+	int		n, rc;
+	char	c, *ptr;
+
+	ptr = vptr;
+	for (n = 1; n < maxlen; n++) {
+		if ( (rc = my_read(fd, &c)) == 1) {
+			*ptr++ = c;
+			if (c == '\n')
+				break;	/* newline is stored, like fgets() */
+		} else if (rc == 0) {
+			if (n == 1)
+				return(0);	/* EOF, no data read */
+			else
+				break;		/* EOF, some data was read */
+		} else
+			return(-1);		/* error, errno set by read() */
+	}
+
+	*ptr = 0;	/* null terminate like fgets() */
+	return(n);
+}
+/* end readline */
+
+ssize_t
+Readline(int fd, void *ptr, size_t maxlen)
+{
+	ssize_t		n;
+
+	if ( (n = readline(fd, ptr, maxlen)) < 0) {
+		logIT(LOG_ERR,"Fehler beim lesen von socket");
+		return(0);
+	}
+	return(n);
+}

@@ -1,0 +1,48 @@
+# Makefile fuer vitocontrol Daemon
+# $Id: Makefile.arm 35 2008-05-05 17:28:07Z marcust $
+
+ARCH = arm
+STAGINGDIR = /opt/openwrt/trunk/staging_dir
+BINDIR = $(STAGINGDIR)/toolchain-armeb_gcc4.1.2/bin
+CC = $(BINDIR)/armeb-linux-uclibc-gcc
+STRIP = $(BINDIR)/armeb-linux-uclibc-strip
+LDFLAGS =  -L $(STAGINGDIR)/armeb/usr/lib -lxml2 -lz 
+CFLAGS =
+IFLAGS = -I $(STAGINGDIR)/armeb/include -I $(STAGINGDIR)/armeb/usr/include -I $(STAGINGDIR)/armeb/usr/include/libxml2
+MAKE = make
+SHELL = /bin/sh
+MAKEFLAGS = b
+
+SRCS = vcontrold.c parser.c io.c common.c socket.c xmlconfig.c arithmetic.c client.c unit.c
+OBJS = vcontrold.o parser.o io.o common.o socket.o xmlconfig.o arithmetic.o unit.o
+HDRS =                       parser.h io.h common.h socket.h xmlconfig.h arithmetic.h unit.h
+BIN = vcontrold
+VERSION=0.6
+PACKAGE = vcontrold-$(VERSION).tgz
+FILES = $(SRCS) $(HDRS) Makefile Makefile.arm  Makefile.mips $(BIN).xml
+
+CL_OBJS = vclient.o common.o socket.o io.o client.o
+CL_BIN = vclient
+
+
+.c.o:
+	$(CC) $(CFLAGS) $(IFLAGS) -c $<
+
+
+$(BIN): $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $@-$(ARCH)
+	$(STRIP) $@-$(ARCH) 
+
+$(CL_BIN): $(CL_OBJS)
+
+	$(CC) $(CFLAGS) $(LDFLAGS) $(CL_OBJS) -o $@-$(ARCH)
+	$(STRIP) $@-$(ARCH) 
+
+
+
+
+all: $(BIN)
+clean:
+	rm -rf $(OBJS) $(BIN) $(CL_OBJS) $(CL_BIN)
+tar: 
+	tar cvf $(PACKAGE) $(FILES) 

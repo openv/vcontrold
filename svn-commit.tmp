@@ -1,0 +1,24 @@
+upload des orginal
+
+-- Diese und die folgenden Zeilen werden ignoriert --
+
+A    xml-32
+A    xml-32/xml
+A    xml-32/xml/vito.xml
+A    xml-32/xml/sim-2098.ini
+A    xml-32/xml/vcontrold.xml
+A    vcontrold
+A    vcontrold/arithmetic.h
+A    vcontrold/client.c
+A    vcontrold/license.txt
+A    vcontrold/parser.h
+A    vcontrold/Makefile.mips
+A    vcontrold/vclient.c
+A    vcontrold/unit.h
+A    vcontrold/prompt.h
+A    vcontrold/common.c
+A    vcontrold/xmlconfig.h
+A    vcontrold/parser.c
+A    vcontrold/Makefile
+A    vcontrold/io.h
+A    vcontrold/common.h
