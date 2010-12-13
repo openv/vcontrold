@@ -1060,7 +1060,7 @@ icmdPtr parseICmd(xmlNodePtr cur) {
 			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) { 
-				icPtr->send=calloc(strlen(chrPtr)+1,sizeof(char));
+				icPtr->send=calloc(strlen(chrPtr)+2,sizeof(char));
 				strcpy(icPtr->send,chrPtr);
 			}
 			else

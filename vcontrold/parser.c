@@ -543,7 +543,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 
 	char eString[2000];
 	char *ePtr=eString;;
-	char cmd[100];
+	char cmd[200];
 	char *ptr;
 
 	char hex[MAXBUF];
@@ -577,7 +577,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		bzero(cmd,sizeof(cmd));
 		strncpy(cmd,sendPtr,ptr-sendPtr);
 		hexlen=0;
-		bzero(uSPtr,sizeof(uSPtr));
+		bzero(uSPtr,sizeof(uString));
 		token=parseLine(cmd,hex,&hexlen,uSPtr);
 		sprintf(string,"\t\tToken: %d Hexlen:%d, Unit: %s",token,hexlen,uSPtr);
 		logIT(LOG_INFO,string);

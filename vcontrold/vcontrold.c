@@ -28,9 +28,14 @@
 #include "socket.h"
 #include "prompt.h"
 
-
+#ifdef __CYGWIN__
+#define XMLFILE "vcontrold.xml"
+#define INIOUTFILE "sim-%s.ini"
+#else
 #define XMLFILE "/etc/vcontrold/vcontrold.xml"
 #define INIOUTFILE "/tmp/sim-%s.ini"
+#endif
+
 #define VERSION "0.94"
 
 
@@ -187,7 +192,13 @@ int rawModus(int socketfd,char *device) {
 	/* diese Datei wird dann an readCmdFile uerbegeben */
 	char readBuf[MAXBUF];
 	char string[1000];
+	
+	#ifdef __CYGWIN__
+	char tmpfile[]="vitotmp-XXXXXX";
+	#else
 	char tmpfile[]="/tmp/vitotmp-XXXXXX";
+	#endif
+	
 	FILE *filePtr;
 	char result[MAXBUF];
 	int resultLen;
@@ -199,7 +210,7 @@ int rawModus(int socketfd,char *device) {
 			return(0);
 		}
 	}
-	filePtr=fopen(tmpfile,"r+");
+	filePtr=fopen(tmpfile,"w+");
 	if (!filePtr) {
 		sprintf(string,"Kann Tmp File %s nicht anlegen",tmpfile);
 		logIT(LOG_ERR,string);
@@ -225,8 +236,11 @@ int rawModus(int socketfd,char *device) {
 		}
 		sprintf(string,"Raw: Gelesen: %s",readBuf);
 		logIT(LOG_INFO,string);
+		/*
 		int n;
 		if ((n=fputs(readBuf,filePtr))== 0) {
+		*/
+		if (fputs(readBuf,filePtr)== EOF) {
 			logIT(LOG_ERR,"Fehler beim schreiben tmp Datei");
 		}
 		else {

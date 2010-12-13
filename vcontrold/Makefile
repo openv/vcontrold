@@ -3,7 +3,7 @@
 
 CC = gcc
 LDFLAGS = -lxml2 
-CFLAGS = -g -I/usr/local/include/libxml2/ -L/usr/local/lib/
+CFLAGS = -Wall -g -I/usr/include/libxml2/ -L/usr/lib/
 MAKE = make
 SHELL = /bin/sh
 MAKEFLAGS = b

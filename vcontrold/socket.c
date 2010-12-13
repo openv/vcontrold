@@ -4,7 +4,11 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <linux/tcp.h>
+
+#ifndef __CYGWIN__  
+#include <linux/tcp.h>	/*do we realy need this?*/
+#endif
+
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>

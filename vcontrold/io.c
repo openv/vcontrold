@@ -25,6 +25,11 @@
 #include "io.h"
 #include "socket.h"
 
+#ifdef __CYGWIN__
+/* NCC is not defined under cygwin */
+#define NCC NCCS
+#endif
+
 static void sig_alrm(int);
 static jmp_buf	env_alrm;
 
@@ -89,7 +94,7 @@ int opentty(char *device) {
 	/* DTR High fuer Spannungsversorgung */
 	int modemctl;
 	modemctl=TIOCM_DTR;
-	s=ioctl(fd,TIOCMSET,modemctl);
+	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
 /*		sprintf(string,"error ioctl TIOCMSET %s:%m",device);
 		logIT(LOG_ERR,string);

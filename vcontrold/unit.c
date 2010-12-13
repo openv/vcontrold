@@ -12,7 +12,12 @@
 #include <time.h>
 #include <stdint.h>
 
+
 #include <asm/byteorder.h>
+
+#ifdef __CYGWIN__ 
+#include "byteorder.h"
+#endif
 
 #include "xmlconfig.h"
 #include "common.h"
@@ -325,13 +330,6 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 		sprintf(formatI,"%%04X %%s");
 	}
 	else if (strstr(uPtr->type,"ushort")==uPtr->type) { /* Umrechnung in Short 2Byte */
-		memcpy(&tmpS,recvBuf,2);	
-		/* je nach CPU Typ wird hier die Wandlung vorgenommen */
-		shortV=__le16_to_cpu(tmpS);
-		floatV=shortV; /* impliziete Typumnwandlung nach float fuer unsere Arithmetic */
-		sprintf(formatI,"%%04X %%s");
-	}
-	else if (strstr(uPtr->type,"ushort")==uPtr->type) { /* Umrechnung in Short 2Byte */
 		memcpy(&tmpUS,recvBuf,2);	
 		/* je nach CPU Typ wird hier die Wandlung vorgenommen */
 		ushortV=__le16_to_cpu(tmpUS);
@@ -354,7 +352,7 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	}
 	else if (uPtr->type) {
 		bzero(string,sizeof(string));
-		sprintf(string,"Unbekannter Typ % in Unit %s",uPtr->type,uPtr->name);
+		sprintf(string,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
 		logIT(LOG_ERR,string);
 		return(-1);
 	}
@@ -574,7 +572,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 		}
 		else if (uPtr->type) {
 			bzero(string,sizeof(string));
-			sprintf(string,"Unbekannter Typ % in Unit %s",uPtr->type,uPtr->name);
+			sprintf(string,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
 			logIT(LOG_ERR,string);
 			return(-1);
 		}
