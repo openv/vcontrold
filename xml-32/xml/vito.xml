@@ -8,6 +8,7 @@
 	     <addr>0800</addr>
 	     <len>2</len>
 	     <unit>UT</unit>
+	     <error>05 05</error>
 	     <description>Ermittle die Aussentemeratur in Grad C</description>
              <device ID="2053">
 		<addr>6F</addr>
@@ -19,6 +20,7 @@
 	     <addr>0804</addr>
 	     <len>2</len>
 	     <unit>UT</unit>
+	     <error>05 05</error>
 	     <description>Ermittle die Warmwassertemperatur in Grad C</description>
              <device ID="2053">
 		<addr>42</addr>
@@ -41,6 +43,7 @@
 	     <addr>0802</addr>
 	     <len>2</len>
 	     <unit>UT</unit>
+	     <error>05 05</error>
 	     <description>Ermittle die Kesseltemperatur in Grad C</description>
              <device ID="2053">
 		<addr>70</addr>
@@ -52,6 +55,7 @@
 	     <addr>5502</addr>
 	     <len>2</len>
 	     <unit>UT</unit>
+	     <error>05 05</error>
 	     <description>Ermittle die Kesselsolltemperatur in Grad C</description>
              <device ID="2053">
 		<addr>71</addr>
@@ -130,6 +134,17 @@
 		 <unit>UTI</unit>
 	     </device>
         </command>
+        <command name='setTempRaumNorSollM1' protocmd='setaddr'>
+             <addr>2306</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze die Raumsolltemperatur normal M1 in Grad C</description>
+             <device ID="2053">
+		 <addr>53</addr>
+		 <len>1</len>
+		 <unit>UTI</unit>
+	     </device>
+        </command>
         <command name='getTempRaumNorSollM2' protocmd='getaddr'>
              <addr>3306</addr>
              <len>1</len>
@@ -142,6 +157,17 @@
              <len>1</len>
              <unit>ST</unit>
              <description>Ermittle die Raumsolltemperatur reduziert M1 in Grad C</description>
+             <device ID="2053">
+		 <addr>54</addr>
+		 <len>1</len>
+		 <unit>UTI</unit>
+	     </device>
+        </command>
+        <command name='setTempRaumRedSollM1' protocmd='setaddr'>
+             <addr>2307</addr>
+             <len>1</len>
+             <unit>ST</unit>
+             <description>Setze die Raumsolltemperatur reduziert M1 in Grad C</description>
              <device ID="2053">
 		 <addr>54</addr>
 		 <len>1</len>
@@ -589,6 +615,24 @@
 		<len>1</len>
 		<unit>ST</unit>
 		<description>Setze die Warmwassersolltemperatur Party M2 in Grad C</description>
+             <device ID="2053"/>
+	</command>
+	<command name='setBetriebArtM1' protocmd='setaddr'>
+		<addr>2301</addr>
+		<len>1</len>
+		<unit>BA</unit>
+		<description>Setze Betriebsart M1</description>
+                <device ID="2053">
+		    <addr>51</addr>
+		    <len>1</len>
+		    <unit>BA</unit> 
+                </device>
+	</command>
+	<command name='setBetriebSparM1' protocmd='setaddr'>
+		<addr>2302</addr>
+		<len>1</len>
+		<unit>RT</unit>
+		<description>Setze Betriebsart Spar M1</description>
              <device ID="2053"/>
 	</command>
 	<command name='setBetriebPartyM1' protocmd='setaddr'>
