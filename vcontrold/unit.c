@@ -11,8 +11,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
-
-
+#include <arpa/inet.h>
 #include <asm/byteorder.h>
 
 #ifdef __CYGWIN__ 
@@ -82,15 +81,26 @@ int setCycleTime(char *input,unsigned char *sendBuf) {
 			continue;
 		while(isblank(*sptr))
 			sptr++;
-		/* haben wir einen Doppelpunkt im String? */
-		if(!strchr(sptr,':')) {
-			sprintf(sendBuf,"Falsches Zeitformat: %s",sptr);
-			return(0);
+		/* besteht der String nur aus ein oder zwei Minus? -> diese Zeit bleibt leer */
+		if ((0 == strcmp(sptr,"-")) ||  (0 == strcmp(sptr,"--"))) {
+		  /* Wir überspringen die nächste Zeitangabe, da die ja auch "-" sein muß */
+		  bptr++;
+		  count++;
+		  sptr=strtok(NULL," ");
+		  sprintf(string,"Cycle Time: -- -- -> [%02X%02X]",0xff, 0xff);
+		  logIT(LOG_INFO,string);
 		}
-		sscanf(sptr,"%i:%i",&hour,&min);
-		*bptr=((hour <<3) + (min/10)) & 0xff;	
-		sprintf(string,"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
-		logIT(LOG_INFO,string);
+		else {
+		  /* haben wir einen Doppelpunkt im String? */
+		  if(!strchr(sptr,':')) {
+		    sprintf(sendBuf,"Falsches Zeitformat: %s",sptr);
+		    return(0);
+		  }
+		  sscanf(sptr,"%i:%i",&hour,&min);
+		  *bptr=((hour <<3) + (min/10)) & 0xff;	
+		  sprintf(string,"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
+		  logIT(LOG_INFO,string);
+		}
 		bptr++;
 		cptr=sptr;
 		count++;

@@ -67,8 +67,8 @@ int reloadConfig();
 
 
 void usage() {
-	printf("usage: vcontrold [-d <device>] [-l logfile] [-c cmdfile] [-p port] [-s] [-n] \n");
-	exit(1);
+  printf("usage: vcontrold [-x xml-file] [-d <device>] [-l <logfile>] [-p port] [-s] [-n] [-i] [-g]\n");
+  exit(1);
 }
 
 short checkIP(char *ip) {
@@ -137,12 +137,16 @@ int readCmdFile(char *filename,char *result,int *resultLen,char *device ) {
 	sprintf(string,"Lese Cmd File %s",filename);
 	logIT(LOG_INFO,string);
 	/* Queue leeren */
+	vcontrol_semget();
         tcflush(fd,TCIOFLUSH);
+	vcontrol_semrelease();
 	while(fgets(line,MAXBUF-1,cmdPtr)) {
 		/* \n verdampfen */
 		line[strlen(line)-1]='\0';
 		bzero(recvBuf,sizeof(recvBuf));
+		vcontrol_semget();
 		count=execCmd(line,fd,recvBuf,sizeof(recvBuf));
+		vcontrol_semrelease();
 		int n;
 		char *ptr;
 		ptr=recvBuf;
@@ -285,7 +289,7 @@ int interactive(int socketfd,char *device ) {
 		sprintf(string,"Befehl: %s",readBuf);
 		logIT(LOG_INFO,string);	
 
-		/* wir trennen Kommando und evtl. Optionen am ersetn Blank */
+		/* wir trennen Kommando und evtl. Optionen am ersten Blank */
 		bzero(cmd,sizeof(cmd));
 		bzero(para,sizeof(para));
 		if(ptr=strchr(readBuf,' ')) {
@@ -431,15 +435,20 @@ int interactive(int socketfd,char *device ) {
 				}
 				continue;
 			}
+
+			vcontrol_semget();
+
 			/* falls ein Pre-Kommando definiert wurde, fuehren wir dies zuerst aus */
 			if (cPtr->precmd &&(pcPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cPtr->precmd))) {
 				sprintf(string,"Fuehre Pre Kommando %s aus",cPtr->precmd);
 				logIT(LOG_INFO,string);
+
 				if (execByteCode(pcPtr->cmpPtr,fd,pRecvBuf,sizeof(pRecvBuf),sendBuf,sendLen,1,pcPtr->bit,pcPtr->retry,pRecvBuf,pcPtr->recvTimeout)==-1) {	
-					sprintf(string,"Fehler beim ausfuehren von %s",readBuf);
-					logIT(LOG_ERR,string);
-					sendErrMsg(socketfd);
-					break;
+				  vcontrol_semrelease();
+				  sprintf(string,"Fehler beim ausfuehren von %s",readBuf);
+				  logIT(LOG_ERR,string);
+				  sendErrMsg(socketfd);
+				  break;
 				}
 				else {
 					bzero(buffer,sizeof(buffer));
@@ -455,7 +464,11 @@ int interactive(int socketfd,char *device ) {
 			       -1 -> Fehler  
 				0 -> Formaterierter String
 				n -> Bytes in Rohform */
-			if ((count=execByteCode(cPtr->cmpPtr,fd,recvBuf,sizeof(recvBuf),sendBuf,sendLen,noUnit,cPtr->bit,cPtr->retry,pRecvBuf,cPtr->recvTimeout))==-1) {	
+
+			count=execByteCode(cPtr->cmpPtr,fd,recvBuf,sizeof(recvBuf),sendBuf,sendLen,noUnit,cPtr->bit,cPtr->retry,pRecvBuf,cPtr->recvTimeout);
+			vcontrol_semrelease();
+
+			if (count==-1) {	
 				sprintf(string,"Fehler beim ausfuehren von %s",readBuf);
 				logIT(LOG_ERR,string);
 				sendErrMsg(socketfd);
@@ -613,7 +626,6 @@ static void sigHupHandler(int signo) {
 /* hier gehts los */
 
 main(int argc,char* argv[])  {
-
 
 	/* Auswertung der Kommandozeilenschalter */
 	int c;
@@ -774,6 +786,8 @@ main(int argc,char* argv[])  {
 			}	
 
 		}
+
+		vcontrol_seminit();
 			
 		int sockfd=-1;
 		int listenfd=-1;
@@ -809,9 +823,13 @@ main(int argc,char* argv[])  {
 			}
 		}
 	}
+	else
+	  vcontrol_seminit();
 
 	if (cmdfile)
 		readCmdFile(cmdfile,result,&resultLen,device);
+
+	vcontrol_semfree();
 
 	close(fd);
 	logIT(LOG_LOCAL0,"vcontrold beendet");

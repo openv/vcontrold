@@ -1,5 +1,10 @@
+#ifndef _COMMON_H_
+#define _COMMON_H_
+
 /* common.h */
 /* $Id: common.h 26 2008-03-20 20:56:09Z marcust $ */
+
+#include <syslog.h> 
 
 /* Deklarationen */
 int initLog(int useSyslog, char *logfile,int debugSwitch);
@@ -14,4 +19,4 @@ void setDebugFD(int fd);
         #define MAXBUF 4096 
 #endif
 
-
+#endif /* _COMMON_H_ */

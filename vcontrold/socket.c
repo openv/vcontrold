@@ -1,14 +1,6 @@
 /* socket.c */
 /* $Id: socket.c 13 2008-03-02 13:13:41Z marcust $ */
 
-
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#ifndef __CYGWIN__  
-#include <linux/tcp.h>	/*do we realy need this?*/
-#endif
-
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>
@@ -23,7 +15,11 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <arpa/inet.h>
-
+#include <sys/types.h>
+#include <sys/socket.h>
+#ifndef __CYGWIN__  
+#include <linux/tcp.h>	/*do we realy need this?*/
+#endif
 
 #include "socket.h"
 
