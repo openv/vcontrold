@@ -74,8 +74,13 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
   return semid;
 }
 
-
+#ifdef _CYGWIN__
+#define TMPFILENAME "vcontrol.lockXXXXXX"
+#else
 #define TMPFILENAME "/tmp/vcontrol.lockXXXXXX"
+#endif
+
+
 char tmpfilename[255];
 int semid;
 
