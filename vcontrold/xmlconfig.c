@@ -1221,6 +1221,25 @@ protocolPtr parseProtocol(xmlNodePtr cur) {
 		
 }
 	
+
+void removeComments(xmlNodePtr node){
+	while(node){
+		//printf("type:%d name=%s\n",node->type, node->name);
+		if(node->children){						// if the node has children process the children
+			removeComments(node->children);										
+		}
+		if(node->type == XML_COMMENT_NODE){		// if the node is a comment?
+			//printf("found comment\n");
+			if(node->next){						 
+				removeComments(node->next);		
+			}
+			xmlUnlinkNode(node);				//unlink 
+			xmlFreeNode(node);					//and free the node
+		}
+		node=node->next;
+	}	
+}
+	
 int parseXMLFile(char *filename) {
 	xmlDocPtr doc;
 	xmlNodePtr cur,curAlt,curStart;
@@ -1277,6 +1296,9 @@ int parseXMLFile(char *filename) {
 		sprintf(string,"%d XInclude durchgefuehrt",xc);
 		logIT(LOG_INFO,string);
 	}
+		
+	removeComments(cur);		// now the xml tree is complete -> remove all comments
+	
 	int unixFound=0;
 	int protocolsFound=0;
 	cur=cur->children;
