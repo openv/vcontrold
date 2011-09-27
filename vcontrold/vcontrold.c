@@ -4,6 +4,7 @@
 /* $Id: vcontrold.c 34 2008-04-06 19:39:29Z marcust $ */
 #include <stdlib.h>
 #include <stdio.h> 
+#include <ctype.h>
 #include <errno.h>
 #include <signal.h>  
 #include <syslog.h> 
@@ -27,6 +28,7 @@
 #include "parser.h"
 #include "socket.h"
 #include "prompt.h"
+#include "semaphore.h"
 
 #ifdef __CYGWIN__
 #define XMLFILE "vcontrold.xml"
@@ -36,7 +38,7 @@
 #define INIOUTFILE "/tmp/sim-%s.ini"
 #endif
 
-#define VERSION "0.95"
+#define VERSION "0.97"
 
 
 /* Globale Variablen */
@@ -74,7 +76,7 @@ void usage() {
 short checkIP(char *ip) {
 	allowPtr aPtr;
 	char string[1000];
-	if (aPtr=getAllowNode(cfgPtr->aPtr,inet_addr(ip))) {
+	if ((aPtr = getAllowNode(cfgPtr->aPtr,inet_addr(ip)))) {
 		sprintf(string,"%s in allowList (%s)",ip,aPtr->text);
 		logIT(LOG_INFO,string);
 		return(1);
@@ -113,8 +115,8 @@ int readCmdFile(char *filename,char *result,int *resultLen,char *device ) {
 	char *resultPtr=result;
 	int fd;
 	int count=0;
-	void *uPtr;
-	int maxResLen=*resultLen;
+	//void *uPtr;
+	//int maxResLen=*resultLen;
 	*resultLen=0; /* noch keine Zeichen empfangen :-) */
 
 	/* das Device wird erst geoeffnet, wenn wir was zu tun haben */
@@ -252,7 +254,7 @@ int rawModus(int socketfd,char *device) {
 		}
 			
 	}	
-	
+	return 0;			// is this correct?
 }
 
 int interactive(int socketfd,char *device ) {
@@ -279,7 +281,10 @@ int interactive(int socketfd,char *device ) {
 
 	Writen(socketfd,prompt,strlen(prompt));
 	bzero(readBuf,sizeof(readBuf));
-	while(rcount=Readline(socketfd,readBuf,sizeof(readBuf))) {
+	
+	
+	while((rcount=Readline(socketfd,readBuf,sizeof(readBuf)))) {
+				
 		sendErrMsg(socketfd);
 		/* Steuerzeichen verdampfen */
 		/*readPtr=readBuf+strlen(readBuf); **/
@@ -292,7 +297,7 @@ int interactive(int socketfd,char *device ) {
 		/* wir trennen Kommando und evtl. Optionen am ersten Blank */
 		bzero(cmd,sizeof(cmd));
 		bzero(para,sizeof(para));
-		if(ptr=strchr(readBuf,' ')) {
+		if((ptr=strchr(readBuf,' '))) {
 			strncpy(cmd,readBuf,ptr-readBuf);
 			strcpy(para,ptr+1);
 		}
@@ -385,7 +390,8 @@ int interactive(int socketfd,char *device ) {
 			Writen(socketfd,string,strlen(string));
 		}
 		/* Ist das Kommando in der XML definiert ? */
-		else if(readBuf && (cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cmd))&& (cPtr->addr)) { 
+		//else if(readBuf && (cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cmd))&& (cPtr->addr)) {
+		else if((cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cmd))&& (cPtr->addr)) { 
 			bzero(string,sizeof(string));
 			bzero(recvBuf,sizeof(recvBuf));
 			bzero(sendBuf,sizeof(sendBuf));
@@ -600,7 +606,7 @@ int interactive(int socketfd,char *device ) {
 		}
 		bzero(string,sizeof(string));
 		sendErrMsg(socketfd);
-		sprintf(string,"%s",prompt,readBuf);
+		sprintf(string,"%s",prompt); //,readBuf);  // is this needed? what does it do?
 		if (!Writen(socketfd,prompt,strlen(prompt))) {
 			sendErrMsg(socketfd);
 			close(fd);
@@ -625,7 +631,7 @@ static void sigHupHandler(int signo) {
 
 /* hier gehts los */
 
-main(int argc,char* argv[])  {
+int main(int argc,char* argv[])  {
 
 	/* Auswertung der Kommandozeilenschalter */
 	int c;
@@ -742,12 +748,12 @@ main(int argc,char* argv[])  {
 	compileCommand(devPtr,uPtr);
 
 	int fd;
-	char s_buf[MAXBUF];
-	char r_buf[MAXBUF];
+	//char s_buf[MAXBUF];
+	//char r_buf[MAXBUF];
 	char result[MAXBUF];
 	int resultLen=sizeof(result);
-	int count;
-	int n;
+	//int count;
+	//int n;
 	int sid;
 
 	if (tcpport) {
@@ -826,13 +832,15 @@ main(int argc,char* argv[])  {
 	else
 	  vcontrol_seminit();
 
-	if (cmdfile)
+	if (*cmdfile)
 		readCmdFile(cmdfile,result,&resultLen,device);
 
 	vcontrol_semfree();
 
 	close(fd);
 	logIT(LOG_LOCAL0,"vcontrold beendet");
+	
+	return 0;
 }
 
 

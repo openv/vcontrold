@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <ctype.h>
 
 #define HEX 8 
 #define HEXDIGIT 10 
@@ -51,19 +51,19 @@
 
 int nextToken(char **str,char **c,int *count); 
 void  pushBack(char **str,int n); 
-float execExpression(char **str,char *bPtr,float floatV, char *err); 
-float execTerm(char **str,char *bPtr,float floatV,char *err); 
-float execFactor(char **str, char *bPtr,float floatV, char *err); 
-int execIExpression(char **str,char *bPtr,char bitpos,char *pPtr, char *err); 
-int execITerm(char **str,char *bPtr,char bitpos,char *pPtr,char *err); 
-int execIFactor(char **str, char *bPtr,char bitpos,char *pPtr, char *err); 
+float execExpression(char **str,unsigned char *bPtr,float floatV, char *err); 
+float execTerm(char **str, unsigned char *bPtr,float floatV,char *err); 
+float execFactor(char **str, unsigned  char *bPtr,float floatV, char *err); 
+int execIExpression(char **str,unsigned char *bPtr,char bitpos,char *pPtr, char *err); 
+int execITerm(char **str, unsigned char *bPtr,char bitpos,char *pPtr,char *err); 
+int execIFactor(char **str, unsigned char *bPtr,char bitpos,char *pPtr, char *err); 
 
 
-float execExpression(char **str,char *bInPtr,float floatV,char *err) {
+float execExpression(char **str,unsigned char *bInPtr,float floatV,char *err) {
 /* printf("execExpression: %s\n",*str); */
 	int f=1;
 	float term1,term2;
-	float exp1,exp2;
+	//float exp1,exp2;
 	char *item;
 	/*unsigned char bPtr[10];*/
 	unsigned char bPtr[10];
@@ -116,7 +116,7 @@ float execExpression(char **str,char *bInPtr,float floatV,char *err) {
 } 	
 	
 		
-float execTerm(char **str,char *bPtr,float floatV,char *err) {
+float execTerm(char **str,unsigned char *bPtr,float floatV,char *err) {
 /* printf("execTerm: %s\n",*str); */
 	float factor1,factor2;
 	int op;
@@ -152,7 +152,7 @@ float execTerm(char **str,char *bPtr,float floatV,char *err) {
 	}
 }
 
-float execFactor(char **str, char *bPtr,float floatV,char *err) {
+float execFactor(char **str, unsigned char *bPtr,float floatV,char *err) {
 /* printf("execFactor: %s\n",*str); */
 	char nstring[100];
 	float expression;
@@ -220,11 +220,11 @@ float execFactor(char **str, char *bPtr,float floatV,char *err) {
 }
 				
 			
-int execIExpression(char **str,char *bInPtr,char bitpos,char *pPtr,char *err) {
+int execIExpression(char **str,unsigned char *bInPtr,char bitpos,char *pPtr,char *err) {
 /* printf("execExpression: %s\n",*str); */
 	int f=1;
 	int term1,term2;
-	int exp1,exp2;
+	//int exp1,exp2;
 	int op;
 	char *item;
 	unsigned char bPtr[10];
@@ -291,7 +291,7 @@ int execIExpression(char **str,char *bInPtr,char bitpos,char *pPtr,char *err) {
 } 	
 	
 		
-int execITerm(char **str,char *bPtr,char bitpos,char *pPtr,char *err) {
+int execITerm(char **str,unsigned char *bPtr,char bitpos,char *pPtr,char *err) {
 /* printf("execTerm: %s\n",*str); */
 	int factor1,factor2;
 	int op;
@@ -359,7 +359,7 @@ int execITerm(char **str,char *bPtr,char bitpos,char *pPtr,char *err) {
 	}
 }
 
-int execIFactor(char **str, char *bPtr,char bitpos,char *pPtr,char *err) {
+int execIFactor(char **str, unsigned char *bPtr,char bitpos,char *pPtr,char *err) {
 /* printf("execFactor: %s\n",*str); */
 	char nstring[100];
 	int expression;
@@ -443,7 +443,7 @@ int nextToken(char **str,char **c,int *count) {
 
 /*	printf("\tInput String:%s\n",*str); */ 
 	item=**str;	
-	while(isblank(item))
+	while( isblank(item) )
 		item=*(++*str);
 	*c=*str;
 	(*str)++;

@@ -21,9 +21,9 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
-
 #include "io.h"
 #include "socket.h"
+#include "common.h"
 
 #ifdef __CYGWIN__
 /* NCC is not defined under cygwin */
@@ -38,7 +38,7 @@ int openDevice(char *device) {
 	/* Socket: kein / am Anfang und ein : */
 	int fd;
 	char *dptr;
-	char string[1000];
+	//char string[1000];
 	if (device[0] != '/' && (dptr=strchr(device,':'))) {
 		char host[MAXBUF];
 		int port;
@@ -92,13 +92,14 @@ int opentty(char *device) {
 	tcsetattr(fd, TCSADRAIN, &newsb);
 
 	/* DTR High fuer Spannungsversorgung */
-	int modemctl;
-	modemctl=TIOCM_DTR;
+	int modemctl = 0;
+	ioctl(fd, TIOCMGET, &modemctl);
+	modemctl |= TIOCM_DTR;
 	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
-/*		sprintf(string,"error ioctl TIOCMSET %s:%m",device);
+		sprintf(string,"error ioctl TIOCMSET %s:%m",device);
 		logIT(LOG_ERR,string);
-		 exit(1); */
+		exit(1); 
 	}
 
 	return(fd);
@@ -107,7 +108,7 @@ int opentty(char *device) {
 int my_send(int fd,char *s_buf, int len) {
 	int i;
 	char string[1000];
-	int n;
+	//int n;
 	/* Buffer leeren */
 	/* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
 	fcntl(fd,F_SETFL,O_NONBLOCK);

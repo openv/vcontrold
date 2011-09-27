@@ -92,7 +92,7 @@ int vcontrol_seminit()
   int tmpfile;
 
   strcpy(tmpfilename, TMPFILENAME);
-  if (tmpfile = mkstemp(tmpfilename) < 0) {
+  if ((tmpfile = mkstemp(tmpfilename)) < 0) {
     perror("mkstemp");
     exit(1);
   }
@@ -123,6 +123,7 @@ int vcontrol_semfree()
     exit(1);
   }
   unlink(tmpfilename);
+  return 1;					// what should we return?
 }
 
 int vcontrol_semget()

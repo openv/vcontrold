@@ -14,6 +14,7 @@
 #include <time.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -22,6 +23,7 @@
 #endif
 
 #include "socket.h"
+#include "common.h"
 
 
 static void sig_alrm(int);
@@ -31,11 +33,12 @@ static jmp_buf  env_alrm;
 
 int openSocket(int tcpport) {
 	int listenfd;
-	socklen_t clilen;
-	struct sockaddr_in cliaddr, servaddr;
+	//socklen_t clilen;
+	struct sockaddr_in servaddr;
+	//struct sockaddr_in cliaddr;
 	char string[1000];
-	char buf[1000];
-	int cliport;
+	//char buf[1000];
+	//int cliport;
 
 	listenfd=socket(AF_INET,SOCK_STREAM,0);
 	
@@ -44,6 +47,13 @@ int openSocket(int tcpport) {
 	servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
 	servaddr.sin_port=htons(tcpport);
 	
+	// this will configure the socket to reuse the address if it was in use and is not free allready.
+	int optval =1;
+	if(listenfd < 0 || setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
+		sprintf(string,"setsockopt gescheitert!");
+		logIT(LOG_ERR,string);
+		exit(1);
+	}
 	
 	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
 			sprintf(string,"bind auf port %d gescheitert (in use / closewait)",tcpport);
@@ -60,7 +70,7 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 	int connfd;
 	pid_t	childpid;
 	socklen_t clilen;
-	struct sockaddr_in cliaddr, servaddr;
+	struct sockaddr_in cliaddr;
 	char string[1000];
 	char buf[1000];
 	int cliport;
