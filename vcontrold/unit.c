@@ -11,8 +11,12 @@
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
+#include <ctype.h>
 #include <arpa/inet.h>
+
+#ifdef __linux__
 #include <asm/byteorder.h>
+#endif
 
 #ifdef __CYGWIN__ 
 #include "byteorder.h"
@@ -26,17 +30,37 @@
 #define FLOAT 1
 #define INT 2
 
+#if defined (__APPLE__)
+/* this is needed to emulate the linux API calls */
+
+#include <libkern/OSByteOrder.h>
+
+#define __cpu_to_be64(x) OSSwapHostToBigInt64(x)
+#define __cpu_to_le64(x) OSSwapHostToLittleInt64(x)
+#define __cpu_to_be32(x) OSSwapHostToBigInt32(x)
+#define __cpu_to_le32(x) OSSwapHostToLittleInt32(x)
+#define __cpu_to_be16(x) OSSwapHostToBigInt16(x)
+#define __cpu_to_le16(x) OSSwapHostToLittleInt16(x)
+
+#define __be64_to_cpu(x) OSSwapBigToHostInt64(x)
+#define __le64_to_cpu(x) OSSwapLittleToHostInt64(x)
+#define __be32_to_cpu(x) OSSwapBigToHostInt32(x)
+#define __le32_to_cpu(x) OSSwapLittleToHostInt32(x)
+#define __be16_to_cpu(x) OSSwapBigToHostInt16(x)
+#define __le16_to_cpu(x) OSSwapLittleToHostInt16(x)
+
+#endif
 
 /* Deklarationen */
-int getCycleTime(unsigned char *recv,int len,char *result);
-int setCycleTime(char *string,unsigned char *sendBuf);
+int getCycleTime(char *recv,int len,char *result);
+int setCycleTime(char *string,char *sendBuf);
 short bytes2Enum(enumPtr ptr,char *bytes,char **text,short len); 
 short text2Enum(enumPtr ptr,char *text,char **bytes,short *len); 
-int getErrState(enumPtr ePtr,unsigned char *recv,int len,char *result); 
-int getSysTime(unsigned char *recv,int len,char *result); 
-int setSysTime(char *input,unsigned char *sendBuf,short bufsize); 
+int getErrState(enumPtr ePtr, char *recv,int len,char *result); 
+int getSysTime(char *recv,int len,char *result); 
+int setSysTime(char *input,char *sendBuf,short bufsize); 
 
-int getCycleTime(unsigned char *recv,int len,char *result) {
+int getCycleTime(char *recv,int len,char *result) {
 
 	int i;
 	char string[300];
@@ -50,7 +74,7 @@ int getCycleTime(unsigned char *recv,int len,char *result) {
 	bzero(string,sizeof(string));
 
 	for(i=0;i<len;i+=2) {
-		if (recv[i] == 0xff) 
+		if (recv[i] == (char)0xff) 
 			sprintf(string,"%d:An:--     Aus:--\n",(i/2)+1);
 		else
 			sprintf(string,"%d:An:%02d:%02d  Aus:%02d:%02d\n",(i/2)+1,
@@ -62,7 +86,7 @@ int getCycleTime(unsigned char *recv,int len,char *result) {
 	return(1);
 }
 
-int setCycleTime(char *input,unsigned char *sendBuf) {
+int setCycleTime(char *input,char *sendBuf) {
 	char *sptr,*cptr;
 	char *bptr=sendBuf;
 	char string[200];      
@@ -83,7 +107,7 @@ int setCycleTime(char *input,unsigned char *sendBuf) {
 			sptr++;
 		/* besteht der String nur aus ein oder zwei Minus? -> diese Zeit bleibt leer */
 		if ((0 == strcmp(sptr,"-")) ||  (0 == strcmp(sptr,"--"))) {
-		  /* Wir Ã¼berspringen die nÃ¤chste Zeitangabe, da die ja auch "-" sein muÃŸ */
+		  /* Wir Ÿberspringen die nŠchste Zeitangabe, da die ja auch "-" sein mu§ */
 		  bptr++;
 		  count++;
 		  sptr=strtok(NULL," ");
@@ -105,7 +129,7 @@ int setCycleTime(char *input,unsigned char *sendBuf) {
 		cptr=sptr;
 		count++;
 	
-	} while(sptr=strtok(NULL," "));
+	} while((sptr=strtok(NULL," ")) != NULL);
 	if ((count/2)*2 !=count) {
 		sprintf(string,"Anzahl Zeiten ungerade, ignoriere %s",cptr);
 		logIT(LOG_WARNING,string);
@@ -114,7 +138,7 @@ int setCycleTime(char *input,unsigned char *sendBuf) {
 	return(8);
 }
 
-int getSysTime(unsigned char *recv,int len,char *result) {
+int getSysTime(char *recv,int len,char *result) {
 
 	char day[3];
 	if(len !=8) {
@@ -146,12 +170,12 @@ int getSysTime(unsigned char *recv,int len,char *result) {
 	return(1); 
 }
 
-int setSysTime(char *input,unsigned char *sendBuf,short bufsize) {
-	char *bptr=sendBuf;
+int setSysTime(char *input,char *sendBuf,short bufsize) {
+/* 	char *bptr=sendBuf; */
 	char string[200];      
 	char systime[200];      
-	int hour,min;
-	int count=0;
+/* 	int hour,min; */
+/* 	int count=0; */
 	time_t tt;
 	struct tm *t;
 
@@ -180,7 +204,7 @@ int setSysTime(char *input,unsigned char *sendBuf,short bufsize) {
 	
 	
 
-int getErrState(enumPtr ePtr,unsigned char *recv,int len,char *result) {
+int getErrState(enumPtr ePtr,char *recv,int len,char *result) {
 	int i;
 	char *errtext;
 	char systime[35];
@@ -260,7 +284,7 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	char error[1000];
         char buffer[MAXBUF];
 	char *errPtr=error;
-	short t;
+/* 	short t; */
 	float erg;
 	int ergI;
 	char formatI[20];
@@ -433,9 +457,9 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
         char buffer[MAXBUF];
         char input[MAXBUF];
 	char *errPtr=error;
-	short t;
-	float erg;
-	int ergI;
+/* 	short t; */
+	float erg=0.0;
+	int ergI=0;
 	short count;
 	char ergType;
 	float floatV;
@@ -455,7 +479,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 
 	bzero(errPtr,sizeof(error));
 	/* etwas logging */
-	int n;
+	int n=0;
 	char *ptr;
 	char dumBuf[10];
 	bzero(dumBuf,sizeof(dumBuf));
@@ -593,13 +617,14 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 			unsigned char byte=*ptr++ & 255;
 			sprintf(string,"%02X ",byte);
 			strcat(buffer,string);
-			if (n >= MAXBUF-3)
+			if (n >= MAXBUF-3)	/* FN Wo wird 'n' eigentlich initialisiert */
 				break;
 		}
 		sprintf(string,"Typ: %s (Bytes: %s)  ",uPtr->type,buffer);
 		logIT(LOG_INFO,string);
 		return(1);
 	}
+	return (0);	/* Wenn ich das richtig verstehe, sollten wir hier nie landen FN, deshalb; keep compiler happy */
 }
 
 

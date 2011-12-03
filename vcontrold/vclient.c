@@ -11,6 +11,7 @@
 #include <termios.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -29,34 +30,41 @@
 
 
 void usage() {
-	printf("usage: fehlt noch\n"); 
+	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>][-v]\n\n\
+\t-h : IP:Port des vcontrold\n\
+\t-c: Liste von auszufuehrenden Kommandos, durch Komma getrennt\n\
+\t-f: Optional Datei mit Kommandos, pro Zeile ein Kommando\n\
+\t-s: Ausgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
+\t-t: Template, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
+\t-o Output, der stdout Output wird in die angegebene Datei geschrieben\n\
+\t-x Das umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
+\t-v: Verbose Modus zum testen\n"); 
+	
 	exit(1);
 }
 
 /* hier gehts los */
 
+int
 main(int argc,char* argv[])  {
 
 	/* Auswertung der Kommandozeilenschalter */
 	char c;
-	char host[200];
-	char commands[400];
-	char cmdfile[200];
-	char csvfile[200];
-	char tmplfile[200];
-	char outfile[200];
-	int cmdOK=0;
-	char string[1000];
-	char result[1000];
+	char host[200] = "";
+	char commands[400] = "";
+	char cmdfile[200] = "";
+	char csvfile[200] = "";
+	char tmplfile[200] = "";
+	char outfile[200] = "";
+	char string[1000] = "";
+	char result[1000] = "";
 	int sockfd;
-	char readBuf[1000];
 	char dummylog[]="\0";
 	short verbose=0;
 	short execMe=0;
 	trPtr resPtr;
 	FILE *filePtr;
 	FILE *ofilePtr;
-	char *ptr;
 	
 
 	bzero(host,sizeof(host));
@@ -119,7 +127,7 @@ main(int argc,char* argv[])  {
 			}
 	}	
 	initLog(0,dummylog,verbose);	
-	if (!*commands && !cmdfile)
+	if (!*commands && (cmdfile[0] == 0))
 		usage();
 	sockfd=connectServer(host);
 	if (sockfd < 0) {
@@ -225,11 +233,11 @@ main(int argc,char* argv[])  {
 			$Rn: Result (trPtr->raw)
 			$n: Float (trPtr->result)
 		*/
-		while(fgets(line,sizeof(line)-1,filePtr)) {
+		while((fgets(line,sizeof(line)-1,filePtr))) {
 			sprintf(string,"Tmpl Zeile:%s",line);
 			logIT(LOG_INFO,string);
 			lSptr=line;
-			while(lptr=strchr(lSptr,'$')) {	
+			while((lptr=strchr(lSptr,'$'))) {	
 				varReplaced=0;
 				if ((lptr>line) && (*(lptr-1)=='\\')) { /* $ ist durch \ ausmaskiert */
 					bzero(string,sizeof(string));
@@ -364,5 +372,5 @@ main(int argc,char* argv[])  {
 			resPtr=resPtr->next;
 		}
 	}
-	
+	return 0;
 }	

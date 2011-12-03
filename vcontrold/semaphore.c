@@ -7,17 +7,21 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <string.h>
+#include <syslog.h>
 
 #include "common.h"
 #include "semaphore.h"
 
 #define MAX_RETRIES 10
 
+#if !defined(__APPLE__)
+/* on my mac this is a redefinition */
 union semun {
   int val;
   struct semid_ds *buf;
   ushort *array;
 };
+#endif
 
 /*
 ** initsem() -- more-than-inspired by W. Richard Stevens' UNIX Network

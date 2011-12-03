@@ -14,6 +14,8 @@ typedef struct txRx *trPtr;
 
 int recvSync(int fd,char *wait,char **recv); 
 int connectServer(char *host);
+void disconnectServer(int sockfd);
+int sendServer(int fd,char *s_buf, int len);
 trPtr sendCmdFile(int sockfd,char *tmpfile);
 trPtr sendCmds(int sockfd,char *commands);
 

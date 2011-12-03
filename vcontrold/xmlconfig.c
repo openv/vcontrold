@@ -11,6 +11,7 @@
 
 #include "xmlconfig.h"
 #include "common.h"
+#include "parser.h"
 
 
 /* Deklarationen */
@@ -375,7 +376,7 @@ void printNode(xmlNodePtr ptr) {
 	if (!ptr)
 		return;
 	for (n=0;n<=blanks;n++)
-		printf(" ",n);
+		printf(" ");
 	if ((ptr->type==XML_ELEMENT_NODE) || (ptr->type==XML_TEXT_NODE)) {
 		printf("(%d) Node::Name=%s Type:%d Content=%s\n",ptr->line,ptr->name,ptr->type,ptr->content);
 	}
@@ -415,7 +416,7 @@ char *getPropertyNode(xmlAttrPtr cur,xmlChar *name) {
 		return(NULL);
 }
 
-char nullIT(char **ptr) {
+void nullIT(char **ptr) {
 	*ptr=calloc(1,sizeof(char));
 	**ptr='\0';
 }

@@ -9,9 +9,13 @@
 #include <time.h>
 #include <setjmp.h>
 #include <signal.h>
+#include <unistd.h>
+#include <ctype.h>
 
 #include "client.h"
 #include "prompt.h"
+#include "common.h"
+#include "socket.h"
 
 static void sig_alrm(int);
 static jmp_buf  env_alrm;
@@ -59,7 +63,7 @@ int recvSync(int fd,char *wait,char **recv) {
 			exit(1);
 	}
 	rptr=*recv;
-	while(count=readn(fd,&c,1)) {
+	while((count=readn(fd,&c,1))) {
 		alarm(0);
 		if (count<0) 
 			continue;
@@ -70,7 +74,7 @@ int recvSync(int fd,char *wait,char **recv) {
 				exit(1);
 			}
 		}
-		if (pptr=strstr(*recv,wait)) {
+		if ((pptr=strstr(*recv,wait))) {
 			*pptr='\0';
 			string=calloc(strlen(*recv)+100,sizeof(char));
 			sprintf(string,"recv:%s",*recv);
@@ -137,7 +141,6 @@ void disconnectServer(int sockfd) {
 int sendServer(int fd,char *s_buf, int len) {
 	
 	char string[1000];
-	int i;
 	/* Buffer leeren */
         /* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
         fcntl(fd,F_SETFL,O_NONBLOCK);
@@ -154,7 +157,7 @@ trPtr sendCmdFile(int sockfd,char *filename) {
 	trPtr	startPtr=NULL;
 
 	if (!(filePtr=fopen(filename,"r"))) {
-		return;
+		return NULL;
 	}
 	else {
 		sprintf(string,"Kommando-Datei %s geoeffnet",filename);
@@ -176,7 +179,6 @@ trPtr sendCmdFile(int sockfd,char *filename) {
 
 trPtr sendCmds(int sockfd,char *commands) {
 	char *sptr;
-	char string[1000];
 	trPtr	ptr;
 	trPtr	startPtr=NULL;
 
@@ -188,7 +190,7 @@ trPtr sendCmds(int sockfd,char *commands) {
 		}
 		ptr->cmd=calloc(strlen(sptr)+1,sizeof(char));
 		strncpy(ptr->cmd,sptr,strlen(sptr));
-	}while(sptr=strtok(NULL,","));
+	}while((sptr=strtok(NULL,",")) != NULL);
 	if (!sendTrList(sockfd,startPtr))  /* da ging was bei der Kommunikation schief */
 		return(NULL);
 	return(startPtr);

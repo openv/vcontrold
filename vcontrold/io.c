@@ -38,7 +38,7 @@ int openDevice(char *device) {
 	/* Socket: kein / am Anfang und ein : */
 	int fd;
 	char *dptr;
-	//char string[1000];
+
 	if (device[0] != '/' && (dptr=strchr(device,':'))) {
 		char host[MAXBUF];
 		int port;
@@ -80,12 +80,17 @@ int opentty(char *device) {
 	}
 	newsb=oldsb;
 
+#ifdef NCC
+	/* NCC is not always defined */
+	for (s = 0; s < NCC; s++)
+		newsb.c_cc[s] = 0;
+#else
+	bzero (&newsb, sizeof(newsb));
+#endif
 	newsb.c_iflag=IGNBRK | IGNPAR;
 	newsb.c_oflag = 0;
 	newsb.c_lflag = ISIG;
 	newsb.c_cflag = (CLOCAL | B4800 | CS8 | CREAD| PARENB | CSTOPB);
-	for (s = 0; s < NCC; s++)
-		newsb.c_cc[s] = 0;
 	newsb.c_cc[VMIN]   = 1;
 	newsb.c_cc[VTIME]  = 0;
 
@@ -108,7 +113,7 @@ int opentty(char *device) {
 int my_send(int fd,char *s_buf, int len) {
 	int i;
 	char string[1000];
-	//int n;
+
 	/* Buffer leeren */
 	/* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
 	fcntl(fd,F_SETFL,O_NONBLOCK);

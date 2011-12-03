@@ -12,11 +12,14 @@
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
-
+#include <ctype.h>
 
 #include "xmlconfig.h"
 #include "parser.h"
 #include "unit.h"
+#include "common.h"
+#include "io.h"
+
 
 /* externe Variablen */
 extern FILE *iniFD; /* fuer das Anlegen des Sim. INI Files */
@@ -50,7 +53,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
 		char *ptr;
 		ptr=strchr(line,' ');
 		if (!ptr) {
-			sprintf(string,"Parse error, kein Leerzeichen gefunden:",line);
+			sprintf(string,"Parse error, kein Leerzeichen gefunden: %s",line);
 			logIT(LOG_ERR,string);
 		}
 		else {
@@ -113,23 +116,18 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
 	return(token);
 }
 
-int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *sendBuf,short sendLen,short supressUnit, char bitpos, char retry, char *pRecvPtr,unsigned short recvTimeout) {
+int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *sendBuf,short sendLen,short supressUnit, char bitpos, int retry, char *pRecvPtr,unsigned short recvTimeout) {
 
 	char string[1000];
-	char error[1000];
-        char buffer[MAXBUF];
         char result[MAXBUF];
 	char simIn[500];
 	char simOut[500];
-	char *errPtr=error;
-	short t;
 	short len;
-	char *inPtr;
 	compilePtr cPtr=cmpPtr;
 	unsigned long etime;
 
-	struct timespec t_sleep;
-	struct timespec t_sleep_rem;
+/* 	struct timespec t_sLeep; */
+/* 	struct timespec t_sleep_rem; */
 
 	bzero(simIn,sizeof(simIn));
 	bzero(simOut,sizeof(simOut));
@@ -201,7 +199,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				/* falls wir beim empfangen laenger als der Timeout gebraucht haben gehts in die 
 				naechste Rune */
 				if (recvTimeout && (etime > recvTimeout)) {
-					sprintf(string,"Recv Timeout: %d ms  > %d ms (Retry: %d)",etime,recvTimeout,retry-1);
+				  sprintf(string,"Recv Timeout: %ld ms  > %d ms (Retry: %d)",etime,recvTimeout,(int)(retry-1));
 					logIT(LOG_NOTICE,string);
 					if (retry <=1) {
 						sprintf(string,"Recv Timeout, Abbruch");
@@ -289,7 +287,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 
 			default:
-				sprintf(string,"unbekanntes Token: %s",cmpPtr->token);
+				sprintf(string,"unbekanntes Token: %d",cmpPtr->token);
 				logIT(LOG_ERR,string);
 				return(-1);
 			}
@@ -340,7 +338,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 				logIT(LOG_ERR,"Fehler recv, Abbruch");
 				exit(1);
 			}
-			sprintf(string,"Recv: %d ms",etime);
+			sprintf(string,"Recv: %ld ms",etime);
 			logIT(LOG_INFO,string);
 			/* falls wir eine Unit haben (==uPtr) rechnen wir den 
  * 			empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck */
@@ -408,7 +406,6 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	char var[100];
 	char name[100];
 	char *ptr,*bptr;
-	char *dumPtr;
 	macroPtr mFPtr;
 	char string[1000];
 	char *sendPtr,*sendStartPtr;
@@ -451,7 +448,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 		strncpy(var,ptr+1,bptr-ptr-1);
 /*		sprintf(string,"   Var: %s",var);
 		logIT(LOG_INFO,string); */
-		if(*var) /* Haben wir uerbhaupt Variablen zu expandieren */ 
+		if(*var) { /* Haben wir uerbhaupt Variablen zu expandieren */ 
 			if (strstr(var,"addr")==var) {
 				/* immer zwei Byte zusammen */
 				int i;
@@ -484,6 +481,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 				logIT(LOG_ERR,string);
 				exit(3);
 			}
+		}
 		sendPtr=bptr;
 	} while(*sendPtr);
 	sprintf (string,"  Nach Ersetzung: %s",eString);
@@ -508,7 +506,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 		}
 		bzero(name,sizeof(name));
 		strncpy(name,sendPtr,ptr-sendPtr);
-		if (mFPtr=getMacroNode(pPtr->mPtr,name)) {
+		if ((mFPtr=getMacroNode(pPtr->mPtr,name))) {
 			strncpy(ePtr,mFPtr->command,strlen(mFPtr->command));
 			ePtr+=strlen(mFPtr->command);
 			*ePtr++=*ptr; 
@@ -542,7 +540,6 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		return(0);
 
 	char eString[2000];
-	char *ePtr=eString;;
 	char cmd[200];
 	char *ptr;
 
@@ -607,8 +604,6 @@ void compileCommand(devicePtr dPtr,unitPtr uPtr) {
 	if (dPtr->next)
 		compileCommand(dPtr->next,uPtr);
 	
-        macroPtr mPtr;
-        commandPtr cPtr;
 	char string[1000];
 
 	

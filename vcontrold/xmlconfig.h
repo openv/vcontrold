@@ -22,6 +22,7 @@ unitPtr getUnitNode(unitPtr ptr,const char *name);
 commandPtr getCommandNode(commandPtr ptr,const char *name);
 allowPtr getAllowNode(allowPtr ptr,in_addr_t testIP);
 enumPtr getEnumNode(enumPtr prt,char *search,int len);
+icmdPtr getIcmdNode(icmdPtr ptr,const char *name);
 
 
 struct allow {
@@ -96,7 +97,7 @@ struct command {
 	char *errStr;
 	char *precmd;
 	unsigned char len;
-	unsigned char retry;
+	int retry;
 	unsigned short recvTimeout;
 	char bit;
 	char nodeType; /* 0==alles kopiert 1==alles Orig. 2== nur Adresse, unit len orig. */
