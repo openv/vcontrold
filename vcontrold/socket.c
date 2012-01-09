@@ -24,6 +24,7 @@
 #include <linux/tcp.h>	/*do we realy need this? Not sure for Linux -fn- */
 #endif
 #if defined (__FreeBSD__) || defined(__APPLE__)
+#include <netinet/in.h>
 #include <netinet/tcp.h>	/* TCP_NODELAY is defined there -fn- */
 #endif
 #endif

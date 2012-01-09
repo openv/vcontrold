@@ -13,6 +13,9 @@
 #include "common.h"
 #include "parser.h"
 
+#if defined(__FreeBSD__)
+#include <netinet/in.h>
+#endif
 
 /* Deklarationen */
 protocolPtr newProtocolNode(protocolPtr ptr);
