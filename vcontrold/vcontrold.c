@@ -38,7 +38,7 @@
 #define INIOUTFILE "/tmp/sim-%s.ini"
 #endif
 
-#define VERSION "0.97"
+#define VERSION "0.98"
 
 
 /* Globale Variablen */
