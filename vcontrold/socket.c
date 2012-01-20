@@ -243,7 +243,14 @@ readn(int fd, void *vptr, size_t n)
 		} else if (nread == 0)
 			break;				/* EOF */
 
+		#ifdef __CYGWIN__
+		if(nread > nleft) 				// This is a workaround for Cygwin.    
+			nleft=0;					// Here cygwins read(fd,buff,count) is
+		else							// reading more than count chars! this is bad!
+			nleft -= nread;
+		#else
 		nleft -= nread;
+		#endif
 		ptr   += nread;
 	}
 	return(n - nleft);		/* return >= 0 */
