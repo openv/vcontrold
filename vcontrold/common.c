@@ -84,7 +84,7 @@ void logIT (int class,char *string) {
 	pid=getpid();
 
 	if (syslogger)
-		syslog(class,string);
+		syslog(class,"%s",string);
 	if (logFD) {
 		fprintf(logFD,"[%d] %s: %s\n",pid,tPtr,string);
 		fflush(logFD);
