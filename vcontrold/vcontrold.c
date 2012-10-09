@@ -511,7 +511,8 @@ int interactive(int socketfd,char *device ) {
 		}
 		else if(strstr(readBuf,"detail")==readBuf) {
 			readPtr=readBuf+strlen("detail");
-			while(isspace(*++readPtr)); 
+			while(isspace(*readPtr))
+				readPtr++;
 			/* Ist das Kommando in der XML definiert ? */
 		        if(readPtr && (cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,readPtr))) { 
 				bzero(string,sizeof(string));
@@ -747,7 +748,7 @@ int main(int argc,char* argv[])  {
 	/* die Macros werden ersetzt und die zu sendenden Strings in Bytecode gewandelt */
 	compileCommand(devPtr,uPtr);
 
-	int fd;
+	int fd = 0;
 	//char s_buf[MAXBUF];
 	//char r_buf[MAXBUF];
 	char result[MAXBUF];
