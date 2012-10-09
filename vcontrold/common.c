@@ -114,7 +114,7 @@ void setDebugFD(int fd) {
 
 char hex2chr(char *hex) {
 	/* wandelt 1-2stellige Hex-Strings in Character */
-	int n;
+	size_t n;
 	n=strlen(hex);
 	int i;
 	int result=0;
