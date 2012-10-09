@@ -43,7 +43,6 @@ commandPtr cmdPtr=NULL;
 
 
 
-
 protocolPtr newProtocolNode(protocolPtr ptr) {
 	protocolPtr nptr;
 	if (ptr && ptr->next) {
@@ -432,10 +431,8 @@ configPtr parseConfig(xmlNodePtr cur) {
 	char *chrPtr;
 	xmlNodePtr prevPtr;
 	char string[1000];
-	char *id;
 	allowPtr aPtr;
 	char ip[16];
-	char size[4];
 
 	cfgPtr=calloc(1,sizeof(Config));
 	cfgPtr->port=0;
@@ -1165,11 +1162,9 @@ protocolPtr parseProtocol(xmlNodePtr cur) {
 	int protoFound=0;
 	protocolPtr protoPtr;
 	protocolPtr protoStartPtr=NULL;
-	unitPtr uPtr;
 	macroPtr mPtr;
 	icmdPtr icPtr;
 	char *proto;
-	char *defProto=NULL;
 	xmlNodePtr prevPtr;
 	char string[1000];
 
@@ -1246,7 +1241,7 @@ void removeComments(xmlNodePtr node){
 	
 int parseXMLFile(char *filename) {
 	xmlDocPtr doc;
-	xmlNodePtr cur,curAlt,curStart;
+	xmlNodePtr cur,curStart;
 	xmlNodePtr prevPtr;
 	xmlNsPtr ns;
 	char string[1000];
