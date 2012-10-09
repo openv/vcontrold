@@ -6,22 +6,47 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A4F2D4B8162383EC00ED5798 /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0514896FB8003A7995 /* common.c */; };
+		A4F2D4B9162383EC00ED5798 /* arithmetic.c in Sources */ = {isa = PBXBuildFile; fileRef = A494ADFF14896FB8003A7995 /* arithmetic.c */; };
+		A4F2D4BA162383EC00ED5798 /* semaphore.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2314896FB8003A7995 /* semaphore.c */; };
+		A4F2D4BB162383EC00ED5798 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2514896FB8003A7995 /* socket.c */; };
+		A4F2D4BC162383EC00ED5798 /* unit.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2814896FB8003A7995 /* unit.c */; };
+		A4F2D4BD162383EC00ED5798 /* vcontrold.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2B14896FB8003A7995 /* vcontrold.c */; };
+		A4F2D4BE162383EC00ED5798 /* xmlconfig.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2D14896FB8003A7995 /* xmlconfig.c */; };
+		A4F2D4C21624A06800ED5798 /* libxml2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A4F2D4C11624A06800ED5798 /* libxml2.2.dylib */; };
+		A4F2D4C31624A11900ED5798 /* parser.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE1814896FB8003A7995 /* parser.c */; };
+		A4F2D4C41624A13D00ED5798 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0D14896FB8003A7995 /* io.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A4F2D4AB1623827500ED5798 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
-		A494ADFF14896FB8003A7995 /* arithmetic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = arithmetic.c; sourceTree = "<group>"; };
-		A494AE0014896FB8003A7995 /* arithmetic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arithmetic.h; sourceTree = "<group>"; };
+		A494ADFF14896FB8003A7995 /* arithmetic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arithmetic.c; path = ../arithmetic.c; sourceTree = "<group>"; };
+		A494AE0014896FB8003A7995 /* arithmetic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arithmetic.h; path = ../arithmetic.h; sourceTree = "<group>"; };
 		A494AE0114896FB8003A7995 /* auto-build.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "auto-build.sh"; sourceTree = "<group>"; };
-		A494AE0214896FB8003A7995 /* byteorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = byteorder.h; sourceTree = "<group>"; };
-		A494AE0314896FB8003A7995 /* client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = client.c; sourceTree = "<group>"; };
-		A494AE0414896FB8003A7995 /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = client.h; sourceTree = "<group>"; };
-		A494AE0514896FB8003A7995 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = common.c; sourceTree = "<group>"; };
-		A494AE0614896FB8003A7995 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		A494AE0214896FB8003A7995 /* byteorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = byteorder.h; path = ../byteorder.h; sourceTree = "<group>"; };
+		A494AE0314896FB8003A7995 /* client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = client.c; path = ../client.c; sourceTree = "<group>"; };
+		A494AE0414896FB8003A7995 /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = client.h; path = ../client.h; sourceTree = "<group>"; };
+		A494AE0514896FB8003A7995 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = common.c; path = ../common.c; sourceTree = "<group>"; };
+		A494AE0614896FB8003A7995 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../common.h; sourceTree = "<group>"; };
 		A494AE0714896FB8003A7995 /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
 		A494AE0914896FB8003A7995 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		A494AE0A14896FB8003A7995 /* rrd.min.cmds */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rrd.min.cmds; sourceTree = "<group>"; };
 		A494AE0B14896FB8003A7995 /* rrd.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rrd.tmpl; sourceTree = "<group>"; };
 		A494AE0C14896FB8003A7995 /* vupdate.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = vupdate.sh; sourceTree = "<group>"; };
-		A494AE0D14896FB8003A7995 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = io.c; sourceTree = "<group>"; };
-		A494AE0E14896FB8003A7995 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = io.h; sourceTree = "<group>"; };
+		A494AE0D14896FB8003A7995 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../io.c; sourceTree = "<group>"; };
+		A494AE0E14896FB8003A7995 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../io.h; sourceTree = "<group>"; };
 		A494AE0F14896FB8003A7995 /* license.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = license.txt; sourceTree = "<group>"; };
 		A494AE1014896FB8003A7995 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		A494AE1114896FB8003A7995 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -30,8 +55,8 @@
 		A494AE1414896FB8003A7995 /* Makefile.mips */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.mips; sourceTree = "<group>"; };
 		A494AE1614896FB8003A7995 /* rc.vcontrol */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = rc.vcontrol; sourceTree = "<group>"; };
 		A494AE1714896FB8003A7995 /* vcontrol.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vcontrol.mk; sourceTree = "<group>"; };
-		A494AE1814896FB8003A7995 /* parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = parser.c; sourceTree = "<group>"; };
-		A494AE1914896FB8003A7995 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parser.h; sourceTree = "<group>"; };
+		A494AE1814896FB8003A7995 /* parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = parser.c; path = ../parser.c; sourceTree = "<group>"; };
+		A494AE1914896FB8003A7995 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parser.h; path = ../parser.h; sourceTree = "<group>"; };
 		A494AE1A14896FB8003A7995 /* prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prompt.h; sourceTree = "<group>"; };
 		A494AE1B14896FB8003A7995 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		A494AE1D14896FB8003A7995 /* createRRDB.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = createRRDB.sh; sourceTree = "<group>"; };
@@ -40,36 +65,43 @@
 		A494AE2014896FB8003A7995 /* rrdb-update.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "rrdb-update.tmpl"; sourceTree = "<group>"; };
 		A494AE2114896FB8003A7995 /* vc-aufruf.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "vc-aufruf.txt"; sourceTree = "<group>"; };
 		A494AE2214896FB8003A7995 /* vc-commands.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "vc-commands.txt"; sourceTree = "<group>"; };
-		A494AE2314896FB8003A7995 /* semaphore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = semaphore.c; sourceTree = "<group>"; };
-		A494AE2414896FB8003A7995 /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
-		A494AE2514896FB8003A7995 /* socket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = socket.c; sourceTree = "<group>"; };
-		A494AE2614896FB8003A7995 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = socket.h; sourceTree = "<group>"; };
-		A494AE2714896FB8003A7995 /* sql.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sql.tmpl; sourceTree = "<group>"; };
-		A494AE2814896FB8003A7995 /* unit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unit.c; sourceTree = "<group>"; };
-		A494AE2914896FB8003A7995 /* unit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unit.h; sourceTree = "<group>"; };
-		A494AE2A14896FB8003A7995 /* vclient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vclient.c; sourceTree = "<group>"; };
-		A494AE2B14896FB8003A7995 /* vcontrold.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vcontrold.c; sourceTree = "<group>"; };
-		A494AE2C14896FB8003A7995 /* vcontrold.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = vcontrold.xml; sourceTree = "<group>"; };
-		A494AE2D14896FB8003A7995 /* xmlconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = xmlconfig.c; sourceTree = "<group>"; };
-		A494AE2E14896FB8003A7995 /* xmlconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmlconfig.h; sourceTree = "<group>"; };
+		A494AE2314896FB8003A7995 /* semaphore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = semaphore.c; path = ../semaphore.c; sourceTree = "<group>"; };
+		A494AE2414896FB8003A7995 /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = semaphore.h; path = ../semaphore.h; sourceTree = "<group>"; };
+		A494AE2514896FB8003A7995 /* socket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = socket.c; path = ../socket.c; sourceTree = "<group>"; };
+		A494AE2614896FB8003A7995 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = ../socket.h; sourceTree = "<group>"; };
+		A494AE2714896FB8003A7995 /* sql.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sql.tmpl; path = ../sql.tmpl; sourceTree = "<group>"; };
+		A494AE2814896FB8003A7995 /* unit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = unit.c; path = ../unit.c; sourceTree = "<group>"; };
+		A494AE2914896FB8003A7995 /* unit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = unit.h; path = ../unit.h; sourceTree = "<group>"; };
+		A494AE2A14896FB8003A7995 /* vclient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vclient.c; path = ../vclient.c; sourceTree = "<group>"; };
+		A494AE2B14896FB8003A7995 /* vcontrold.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vcontrold.c; sourceTree = SOURCE_ROOT; };
+		A494AE2C14896FB8003A7995 /* vcontrold.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = vcontrold.xml; sourceTree = SOURCE_ROOT; };
+		A494AE2D14896FB8003A7995 /* xmlconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xmlconfig.c; path = ../xmlconfig.c; sourceTree = "<group>"; };
+		A494AE2E14896FB8003A7995 /* xmlconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xmlconfig.h; path = ../xmlconfig.h; sourceTree = "<group>"; };
+		A4F2D4AD1623827500ED5798 /* vcontrold */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vcontrold; sourceTree = BUILT_PRODUCTS_DIR; };
+		A4F2D4BF1623842700ED5798 /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = usr/lib/libxml2.2.dylib; sourceTree = SDKROOT; };
+		A4F2D4C11624A06800ED5798 /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = ../../../../usr/lib/libxml2.2.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A4F2D4AA1623827500ED5798 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4F2D4C21624A06800ED5798 /* libxml2.2.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		08FB7794FE84155DC02AAC07 /* vcontrol_svn */ = {
 			isa = PBXGroup;
 			children = (
-				A494ADFF14896FB8003A7995 /* arithmetic.c */,
-				A494AE0014896FB8003A7995 /* arithmetic.h */,
+				A4F2D4C11624A06800ED5798 /* libxml2.2.dylib */,
+				A4F2D4BF1623842700ED5798 /* libxml2.2.dylib */,
 				A494AE0114896FB8003A7995 /* auto-build.sh */,
-				A494AE0214896FB8003A7995 /* byteorder.h */,
-				A494AE0314896FB8003A7995 /* client.c */,
-				A494AE0414896FB8003A7995 /* client.h */,
-				A494AE0514896FB8003A7995 /* common.c */,
-				A494AE0614896FB8003A7995 /* common.h */,
 				A494AE0714896FB8003A7995 /* configure.ac */,
 				A494AE0814896FB8003A7995 /* examples */,
-				A494AE0D14896FB8003A7995 /* io.c */,
-				A494AE0E14896FB8003A7995 /* io.h */,
 				A494AE0F14896FB8003A7995 /* license.txt */,
 				A494AE1014896FB8003A7995 /* Makefile */,
 				A494AE1114896FB8003A7995 /* Makefile.am */,
@@ -77,23 +109,11 @@
 				A494AE1314896FB8003A7995 /* Makefile.cygwin */,
 				A494AE1414896FB8003A7995 /* Makefile.mips */,
 				A494AE1514896FB8003A7995 /* nslu2 */,
-				A494AE1814896FB8003A7995 /* parser.c */,
-				A494AE1914896FB8003A7995 /* parser.h */,
 				A494AE1A14896FB8003A7995 /* prompt.h */,
 				A494AE1B14896FB8003A7995 /* readme.txt */,
 				A494AE1C14896FB8003A7995 /* rrdb */,
-				A494AE2314896FB8003A7995 /* semaphore.c */,
-				A494AE2414896FB8003A7995 /* semaphore.h */,
-				A494AE2514896FB8003A7995 /* socket.c */,
-				A494AE2614896FB8003A7995 /* socket.h */,
-				A494AE2714896FB8003A7995 /* sql.tmpl */,
-				A494AE2814896FB8003A7995 /* unit.c */,
-				A494AE2914896FB8003A7995 /* unit.h */,
-				A494AE2A14896FB8003A7995 /* vclient.c */,
-				A494AE2B14896FB8003A7995 /* vcontrold.c */,
-				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
-				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
-				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
+				A4F2D4AF1623827500ED5798 /* vcontrold */,
+				A4F2D49F162381A500ED5798 /* Products */,
 			);
 			name = vcontrol_svn;
 			sourceTree = "<group>";
@@ -131,24 +151,65 @@
 			path = rrdb;
 			sourceTree = "<group>";
 		};
+		A4F2D49F162381A500ED5798 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A4F2D4AD1623827500ED5798 /* vcontrold */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A4F2D4AF1623827500ED5798 /* vcontrold */ = {
+			isa = PBXGroup;
+			children = (
+				A494AE0D14896FB8003A7995 /* io.c */,
+				A494AE0E14896FB8003A7995 /* io.h */,
+				A494AE1814896FB8003A7995 /* parser.c */,
+				A494AE1914896FB8003A7995 /* parser.h */,
+				A494AE0214896FB8003A7995 /* byteorder.h */,
+				A494AE0314896FB8003A7995 /* client.c */,
+				A494AE0414896FB8003A7995 /* client.h */,
+				A494AE0514896FB8003A7995 /* common.c */,
+				A494AE0614896FB8003A7995 /* common.h */,
+				A494ADFF14896FB8003A7995 /* arithmetic.c */,
+				A494AE0014896FB8003A7995 /* arithmetic.h */,
+				A494AE2314896FB8003A7995 /* semaphore.c */,
+				A494AE2414896FB8003A7995 /* semaphore.h */,
+				A494AE2514896FB8003A7995 /* socket.c */,
+				A494AE2614896FB8003A7995 /* socket.h */,
+				A494AE2714896FB8003A7995 /* sql.tmpl */,
+				A494AE2814896FB8003A7995 /* unit.c */,
+				A494AE2914896FB8003A7995 /* unit.h */,
+				A494AE2A14896FB8003A7995 /* vclient.c */,
+				A494AE2B14896FB8003A7995 /* vcontrold.c */,
+				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
+				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
+				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
+			);
+			path = vcontrold;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
-/* Begin PBXLegacyTarget section */
-		A494AE60148A31B6003A7995 /* vcontrold */ = {
-			isa = PBXLegacyTarget;
-			buildArgumentsString = "$(ACTION)";
-			buildConfigurationList = A494AE63148A31D4003A7995 /* Build configuration list for PBXLegacyTarget "vcontrold" */;
+/* Begin PBXNativeTarget section */
+		A4F2D4AC1623827500ED5798 /* vcontrold */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A4F2D4B41623827500ED5798 /* Build configuration list for PBXNativeTarget "vcontrold" */;
 			buildPhases = (
+				A4F2D4A91623827500ED5798 /* Sources */,
+				A4F2D4AA1623827500ED5798 /* Frameworks */,
+				A4F2D4AB1623827500ED5798 /* CopyFiles */,
 			);
-			buildToolPath = /usr/bin/make;
-			buildWorkingDirectory = /Users/fn/Src/vcontrol_svn;
+			buildRules = (
+			);
 			dependencies = (
 			);
 			name = vcontrold;
-			passBuildSettingsInEnvironment = 1;
 			productName = vcontrold;
+			productReference = A4F2D4AD1623827500ED5798 /* vcontrold */;
+			productType = "com.apple.product-type.tool";
 		};
-/* End PBXLegacyTarget section */
+/* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		08FB7793FE84155DC02AAC07 /* Project object */ = {
@@ -164,13 +225,33 @@
 				en,
 			);
 			mainGroup = 08FB7794FE84155DC02AAC07 /* vcontrol_svn */;
+			productRefGroup = A4F2D49F162381A500ED5798 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A494AE60148A31B6003A7995 /* vcontrold */,
+				A4F2D4AC1623827500ED5798 /* vcontrold */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A4F2D4A91623827500ED5798 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A4F2D4C41624A13D00ED5798 /* io.c in Sources */,
+				A4F2D4C31624A11900ED5798 /* parser.c in Sources */,
+				A4F2D4B8162383EC00ED5798 /* common.c in Sources */,
+				A4F2D4B9162383EC00ED5798 /* arithmetic.c in Sources */,
+				A4F2D4BA162383EC00ED5798 /* semaphore.c in Sources */,
+				A4F2D4BB162383EC00ED5798 /* socket.c in Sources */,
+				A4F2D4BC162383EC00ED5798 /* unit.c in Sources */,
+				A4F2D4BD162383EC00ED5798 /* vcontrold.c in Sources */,
+				A4F2D4BE162383EC00ED5798 /* xmlconfig.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		1DEB919408733D9F0010E9CD /* Debug */ = {
@@ -179,6 +260,7 @@
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -190,29 +272,54 @@
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 			};
 			name = Release;
 		};
-		A494AE61148A31B6003A7995 /* Debug */ = {
+		A4F2D4B51623827500ED5798 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				PRODUCT_NAME = vcontrold;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/include/libxml2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
 		};
-		A494AE62148A31B6003A7995 /* Release */ = {
+		A4F2D4B61623827500ED5798 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				PRODUCT_NAME = vcontrold;
-				ZERO_LINK = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				"HEADER_SEARCH_PATHS[arch=*]" = /usr/include/libxml2;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -228,14 +335,13 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A494AE63148A31D4003A7995 /* Build configuration list for PBXLegacyTarget "vcontrold" */ = {
+		A4F2D4B41623827500ED5798 /* Build configuration list for PBXNativeTarget "vcontrold" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A494AE61148A31B6003A7995 /* Debug */,
-				A494AE62148A31B6003A7995 /* Release */,
+				A4F2D4B51623827500ED5798 /* Debug */,
+				A4F2D4B61623827500ED5798 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
