@@ -91,7 +91,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
 						pPtr=pString;
 						while(*ptr && (isdigit(*ptr)||isspace(*ptr)))
 							ptr++;
-						strncpy(uSPtr,ptr,sizeof(uSPtr));	
+						strncpy(uSPtr,ptr,sizeof(*uSPtr));
 					}
 					return(token);
 				}
@@ -99,7 +99,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
 					pPtr=pString;
 					while(*ptr && (isdigit(*ptr)||isspace(*ptr)))
 						ptr++;
-					strncpy(uSPtr,ptr,sizeof(uSPtr));	
+					strncpy(uSPtr,ptr,sizeof(*uSPtr));
 					return(token);
 				}
 				else  {
