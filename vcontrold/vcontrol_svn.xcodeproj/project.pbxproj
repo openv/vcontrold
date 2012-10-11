@@ -93,7 +93,7 @@
 		A494AE2714896FB8003A7995 /* sql.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sql.tmpl; path = ../sql.tmpl; sourceTree = "<group>"; };
 		A494AE2814896FB8003A7995 /* unit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = unit.c; path = ../unit.c; sourceTree = "<group>"; };
 		A494AE2914896FB8003A7995 /* unit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = unit.h; path = ../unit.h; sourceTree = "<group>"; };
-		A494AE2A14896FB8003A7995 /* vclient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = vclient.c; path = ../vclient.c; sourceTree = "<group>"; };
+		A494AE2A14896FB8003A7995 /* vclient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vclient.c; sourceTree = SOURCE_ROOT; };
 		A494AE2B14896FB8003A7995 /* vcontrold.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vcontrold.c; sourceTree = SOURCE_ROOT; };
 		A494AE2C14896FB8003A7995 /* vcontrold.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = vcontrold.xml; sourceTree = SOURCE_ROOT; };
 		A494AE2D14896FB8003A7995 /* xmlconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xmlconfig.c; path = ../xmlconfig.c; sourceTree = "<group>"; };
@@ -150,6 +150,9 @@
 		A43197C6162755ED00F5E290 /* vclient */ = {
 			isa = PBXGroup;
 			children = (
+				A494AE0314896FB8003A7995 /* client.c */,
+				A494AE0414896FB8003A7995 /* client.h */,
+				A494AE2A14896FB8003A7995 /* vclient.c */,
 				A43197C9162755ED00F5E290 /* vclient.1 */,
 			);
 			path = vclient;
@@ -205,8 +208,6 @@
 				A494AE1814896FB8003A7995 /* parser.c */,
 				A494AE1914896FB8003A7995 /* parser.h */,
 				A494AE0214896FB8003A7995 /* byteorder.h */,
-				A494AE0314896FB8003A7995 /* client.c */,
-				A494AE0414896FB8003A7995 /* client.h */,
 				A494AE0514896FB8003A7995 /* common.c */,
 				A494AE0614896FB8003A7995 /* common.h */,
 				A494ADFF14896FB8003A7995 /* arithmetic.c */,
@@ -218,7 +219,6 @@
 				A494AE2714896FB8003A7995 /* sql.tmpl */,
 				A494AE2814896FB8003A7995 /* unit.c */,
 				A494AE2914896FB8003A7995 /* unit.h */,
-				A494AE2A14896FB8003A7995 /* vclient.c */,
 				A494AE2B14896FB8003A7995 /* vcontrold.c */,
 				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
 				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
