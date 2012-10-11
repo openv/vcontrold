@@ -1,0 +1,34 @@
+.\" (c) copyright 2012 by Frank Nobis fn@radio-do.de
+.Dd 11.10.2012			\" DATE
+.Dt vcontrold 1
+.Os Darwin
+.Sh NAME
+.Nm vcontrold
+.Nd Unix daemon for Vito communication
+.Sh SYNOPSIS
+.Nm
+.Op Fl x Ar xml-file
+.Op Fl d Ar device
+.Op Fl l Ar logfile
+.Op Fl p Ar port
+.Op Fl s
+.Op Fl n
+.Op Fl i
+.Op Fl g
+.Sh DESCRIPTION
+.Nm
+uses a serial link or an IP connection to communicate with a vito heating system.
+The meaning of the different options is:
+s use syslog
+n do not fork. This is for testing purpose only
+i use a temp file in /tmp/sim-devid.ini for use with the vsim simulator
+g enable debug mode.
+.Sh FILES
+.Bl -tag -width "/etc/vcontrold.xml" -compact
+.It Pa /etc/vcontrold.xml
+These are the programm specific configurations. E.g. device, baudrate, IP etc.
+.It Pa /etc/vito.xml
+These are the command definitions for the devices in use.
+.El                      \" Ends the list
+.Sh SEE ALSO
+.Xr vclient 1

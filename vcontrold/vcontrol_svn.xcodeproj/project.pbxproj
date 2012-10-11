@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A43197CA162755ED00F5E290 /* vclient.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A43197C9162755ED00F5E290 /* vclient.1 */; };
+		A43197CE1627565200F5E290 /* client.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0314896FB8003A7995 /* client.c */; };
+		A43197CF1627565200F5E290 /* vclient.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2A14896FB8003A7995 /* vclient.c */; };
+		A43197D01627566500F5E290 /* io.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0D14896FB8003A7995 /* io.c */; };
+		A43197D11627566500F5E290 /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0514896FB8003A7995 /* common.c */; };
+		A43197D21627566500F5E290 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2514896FB8003A7995 /* socket.c */; };
+		A45AEB761627406C0049941D /* vcontrold.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A477FD6F16273E0000EBB2DF /* vcontrold.1 */; };
 		A4F2D4B8162383EC00ED5798 /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0514896FB8003A7995 /* common.c */; };
 		A4F2D4B9162383EC00ED5798 /* arithmetic.c in Sources */ = {isa = PBXBuildFile; fileRef = A494ADFF14896FB8003A7995 /* arithmetic.c */; };
 		A4F2D4BA162383EC00ED5798 /* semaphore.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2314896FB8003A7995 /* semaphore.c */; };
@@ -20,18 +27,32 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		A43197C2162755ED00F5E290 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				A43197CA162755ED00F5E290 /* vclient.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 		A4F2D4AB1623827500ED5798 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
+				A45AEB761627406C0049941D /* vcontrold.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A43197C4162755ED00F5E290 /* vclient */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vclient; sourceTree = BUILT_PRODUCTS_DIR; };
+		A43197C9162755ED00F5E290 /* vclient.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = vclient.1; sourceTree = "<group>"; };
+		A477FD6F16273E0000EBB2DF /* vcontrold.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; path = vcontrold.1; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.man; };
 		A494ADFF14896FB8003A7995 /* arithmetic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arithmetic.c; path = ../arithmetic.c; sourceTree = "<group>"; };
 		A494AE0014896FB8003A7995 /* arithmetic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arithmetic.h; path = ../arithmetic.h; sourceTree = "<group>"; };
 		A494AE0114896FB8003A7995 /* auto-build.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "auto-build.sh"; sourceTree = "<group>"; };
@@ -83,6 +104,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		A43197C1162755ED00F5E290 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4F2D4AA1623827500ED5798 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -113,9 +141,18 @@
 				A494AE1B14896FB8003A7995 /* readme.txt */,
 				A494AE1C14896FB8003A7995 /* rrdb */,
 				A4F2D4AF1623827500ED5798 /* vcontrold */,
+				A43197C6162755ED00F5E290 /* vclient */,
 				A4F2D49F162381A500ED5798 /* Products */,
 			);
 			name = vcontrol_svn;
+			sourceTree = "<group>";
+		};
+		A43197C6162755ED00F5E290 /* vclient */ = {
+			isa = PBXGroup;
+			children = (
+				A43197C9162755ED00F5E290 /* vclient.1 */,
+			);
+			path = vclient;
 			sourceTree = "<group>";
 		};
 		A494AE0814896FB8003A7995 /* examples */ = {
@@ -155,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				A4F2D4AD1623827500ED5798 /* vcontrold */,
+				A43197C4162755ED00F5E290 /* vclient */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -185,6 +223,7 @@
 				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
 				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
 				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
+				A477FD6F16273E0000EBB2DF /* vcontrold.1 */,
 			);
 			path = vcontrold;
 			sourceTree = "<group>";
@@ -192,6 +231,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A43197C3162755ED00F5E290 /* vclient */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A43197CB162755ED00F5E290 /* Build configuration list for PBXNativeTarget "vclient" */;
+			buildPhases = (
+				A43197C0162755ED00F5E290 /* Sources */,
+				A43197C1162755ED00F5E290 /* Frameworks */,
+				A43197C2162755ED00F5E290 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = vclient;
+			productName = vclient;
+			productReference = A43197C4162755ED00F5E290 /* vclient */;
+			productType = "com.apple.product-type.tool";
+		};
 		A4F2D4AC1623827500ED5798 /* vcontrold */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A4F2D4B41623827500ED5798 /* Build configuration list for PBXNativeTarget "vcontrold" */;
@@ -230,11 +286,24 @@
 			projectRoot = "";
 			targets = (
 				A4F2D4AC1623827500ED5798 /* vcontrold */,
+				A43197C3162755ED00F5E290 /* vclient */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A43197C0162755ED00F5E290 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A43197D01627566500F5E290 /* io.c in Sources */,
+				A43197D11627566500F5E290 /* common.c in Sources */,
+				A43197D21627566500F5E290 /* socket.c in Sources */,
+				A43197CE1627565200F5E290 /* client.c in Sources */,
+				A43197CF1627565200F5E290 /* vclient.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4F2D4A91623827500ED5798 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -258,6 +327,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CODE_SIGN_IDENTITY = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
@@ -270,10 +340,55 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CODE_SIGN_IDENTITY = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		A43197CC162755ED00F5E290 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		A43197CD162755ED00F5E290 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -335,6 +450,14 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		A43197CB162755ED00F5E290 /* Build configuration list for PBXNativeTarget "vclient" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A43197CC162755ED00F5E290 /* Debug */,
+				A43197CD162755ED00F5E290 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		A4F2D4B41623827500ED5798 /* Build configuration list for PBXNativeTarget "vcontrold" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -342,6 +465,7 @@
 				A4F2D4B61623827500ED5798 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
