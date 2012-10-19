@@ -51,23 +51,23 @@
 
 /* Begin PBXFileReference section */
 		A43197C4162755ED00F5E290 /* vclient */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vclient; sourceTree = BUILT_PRODUCTS_DIR; };
-		A43197C9162755ED00F5E290 /* vclient.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = vclient.1; sourceTree = "<group>"; };
+		A43197C9162755ED00F5E290 /* vclient.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; name = vclient.1; path = vclient/vclient.1; sourceTree = "<group>"; };
 		A477FD6F16273E0000EBB2DF /* vcontrold.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; path = vcontrold.1; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.man; };
-		A494ADFF14896FB8003A7995 /* arithmetic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = arithmetic.c; path = ../arithmetic.c; sourceTree = "<group>"; };
-		A494AE0014896FB8003A7995 /* arithmetic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = arithmetic.h; path = ../arithmetic.h; sourceTree = "<group>"; };
+		A494ADFF14896FB8003A7995 /* arithmetic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = arithmetic.c; sourceTree = "<group>"; };
+		A494AE0014896FB8003A7995 /* arithmetic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arithmetic.h; sourceTree = "<group>"; };
 		A494AE0114896FB8003A7995 /* auto-build.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = "auto-build.sh"; sourceTree = "<group>"; };
-		A494AE0214896FB8003A7995 /* byteorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = byteorder.h; path = ../byteorder.h; sourceTree = "<group>"; };
-		A494AE0314896FB8003A7995 /* client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = client.c; path = ../client.c; sourceTree = "<group>"; };
-		A494AE0414896FB8003A7995 /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = client.h; path = ../client.h; sourceTree = "<group>"; };
-		A494AE0514896FB8003A7995 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = common.c; path = ../common.c; sourceTree = "<group>"; };
-		A494AE0614896FB8003A7995 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../common.h; sourceTree = "<group>"; };
+		A494AE0214896FB8003A7995 /* byteorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = byteorder.h; sourceTree = "<group>"; };
+		A494AE0314896FB8003A7995 /* client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = client.c; sourceTree = "<group>"; };
+		A494AE0414896FB8003A7995 /* client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = client.h; sourceTree = "<group>"; };
+		A494AE0514896FB8003A7995 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = common.c; sourceTree = "<group>"; };
+		A494AE0614896FB8003A7995 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
 		A494AE0714896FB8003A7995 /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = configure.ac; sourceTree = "<group>"; };
-		A494AE0914896FB8003A7995 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
-		A494AE0A14896FB8003A7995 /* rrd.min.cmds */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rrd.min.cmds; sourceTree = "<group>"; };
-		A494AE0B14896FB8003A7995 /* rrd.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = rrd.tmpl; sourceTree = "<group>"; };
-		A494AE0C14896FB8003A7995 /* vupdate.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = vupdate.sh; sourceTree = "<group>"; };
-		A494AE0D14896FB8003A7995 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = io.c; path = ../io.c; sourceTree = "<group>"; };
-		A494AE0E14896FB8003A7995 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = io.h; path = ../io.h; sourceTree = "<group>"; };
+		A494AE0914896FB8003A7995 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = readme.txt; path = examples/readme.txt; sourceTree = "<group>"; };
+		A494AE0A14896FB8003A7995 /* rrd.min.cmds */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = rrd.min.cmds; path = examples/rrd.min.cmds; sourceTree = "<group>"; };
+		A494AE0B14896FB8003A7995 /* rrd.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = rrd.tmpl; path = examples/rrd.tmpl; sourceTree = "<group>"; };
+		A494AE0C14896FB8003A7995 /* vupdate.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = vupdate.sh; path = examples/vupdate.sh; sourceTree = "<group>"; };
+		A494AE0D14896FB8003A7995 /* io.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = io.c; sourceTree = "<group>"; };
+		A494AE0E14896FB8003A7995 /* io.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = io.h; sourceTree = "<group>"; };
 		A494AE0F14896FB8003A7995 /* license.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = license.txt; sourceTree = "<group>"; };
 		A494AE1014896FB8003A7995 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		A494AE1114896FB8003A7995 /* Makefile.am */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.am; sourceTree = "<group>"; };
@@ -76,8 +76,8 @@
 		A494AE1414896FB8003A7995 /* Makefile.mips */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Makefile.mips; sourceTree = "<group>"; };
 		A494AE1614896FB8003A7995 /* rc.vcontrol */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = rc.vcontrol; sourceTree = "<group>"; };
 		A494AE1714896FB8003A7995 /* vcontrol.mk */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = vcontrol.mk; sourceTree = "<group>"; };
-		A494AE1814896FB8003A7995 /* parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = parser.c; path = ../parser.c; sourceTree = "<group>"; };
-		A494AE1914896FB8003A7995 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parser.h; path = ../parser.h; sourceTree = "<group>"; };
+		A494AE1814896FB8003A7995 /* parser.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = parser.c; sourceTree = "<group>"; };
+		A494AE1914896FB8003A7995 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = parser.h; sourceTree = "<group>"; };
 		A494AE1A14896FB8003A7995 /* prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prompt.h; sourceTree = "<group>"; };
 		A494AE1B14896FB8003A7995 /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 		A494AE1D14896FB8003A7995 /* createRRDB.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = createRRDB.sh; sourceTree = "<group>"; };
@@ -86,18 +86,18 @@
 		A494AE2014896FB8003A7995 /* rrdb-update.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "rrdb-update.tmpl"; sourceTree = "<group>"; };
 		A494AE2114896FB8003A7995 /* vc-aufruf.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "vc-aufruf.txt"; sourceTree = "<group>"; };
 		A494AE2214896FB8003A7995 /* vc-commands.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "vc-commands.txt"; sourceTree = "<group>"; };
-		A494AE2314896FB8003A7995 /* semaphore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = semaphore.c; path = ../semaphore.c; sourceTree = "<group>"; };
-		A494AE2414896FB8003A7995 /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = semaphore.h; path = ../semaphore.h; sourceTree = "<group>"; };
-		A494AE2514896FB8003A7995 /* socket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = socket.c; path = ../socket.c; sourceTree = "<group>"; };
-		A494AE2614896FB8003A7995 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = ../socket.h; sourceTree = "<group>"; };
-		A494AE2714896FB8003A7995 /* sql.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = sql.tmpl; path = ../sql.tmpl; sourceTree = "<group>"; };
-		A494AE2814896FB8003A7995 /* unit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = unit.c; path = ../unit.c; sourceTree = "<group>"; };
-		A494AE2914896FB8003A7995 /* unit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = unit.h; path = ../unit.h; sourceTree = "<group>"; };
+		A494AE2314896FB8003A7995 /* semaphore.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = semaphore.c; sourceTree = "<group>"; };
+		A494AE2414896FB8003A7995 /* semaphore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = semaphore.h; sourceTree = "<group>"; };
+		A494AE2514896FB8003A7995 /* socket.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = socket.c; sourceTree = "<group>"; };
+		A494AE2614896FB8003A7995 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = socket.h; sourceTree = "<group>"; };
+		A494AE2714896FB8003A7995 /* sql.tmpl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sql.tmpl; sourceTree = "<group>"; };
+		A494AE2814896FB8003A7995 /* unit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unit.c; sourceTree = "<group>"; };
+		A494AE2914896FB8003A7995 /* unit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unit.h; sourceTree = "<group>"; };
 		A494AE2A14896FB8003A7995 /* vclient.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vclient.c; sourceTree = SOURCE_ROOT; };
 		A494AE2B14896FB8003A7995 /* vcontrold.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = vcontrold.c; sourceTree = SOURCE_ROOT; };
 		A494AE2C14896FB8003A7995 /* vcontrold.xml */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = vcontrold.xml; sourceTree = SOURCE_ROOT; };
-		A494AE2D14896FB8003A7995 /* xmlconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = xmlconfig.c; path = ../xmlconfig.c; sourceTree = "<group>"; };
-		A494AE2E14896FB8003A7995 /* xmlconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = xmlconfig.h; path = ../xmlconfig.h; sourceTree = "<group>"; };
+		A494AE2D14896FB8003A7995 /* xmlconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = xmlconfig.c; sourceTree = "<group>"; };
+		A494AE2E14896FB8003A7995 /* xmlconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmlconfig.h; sourceTree = "<group>"; };
 		A4F2D4AD1623827500ED5798 /* vcontrold */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vcontrold; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4F2D4BF1623842700ED5798 /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = usr/lib/libxml2.2.dylib; sourceTree = SDKROOT; };
 		A4F2D4C11624A06800ED5798 /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = ../../../../usr/lib/libxml2.2.dylib; sourceTree = "<group>"; };
@@ -129,6 +129,35 @@
 				A4F2D4BF1623842700ED5798 /* libxml2.2.dylib */,
 				A494AE0114896FB8003A7995 /* auto-build.sh */,
 				A494AE0714896FB8003A7995 /* configure.ac */,
+				A494AE0D14896FB8003A7995 /* io.c */,
+				A494AE0E14896FB8003A7995 /* io.h */,
+				A494AE1814896FB8003A7995 /* parser.c */,
+				A494AE1914896FB8003A7995 /* parser.h */,
+				A494AE0214896FB8003A7995 /* byteorder.h */,
+				A494AE0514896FB8003A7995 /* common.c */,
+				A494AE0614896FB8003A7995 /* common.h */,
+				A494ADFF14896FB8003A7995 /* arithmetic.c */,
+				A494AE0014896FB8003A7995 /* arithmetic.h */,
+				A494AE2314896FB8003A7995 /* semaphore.c */,
+				A494AE2414896FB8003A7995 /* semaphore.h */,
+				A494AE2514896FB8003A7995 /* socket.c */,
+				A494AE2614896FB8003A7995 /* socket.h */,
+				A494AE2714896FB8003A7995 /* sql.tmpl */,
+				A494AE2814896FB8003A7995 /* unit.c */,
+				A494AE2914896FB8003A7995 /* unit.h */,
+				A494AE2B14896FB8003A7995 /* vcontrold.c */,
+				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
+				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
+				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
+				A477FD6F16273E0000EBB2DF /* vcontrold.1 */,
+				A494AE0914896FB8003A7995 /* readme.txt */,
+				A494AE0A14896FB8003A7995 /* rrd.min.cmds */,
+				A494AE0B14896FB8003A7995 /* rrd.tmpl */,
+				A494AE0C14896FB8003A7995 /* vupdate.sh */,
+				A494AE0314896FB8003A7995 /* client.c */,
+				A494AE0414896FB8003A7995 /* client.h */,
+				A494AE2A14896FB8003A7995 /* vclient.c */,
+				A43197C9162755ED00F5E290 /* vclient.1 */,
 				A494AE0814896FB8003A7995 /* examples */,
 				A494AE0F14896FB8003A7995 /* license.txt */,
 				A494AE1014896FB8003A7995 /* Makefile */,
@@ -140,31 +169,14 @@
 				A494AE1A14896FB8003A7995 /* prompt.h */,
 				A494AE1B14896FB8003A7995 /* readme.txt */,
 				A494AE1C14896FB8003A7995 /* rrdb */,
-				A4F2D4AF1623827500ED5798 /* vcontrold */,
-				A43197C6162755ED00F5E290 /* vclient */,
 				A4F2D49F162381A500ED5798 /* Products */,
 			);
 			name = vcontrol_svn;
 			sourceTree = "<group>";
 		};
-		A43197C6162755ED00F5E290 /* vclient */ = {
-			isa = PBXGroup;
-			children = (
-				A494AE0314896FB8003A7995 /* client.c */,
-				A494AE0414896FB8003A7995 /* client.h */,
-				A494AE2A14896FB8003A7995 /* vclient.c */,
-				A43197C9162755ED00F5E290 /* vclient.1 */,
-			);
-			path = vclient;
-			sourceTree = "<group>";
-		};
 		A494AE0814896FB8003A7995 /* examples */ = {
 			isa = PBXGroup;
 			children = (
-				A494AE0914896FB8003A7995 /* readme.txt */,
-				A494AE0A14896FB8003A7995 /* rrd.min.cmds */,
-				A494AE0B14896FB8003A7995 /* rrd.tmpl */,
-				A494AE0C14896FB8003A7995 /* vupdate.sh */,
 			);
 			path = examples;
 			sourceTree = "<group>";
@@ -198,34 +210,6 @@
 				A43197C4162755ED00F5E290 /* vclient */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		A4F2D4AF1623827500ED5798 /* vcontrold */ = {
-			isa = PBXGroup;
-			children = (
-				A494AE0D14896FB8003A7995 /* io.c */,
-				A494AE0E14896FB8003A7995 /* io.h */,
-				A494AE1814896FB8003A7995 /* parser.c */,
-				A494AE1914896FB8003A7995 /* parser.h */,
-				A494AE0214896FB8003A7995 /* byteorder.h */,
-				A494AE0514896FB8003A7995 /* common.c */,
-				A494AE0614896FB8003A7995 /* common.h */,
-				A494ADFF14896FB8003A7995 /* arithmetic.c */,
-				A494AE0014896FB8003A7995 /* arithmetic.h */,
-				A494AE2314896FB8003A7995 /* semaphore.c */,
-				A494AE2414896FB8003A7995 /* semaphore.h */,
-				A494AE2514896FB8003A7995 /* socket.c */,
-				A494AE2614896FB8003A7995 /* socket.h */,
-				A494AE2714896FB8003A7995 /* sql.tmpl */,
-				A494AE2814896FB8003A7995 /* unit.c */,
-				A494AE2914896FB8003A7995 /* unit.h */,
-				A494AE2B14896FB8003A7995 /* vcontrold.c */,
-				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
-				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
-				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
-				A477FD6F16273E0000EBB2DF /* vcontrold.1 */,
-			);
-			path = vcontrold;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -460,6 +444,7 @@
 				A43197CD162755ED00F5E290 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A4F2D4B41623827500ED5798 /* Build configuration list for PBXNativeTarget "vcontrold" */ = {
 			isa = XCConfigurationList;
