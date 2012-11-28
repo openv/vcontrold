@@ -303,7 +303,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 	char string[1000];
 	char uString[100];
-	char *uSPtr=uString;
+	/*char *uSPtr=uString;*/
 	sprintf(string,"Execute %s",cmd);
 	logIT(LOG_INFO,string);
 	/* wir parsen die einzelnen Zeilen */
@@ -312,7 +312,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 	int hexlen=0;
 	int t;
 	unsigned long etime;
-	token=parseLine(cmd,hex,&hexlen,uSPtr);
+	token=parseLine(cmd,hex,&hexlen,uString);
 	/* wenn noOpen fuer debug Zwecke gesetzt ist, machen wir hier nichts */
 	switch (token) {
 		case WAIT:
@@ -575,7 +575,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		strncpy(cmd,sendPtr,ptr-sendPtr);
 		hexlen=0;
 		bzero(uSPtr,sizeof(uString));
-		token=parseLine(cmd,hex,&hexlen,uSPtr);
+		token=parseLine(cmd,hex,&hexlen,uString);
 		sprintf(string,"\t\tToken: %d Hexlen:%d, Unit: %s",token,hexlen,uSPtr);
 		logIT(LOG_INFO,string);
 		cmpPtr=newCompileNode(cmpStartPtr);
