@@ -33,7 +33,7 @@ void *getUnit(char *str) {
 
 
 
-int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
+int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 	int token=0;
 	char string[1000];
 	if(strstr(line,"WAIT")==line) 
@@ -91,7 +91,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
 						pPtr=pString;
 						while(*ptr && (isdigit(*ptr)||isspace(*ptr)))
 							ptr++;
-						strncpy(uSPtr,ptr,sizeof(*uSPtr));
+						strncpy(uSPtr,ptr,uSPtrLen);
 					}
 					return(token);
 				}
@@ -99,7 +99,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr) {
 					pPtr=pString;
 					while(*ptr && (isdigit(*ptr)||isspace(*ptr)))
 						ptr++;
-					strncpy(uSPtr,ptr,sizeof(*uSPtr));
+					strncpy(uSPtr,ptr,uSPtrLen);
 					return(token);
 				}
 				else  {
@@ -312,7 +312,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 	int hexlen=0;
 	int t;
 	unsigned long etime;
-	token=parseLine(cmd,hex,&hexlen,uString);
+	token=parseLine(cmd,hex,&hexlen,uString, sizeof(uString));
 	/* wenn noOpen fuer debug Zwecke gesetzt ist, machen wir hier nichts */
 	switch (token) {
 		case WAIT:
@@ -575,7 +575,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		strncpy(cmd,sendPtr,ptr-sendPtr);
 		hexlen=0;
 		bzero(uSPtr,sizeof(uString));
-		token=parseLine(cmd,hex,&hexlen,uString);
+		token=parseLine(cmd,hex,&hexlen,uString, sizeof(uString));
 		sprintf(string,"\t\tToken: %d Hexlen:%d, Unit: %s",token,hexlen,uSPtr);
 		logIT(LOG_INFO,string);
 		cmpPtr=newCompileNode(cmpStartPtr);
