@@ -275,7 +275,7 @@ Readn(int fd, void *ptr, size_t nbytes)
 static ssize_t
 my_read(int fd, char *ptr)
 {
-	ssize_t read_cnt = 0;
+	static ssize_t read_cnt = 0;
 	static char	*read_ptr;
 	static char	read_buf[MAXLINE];
 
