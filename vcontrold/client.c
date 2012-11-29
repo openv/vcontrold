@@ -41,12 +41,12 @@ trPtr newTrNode(trPtr ptr) {
 }
 
 
-int recvSync(int fd,char *wait,char **recv) {
+ssize_t recvSync(int fd,char *wait,char **recv) {
 	char *string;
 	char *rptr;
 	char *pptr;
 	char c;
-	int count;
+	ssize_t count;
 	int rcount=1;
 	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
 		logIT(LOG_ERR,"SIGALRM error");
@@ -90,7 +90,7 @@ int recvSync(int fd,char *wait,char **recv) {
 	}
 	if (count <=0) {
 		string=calloc(1000,sizeof(char));
-		sprintf(string,"exit mit count=%d",count);
+		sprintf(string,"exit mit count=%ld",count);
 		logIT(LOG_ERR,string);;
 		free(string);
 	}
@@ -138,7 +138,7 @@ void disconnectServer(int sockfd) {
 	close(sockfd);
 }
 
-int sendServer(int fd,char *s_buf, int len) {
+size_t sendServer(int fd,char *s_buf, size_t len) {
 	
 	char string[1000];
 	/* Buffer leeren */

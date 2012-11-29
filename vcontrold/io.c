@@ -173,7 +173,7 @@ static void sig_alrm(int signo) {
 
 int waitfor(int fd, char *w_buf,int w_len) {
 	int i;
-	int start;
+	time_t start;
 	char r_buf[MAXBUF];
 	char string[1000];
 	char hexString[1000]="\0";
