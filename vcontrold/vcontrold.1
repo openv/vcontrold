@@ -17,18 +17,34 @@
 .Op Fl g
 .Sh DESCRIPTION
 .Nm
-uses a serial link or an IP connection to communicate with a vito heating system.
+uses a serial link or an IP connection to communicate with a vito heating
+system.
+.Sh OPTIONS
 The meaning of the different options is:
-s use syslog
-n do not fork. This is for testing purpose only
-i use a temp file in /tmp/sim-devid.ini for use with the vsim simulator
-g enable debug mode.
+.Bl -hang
+.It Fl s
+use syslog
+.It Fl l
+use
+.Ar logfile
+instead of syslog.
+.It Fl n
+do not fork. This is for testing purpose only. Normaly
+.Nm vcontrold
+will detach from the controlling terminal and put itself into the background.
+.It Fl i
+use a temp file in /tmp/sim-devid.ini for use with the vsim simulator
+.It Fl g
+enable debug mode.
+.El
 .Sh FILES
-.Bl -tag -width "/etc/vcontrold.xml" -compact
-.It Pa /etc/vcontrold.xml
+.Bl -tag -width "/etc/vcontrold/vcontrold.xml" -compact
+.It Pa /etc/vcontrold/vcontrold.xml
 These are the programm specific configurations. E.g. device, baudrate, IP etc.
-.It Pa /etc/vito.xml
+.It Pa /etc/vcontrold/vito.xml
 These are the command definitions for the devices in use.
 .El                      \" Ends the list
 .Sh SEE ALSO
 .Xr vclient 1
+.Sh AUTHORS
+.An "Frank Nobis" Aq fn@radio-do.de
