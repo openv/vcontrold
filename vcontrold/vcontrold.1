@@ -21,7 +21,25 @@ uses a serial link or an IP connection to communicate with a vito heating
 system.
 .Sh OPTIONS
 The meaning of the different options is:
-.Bl -hang
+.Bl -hang -width -indent
+.It Fl x
+used to tell
+.Nm vcontrold
+where the main config file is found. See
+.Xr FILES
+for more info,
+.It Fl d
+specifies the serial device to use. This option overrides the device entry in the
+.Ar xml
+file.
+.It Fl p
+the TCP
+.Ar port
+to use for remote connections. The default is 3002 and can be specified in the
+.Ar xml
+file. This option overrides the corresponding option int the
+.Ar xml
+file.
 .It Fl s
 use syslog
 .It Fl l
