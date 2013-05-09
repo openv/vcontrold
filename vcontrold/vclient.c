@@ -15,6 +15,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <fcntl.h>
 
 #include <sys/time.h>
@@ -52,10 +53,10 @@ main(int argc,char* argv[])  {
 	char c;
 	char host[200] = "";
 	char commands[400] = "";
-	char cmdfile[200] = "";
-	char csvfile[200] = "";
-	char tmplfile[200] = "";
-	char outfile[200] = "";
+	char cmdfile[MAXPATHLEN] = "";
+	char csvfile[MAXPATHLEN] = "";
+	char tmplfile[MAXPATHLEN] = "";
+	char outfile[MAXPATHLEN] = "";
 	char string[1000] = "";
 	char result[1000] = "";
 	int sockfd;
@@ -66,15 +67,6 @@ main(int argc,char* argv[])  {
 	FILE *filePtr;
 	FILE *ofilePtr;
 	
-
-	bzero(host,sizeof(host));
-	bzero(commands,sizeof(commands));
-	bzero(cmdfile,sizeof(cmdfile));
-	bzero(csvfile,sizeof(csvfile));
-	bzero(tmplfile,sizeof(tmplfile));
-	bzero(outfile,sizeof(outfile));
-	bzero(string,sizeof(string));
-
 
 	while (--argc > 0 && (*++argv)[0] == '-') {
 			c=*++argv[0];
@@ -112,7 +104,7 @@ main(int argc,char* argv[])  {
 				if (!--argc) 
 					usage();
 				++argv;
-				strncpy(outfile,argv[0],sizeof(tmplfile));
+				strncpy(outfile,argv[0],sizeof(outfile));
 				if (c == 'x')  /* wir merken uns den execute Mode */	
 					execMe=1;
 				break;
@@ -136,6 +128,7 @@ main(int argc,char* argv[])  {
 		exit(1);
 	}
 	/* Kommandos direkt angegeben */
+	resPtr=NULL;
 	if (*commands) { 
 		resPtr=sendCmds(sockfd,commands);
 	}
@@ -182,7 +175,7 @@ main(int argc,char* argv[])  {
 			}
 			bzero(string,sizeof(string));
 			sprintf(string,"%f;",resPtr->result);
-			strncat(result,string,sizeof(result)); 
+			strncat(result,string,sizeof(result) - strlen(result) - 1);
 			resPtr=resPtr->next;
 		}
 		/*letztes Semikolon verdampfen und \n dran*/
