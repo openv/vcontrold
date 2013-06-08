@@ -85,7 +85,7 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
 #endif
 
 
-char tmpfilename[255];
+char tmpfilename[MAXPATHLEN+1];	/* account for the leading '\0' */
 int semid;
 
 int vcontrol_seminit()
@@ -95,7 +95,7 @@ int vcontrol_seminit()
 
   int tmpfile;
 
-  strcpy(tmpfilename, TMPFILENAME);
+  strncpy(tmpfilename, TMPFILENAME, sizeof(TMPFILENAME));
   if ((tmpfile = mkstemp(tmpfilename)) < 0) {
     perror("mkstemp");
     exit(1);

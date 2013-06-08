@@ -65,7 +65,7 @@ int opentty(char *device) {
 	sprintf(string,"konfiguriere serielle Schnittstelle %s",device);
 	logIT(LOG_LOCAL0,string);
 	if ((fd=open(device,O_RDWR)) < 0) {
-		sprintf(string,"cannot open %s:%m",device);
+		sprintf(string,"cannot open %s:%s",device, strerror (errno));
 		logIT(LOG_ERR,string);
 		exit(1);
 	}
@@ -74,7 +74,7 @@ int opentty(char *device) {
 	s=tcgetattr(fd,&oldsb);
 
 	if (s<0) {
-		sprintf(string,"error tcgetattr %s:%m",device);
+		sprintf(string,"error tcgetattr %s:%s",device, strerror (errno));
 		logIT(LOG_ERR,string);
 		exit(1);
 	}
@@ -102,7 +102,7 @@ int opentty(char *device) {
 	modemctl |= TIOCM_DTR;
 	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
-		sprintf(string,"error ioctl TIOCMSET %s:%m",device);
+		sprintf(string,"error ioctl TIOCMSET %s:%s",device, strerror (errno));
 		logIT(LOG_ERR,string);
 		exit(1); 
 	}

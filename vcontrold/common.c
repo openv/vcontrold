@@ -3,8 +3,9 @@
  *  */
 /* $Id: common.c 26 2008-03-20 20:56:09Z marcust $ */
 #include <stdlib.h>
-#include <stdio.h> 
-#include <syslog.h> 
+#include <stdio.h>
+#include <errno.h>
+#include <syslog.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
@@ -34,7 +35,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 	if (*logfile) {
 		logFD=fopen(logfile,"a");
 		if (!logFD) {
-			printf("Konnte %s nicht oeffnen %m",logfile);
+			printf("Konnte %s nicht oeffnen %s",logfile, strerror (errno));
 			return(0) ;
 		}
 	}
