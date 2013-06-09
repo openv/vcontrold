@@ -8,6 +8,7 @@
 #include <sys/sem.h>
 #include <string.h>
 #include <syslog.h>
+#include <sys/param.h>
 
 #include "common.h"
 #include "semaphore.h"
