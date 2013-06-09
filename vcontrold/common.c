@@ -111,8 +111,20 @@ void setDebugFD(int fd) {
 }
 
 		
+char hex2chr(char *hex) {
+	char buffer[16];
+	int hex_value=-1;
+	
+	sprintf(buffer, "0x%s", hex);
+	if (sscanf(hex, "%x", &hex_value) != 1) {
+		char string[64];
+		sprintf(string, "Ungültige Hex Zeichen in %s", hex);
+		logIT(LOG_WARNING, string);
+	}
+	return hex_value;
+}
 
-
+#if 0
 char hex2chr(char *hex) {
 	/* wandelt 1-2stellige Hex-Strings in Character */
 	size_t n;
@@ -167,6 +179,7 @@ char hex2chr(char *hex) {
 	}
 	return((char) result);		
 }
+#endif
 
 int char2hex(char *outString, const char *charPtr, int len) {
 	int n;
@@ -197,37 +210,3 @@ short string2chr(char *line,char *buf,short bufsize) {
 
 	return(count);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
