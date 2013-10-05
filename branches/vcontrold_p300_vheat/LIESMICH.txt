@@ -1,13 +1,13 @@
-Änderungen durch vheat per Februar/Oktober 2013
+Änderungen durch vheat per Februar/Oktober 2013 
 
 Disclaimer: 
-Momentan ist dieser SVN Branch noch nicht auf Compilierbarkeit geprüft!
-
 Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
 immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
 
 Diese P300 Variante läuft bei mir auf vcontrold/FriendlyARM mini2440 und vclient+Cati/QNAP TS559 Pro II seit dem Frühjahr 2013 
 ohne Probleme.
+
+Kompiliert auf Debian, QNAP TS559ProII, FriendlyARM. Vclient auf allen dreien geprüft, vcontrold läuft auf FriendlyARM 
  
 Dieser Branch beinhaltet folgende Änderungen zum trunk:
 
