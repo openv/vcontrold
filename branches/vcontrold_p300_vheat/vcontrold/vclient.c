@@ -31,7 +31,7 @@
 
 
 void usage() {
-	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>][-v]\n\n\
+	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
 \t-h : IP:Port des vcontrold\n\
 \t-c: Liste von auszufuehrenden Kommandos, durch Komma getrennt\n\
 \t-f: Optional Datei mit Kommandos, pro Zeile ein Kommando\n\
@@ -39,6 +39,8 @@ void usage() {
 \t-t: Template, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
 \t-o Output, der stdout Output wird in die angegebene Datei geschrieben\n\
 \t-x Das umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
+\t-m Munin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
+\t-k CactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
 \t-v: Verbose Modus zum testen\n"); 
 	
 	exit(1);
@@ -62,12 +64,20 @@ main(int argc,char* argv[])  {
 	int sockfd;
 	char dummylog[]="\0";
 	short verbose=0;
+	short munin=0;
+	short cacti=0;
 	short execMe=0;
 	trPtr resPtr;
 	FILE *filePtr;
 	FILE *ofilePtr;
 	
-
+/* ToDo: vheat(2013-10-05):
+ * derzeitige Implementierung crasht, wenn zwei Optionen ohne Parameter auf einander folgen
+ * zB: "vclient -h 1..0 -c xyz -v -k"
+ * Es wird ein String erwartet wie bei -h oder -c, der Bindestrich wird nicht erwartet.
+ *
+ * Fix sollte sein: Umbau auf getopt(), um die Parameter zu lesen.
+ */
 	while (--argc > 0 && (*++argv)[0] == '-') {
 			c=*++argv[0];
 			switch (c) {
@@ -87,6 +97,14 @@ main(int argc,char* argv[])  {
 				++argv;
 				verbose=1;
 				break;
+                        case 'm':
+                                ++argv;
+                                munin=1;
+                                break;
+                        case 'k':
+                                ++argv;
+                                cacti=1;
+                                break;
 			case 'f':
 				if (!--argc) 
 					usage();
@@ -351,6 +369,40 @@ main(int argc,char* argv[])  {
                         exit(ret);
 		}
 	}
+	else if (munin) { /*Munin Format ausgeben*/
+		while (resPtr) {
+			fprintf(ofilePtr,"%s.value ",resPtr->cmd);
+			if (resPtr->err) {
+				fprintf(ofilePtr,"U\n");
+				resPtr=resPtr->next;
+				continue;
+			}
+			if (resPtr->raw)
+				fprintf(ofilePtr,"%f\n",resPtr->result);
+			else
+				fprintf(ofilePtr,"U\n");				
+			resPtr=resPtr->next;
+		}
+	}	
+        else if (cacti) { /*Cacti Format ausgeben*/
+		int index = 1;
+                while (resPtr) {
+                        fprintf(ofilePtr,"v%d:",index);
+                        if (resPtr->err) {
+                                fprintf(ofilePtr,"U ");
+                                resPtr=resPtr->next;
+                                index++;
+				continue;
+                        }
+                        if (resPtr->raw)
+                                fprintf(ofilePtr,"%f ",resPtr->result);
+                        else
+                                fprintf(ofilePtr,"U ");                        
+                        index++;
+			resPtr=resPtr->next;
+                }
+		fprintf(ofilePtr,"\n");
+        }
 	else {
 		while (resPtr) {
 			fprintf(ofilePtr,"%s:\n",resPtr->cmd);

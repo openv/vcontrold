@@ -19,6 +19,7 @@
 #include "unit.h"
 #include "common.h"
 #include "io.h"
+#include "framer.h"
 
 
 /* externe Variablen */
@@ -48,12 +49,12 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 	else if(strstr(line,"PAUSE")==line)
 		token=PAUSE;
 	if (token) {
-		/* wir parsen den Hex String und liefern ihn gewandelt zurück */
+		/* wir parsen den Hex String und liefern ihn gewandelt zurï¿½ck */
 		/* erste Leerstelle suchen */
 		char *ptr;
 		ptr=strchr(line,' ');
 		if (!ptr) {
-			sprintf(string,"Parse error, kein Leerzeichen gefunden: %s",line);
+			snprintf(string, sizeof(string), "Parse error, kein Leerzeichen gefunden: %s",line);
 			logIT(LOG_ERR,string);
 		}
 		else {
@@ -140,7 +141,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 			}
 			if (cPtr->uPtr) {
 				if(procSetUnit(cPtr->uPtr,sendBuf,&len,bitpos,pRecvPtr)<=0) {
-					sprintf(string,"Fehler Unit Wandlung:%s",sendBuf);
+					snprintf(string, sizeof(string), "Fehler Unit Wandlung:%s",sendBuf);
 					logIT(LOG_ERR,string);
 					return(-1);
 				}
@@ -160,7 +161,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 		while (cmpPtr) {
 			switch(cmpPtr->token) {
 			case WAIT:
-				if (!waitfor(fd,cmpPtr->send,cmpPtr->len)) {
+				if (!framer_waitfor(fd,cmpPtr->send,cmpPtr->len)) {
 					logIT(LOG_ERR,"Fehler wait, Abbruch");
 					return(-1);
 				}
@@ -170,7 +171,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				strcat(simIn," ");
 				break;
 			case SEND:
-				if (!my_send(fd,cmpPtr->send,cmpPtr->len)) {
+				if (!framer_send(fd,cmpPtr->send,cmpPtr->len)) {
 					logIT(LOG_ERR,"Fehler send, Abbruch");
 					return(-1);
 				}
@@ -186,23 +187,23 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 			case RECV:
 				if (cmpPtr->len > recvLen) {
-					sprintf(string,"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,cmpPtr->len);
+					snprintf(string, sizeof(string),"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,cmpPtr->len);
 					logIT(LOG_ERR,string);
 					cmpPtr->len=recvLen; /* hoffentlich kommen wir hier nicht hin */
 				}	
 				etime=0;
 				bzero(recvBuf,sizeof(recvBuf));
-				if (receive(fd,recvBuf,cmpPtr->len,&etime)<=0) {
+				if (framer_receive(fd,recvBuf,cmpPtr->len,&etime)<=0) {
 					logIT(LOG_ERR,"Fehler recv, Abbruch");
 					return(-1);	
 				}
 				/* falls wir beim empfangen laenger als der Timeout gebraucht haben gehts in die 
 				naechste Rune */
 				if (recvTimeout && (etime > recvTimeout)) {
-				  sprintf(string,"Recv Timeout: %ld ms  > %d ms (Retry: %d)",etime,recvTimeout,(int)(retry-1));
+				  snprintf(string, sizeof(string),"Recv Timeout: %ld ms  > %d ms (Retry: %d)",etime,recvTimeout,(int)(retry-1));
 					logIT(LOG_NOTICE,string);
 					if (retry <=1) {
-						sprintf(string,"Recv Timeout, Abbruch");
+						snprintf(string, sizeof(string),"Recv Timeout, Abbruch");
 						logIT(LOG_ERR,string);
 						return(-1);
 					}
@@ -212,10 +213,10 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				/*  falls ein errStr definiert ist, schauen wir mal ob das Ergebnis richtig ist */
 				if (cmpPtr->errStr && *cmpPtr->errStr) {
 					if (memcmp(recvBuf,cmpPtr->errStr,cmpPtr->len)==0) { /* falsche Antwort */
-						sprintf(string,"Errstr matched, Ergebnis falsch (Retry:%d)",retry-1);
+						snprintf(string, sizeof(string),"Errstr matched, Ergebnis falsch (Retry:%d)",retry-1);
 						logIT(LOG_NOTICE,string);
 						if (retry <=1) {
-							sprintf(string,"Ergebnis falsch, Abbruch");
+							snprintf(string, sizeof(string),"Ergebnis falsch, Abbruch");
 							logIT(LOG_ERR,string);
 							return(-1);
 						}
@@ -231,7 +232,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				bzero(result,sizeof(result));
 				if (!supressUnit && cmpPtr->uPtr) {
 					if (procGetUnit(cmpPtr->uPtr,recvBuf,cmpPtr->len,result,bitpos,pRecvPtr)<=0) {
-						sprintf(string,"Fehler Unit Wandlung:%s",result);
+						snprintf(string,sizeof(string), "Fehler Unit Wandlung:%s",result);
 						logIT(LOG_ERR,string);
 						return(-1);
 					}
@@ -246,7 +247,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				return(cmpPtr->len);
 				break;
 			case PAUSE:
-				sprintf(string,"Warte %i ms",cmpPtr->len);
+				snprintf(string, sizeof(string),"Warte %i ms",cmpPtr->len);
 				logIT(LOG_INFO,string);
 				usleep(cmpPtr->len * 1000L);
 				/* t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
@@ -287,7 +288,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 
 			default:
-				sprintf(string,"unbekanntes Token: %d",cmpPtr->token);
+				snprintf(string, sizeof(string),"unbekanntes Token: %d",cmpPtr->token);
 				logIT(LOG_ERR,string);
 				return(-1);
 			}
@@ -304,7 +305,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 	char string[1000];
 	char uString[100];
 	/*char *uSPtr=uString;*/
-	sprintf(string,"Execute %s",cmd);
+	snprintf(string, sizeof(string),"Execute %s",cmd);
 	logIT(LOG_INFO,string);
 	/* wir parsen die einzelnen Zeilen */
 	char hex[MAXBUF];
@@ -329,7 +330,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 			break;
 		case RECV:
 			if (hexlen > recvLen) {
-				sprintf(string,"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,hexlen);
+				snprintf(string, sizeof(string),"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,hexlen);
 				logIT(LOG_ERR,string);
 				hexlen=recvLen;
 			}	
@@ -338,7 +339,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 				logIT(LOG_ERR,"Fehler recv, Abbruch");
 				exit(1);
 			}
-			sprintf(string,"Recv: %ld ms",etime);
+			snprintf(string, sizeof(string),"Recv: %ld ms",etime);
 			logIT(LOG_INFO,string);
 			/* falls wir eine Unit haben (==uPtr) rechnen wir den 
  * 			empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck */
@@ -346,13 +347,13 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 			break;
 		case PAUSE:
 			t=(int) hexlen/1000;
-			sprintf(string,"Warte %i s",t);
+			snprintf(string, sizeof(string),"Warte %i s",t);
 			logIT(LOG_INFO,string);
 			sleep(t);
 			break;
 
 		default:
-			sprintf(string,"unbekannter Befehl: %s",cmd);
+			snprintf(string, sizeof(string),"unbekannter Befehl: %s",cmd);
 				logIT(LOG_INFO,string);
 	}
 	return(0);
@@ -416,7 +417,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	/* send des Kommand Pointers muss gebaut werden 
 	1. Suche Kommando pcmd bei den Kommandos des Protokolls */
 	if (!(iPtr= (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
-		sprintf(string,"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
+		snprintf(string, sizeof(string),"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
 		logIT(LOG_ERR,string);
 		exit(3);
 	}
@@ -425,7 +426,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	sendStartPtr=iPtr->send;
 	if (!sendPtr) 
 		return(0);
-	sprintf(string,"protocmd Zeile: %s",sendPtr);
+	snprintf(string, sizeof(string),"protocmd Zeile: %s",sendPtr);
 	logIT(LOG_INFO,string);
 	bzero(eString,sizeof(eString));
 	cPtr->retry=iPtr->retry; /* wir uebernehmen den Retry Wert aus des Protokoll Kommandos */	
@@ -446,7 +447,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 		ePtr+=ptr-sendPtr;
 		bzero(var,sizeof(var));
 		strncpy(var,ptr+1,bptr-ptr-1);
-/*		sprintf(string,"   Var: %s",var);
+/*		snprintf(string, sizeof(string),"   Var: %s",var);
 		logIT(LOG_INFO,string); */
 		if(*var) { /* Haben wir uerbhaupt Variablen zu expandieren */ 
 			if (strstr(var,"addr")==var) {
@@ -461,12 +462,12 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 				ePtr--;
 			}
 			else if (strstr(var,"len")==var) {
-				sprintf(string,"%d",cPtr->len);
+				snprintf(string, sizeof(string),"%d",cPtr->len);
 				strncpy(ePtr,string,strlen(string));
 				ePtr+=strlen(string);
 			}
 			else if (strstr(var,"hexlen")==var) {
-				sprintf(string,"%02X",cPtr->len);
+				snprintf(string, sizeof(string),"%02X",cPtr->len);
 				strncpy(ePtr,string,strlen(string));
 				ePtr+=strlen(string);
 			}
@@ -477,14 +478,14 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 				}
 			}
 			else {
-				sprintf(string,"Variable %s unbekannt",var);
+				snprintf(string, sizeof(string),"Variable %s unbekannt",var);
 				logIT(LOG_ERR,string);
 				exit(3);
 			}
 		}
 		sendPtr=bptr;
 	} while(*sendPtr);
-	sprintf (string,"  Nach Ersetzung: %s",eString);
+	snprintf (string, sizeof(string),"  Nach Ersetzung: %s",eString);
 	logIT(LOG_INFO,string);
 	tmpPtr=calloc(strlen(eString)+1,sizeof(char));
 	strcpy(tmpPtr,eString);
@@ -518,7 +519,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 		sendPtr=ptr+1;
 	} while(*sendPtr);
 	free(tmpPtr);
-	sprintf (string,"   nach EXPAND:%s",eString);
+	snprintf (string, sizeof(string),"   nach EXPAND:%s",eString);
 	logIT(LOG_INFO,string);
 	if (!(cPtr->send=calloc(strlen(eString)+1,sizeof(char)))) {
 			logIT(LOG_ERR,"calloc gescheitert");
@@ -561,7 +562,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 	sendStartPtr=cPtr->send;
 	if (!sendPtr) /* hier gibt es nichts zu tun */
 		return(0);
-	sprintf(string,"BuildByteCode:%s",sendPtr);
+	snprintf(string, sizeof(string),"BuildByteCode:%s",sendPtr);
 	logIT(LOG_INFO,string);
 	bzero(eString,sizeof(eString));
 	do {
@@ -576,7 +577,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		hexlen=0;
 		bzero(uSPtr,sizeof(uString));
 		token=parseLine(cmd,hex,&hexlen,uString, sizeof(uString));
-		sprintf(string,"\t\tToken: %d Hexlen:%d, Unit: %s",token,hexlen,uSPtr);
+		snprintf(string, sizeof(string),"\t\tToken: %d Hexlen:%d, Unit: %s",token,hexlen,uSPtr);
 		logIT(LOG_INFO,string);
 		cmpPtr=newCompileNode(cmpStartPtr);
 		if(!cmpStartPtr)
@@ -587,7 +588,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		cmpPtr->send=calloc(hexlen,sizeof(char));
 		memcpy(cmpPtr->send,hex,hexlen);
 		if (*uSPtr && !(cmpPtr->uPtr=getUnitNode(uPtr,uSPtr))) {
-			sprintf(string,"Unit %s nicht definiert",uSPtr);
+			snprintf(string, sizeof(string),"Unit %s nicht definiert",uSPtr);
 			logIT(LOG_ERR,string);
 			exit(3);
 		}
@@ -607,7 +608,7 @@ void compileCommand(devicePtr dPtr,unitPtr uPtr) {
 	char string[1000];
 
 	
-	sprintf(string,"Expandiere Kommandos fuer Device %s", dPtr->id);
+	snprintf(string, sizeof(string),"Expandiere Kommandos fuer Device %s", dPtr->id);
 	logIT(LOG_INFO,string);
 	expand(dPtr->cmdPtr,dPtr->protoPtr);
 	buildByteCode(dPtr->cmdPtr,uPtr); 

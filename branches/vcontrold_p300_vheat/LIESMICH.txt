@@ -1,0 +1,106 @@
+Änderungen durch vheat per Februar/Oktober 2013
+
+Disclaimer: 
+Momentan ist dieser SVN Branch noch nicht auf Compilierbarkeit geprüft!
+
+Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
+immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
+
+Diese P300 Variante läuft bei mir auf vcontrold/FriendlyARM mini2440 und vclient+Cati/QNAP TS559 Pro II seit dem Frühjahr 2013 
+ohne Probleme.
+ 
+Dieser Branch beinhaltet folgende Änderungen zum trunk:
+
+A) vclient:
+Zusätzliche Parameter, um direkt Ausgaben für Multiparameter-Aufrufe für die Datenlogger Munin oder Cacti zu bekommen.
+-m Munin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.
+	in der Ausgabe werden die vcontrold Command Parameter ausgegeben, jeweils gefolgt vom RAW Value, jeweils eine Zeile, 
+	Fehler sind durch U gekennzeichnet, Beispiel:
+		getTempA.value 18.786
+		getTempWWist,value 48.345
+		getUnknown.value U
+-k CactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren. 
+	Es wird angenommen, dass das "Data Template" in Cacti die Ergebnisse in den Variablen "Output Field" v1, v2 bis v<n> 
+	erwartet. Dementsprechend müssen Parameter gefüllt werden.
+	Fehler sind durch U gekenzeichnet, Beispiel:
+	Cacti Parameter im Data Template:
+		p1 getTempA
+		p2 getTempWWist
+		p3 getUnknown
+	vclient ergibt dann	
+		v1:18.786 v2:48.345 v3:U
+		
+	Beispiel Script für Cacti:
+
+<begin>
+	#!/opt/bin/perl
+	use English;
+	
+	$RS='';
+	
+	$cmd=join(',',@ARGV);
+	
+	system "date > /dev/console";
+	system "echo $cmd > /dev/console";
+	open(PROCESS, "/opt/bin/vclient -h 192.168.1.230:3002 -c \"$cmd\" -k|");
+	$answ = <PROCESS>;
+	close(PROCESS);
+	
+	print $answ;
+	system "echo \"xx$answ yy\" > /dev/console";
+	exit;
+<end>
+
+B) vcontrold
+Design der Änderung: Es wird ein "Pseudo"-Protokoll P300 mit Protokoll-Id pid 41 definiert. 
+In einem neuen Framing Layer wird das erkannt und entsprechend verarbeitet. Dieser Layer kennt eine "Transaktion", 
+während der der vcontrold für andere Clients gesperrt ist, somit alle Kommandos nacheinander ungestört ausgeführt werden, 
+es ist also nur einmal die Synchronisation und Protokoll-Umschaltung nötig. 
+Dazu mussten zusätzlich die Semaphore Operationen verschoben werden.
+
+Bekannter Fehler: Wird der vcontrold im Vordergrund mit verbose Information gestartet, tritt nach einiger Zeit ein semop() 
+Semaphore Problem auf.  
+
+C) xml
+	die Konfigurationsfiles für die Benutzung der P300, hier am Beipiel VScotHO1 20CB
+
+siehe vito.xml:	
+<vito>
+	<devices>
+		...
+		<device ID="20CB" name="VScotHO1" protocol="P300" />
+...	
+
+siehe vcontrold.xml:
+  <protocols>
+      <protocol name='P300'>
+	  <pid>41</pid>
+	  <macros>
+		<macro name='GETADDR'>
+		    <command>SEND 00 01</command>
+		</macro>
+		<macro name='SETADDR'>
+		    <command>SEND 01 F4</command>
+		</macro>
+	  </macros>
+	  <commands>
+		<command name="getaddr">
+		     <send>GETADDR $addr $hexlen;RECV $len $unit</send>
+		</command>
+		<command name="setaddr">
+		     <send>SETADDR $addr $hexlen;SEND BYTES $unit;RECV 1 SR</send>
+		</command>
+	  	<command name="gettestaddr">
+		     <send></send>
+		</command>
+	
+	  </commands>
+      </protocol>
+      
+D) Sonstiges
+sprintf->snprintf: war ein Problem bei langen Fehlerstrings
+ 
+Die Leseschleife des seriellen Ports geändert, da der verwendete FriendlyARM mini2440 / Linux mit dem vorherigen Verhalten nicht klar kam, der neue Algorithmus
+sollte allgemein funktionieren. 
+
+Im Wochentagsformat ist 0 sowie 7 Sonntag, Probleme in der Schaltuhr/Zeit Umwandlung
