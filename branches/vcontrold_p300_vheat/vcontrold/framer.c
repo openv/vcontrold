@@ -111,7 +111,7 @@ static void framer_set_result(char result) {
 
 static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime) {
 	char string[100];
-	if ((framer_current_addr & FRAMER_LINK_STATUS(0)) == FRAMER_LINK_STATUS(0)) {
+	if ((framer_pid == P300_LEADIN) && ((framer_current_addr & FRAMER_LINK_STATUS(0)) == FRAMER_LINK_STATUS(0))) {
 		r_buf[0] = (char) (framer_current_addr ^ FRAMER_LINK_STATUS(0));
 		snprintf(string, sizeof(string), ">FRAMER: preset result %02X", r_buf[0]);
 		logIT(LOG_INFO, string);
