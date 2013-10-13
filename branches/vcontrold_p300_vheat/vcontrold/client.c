@@ -90,7 +90,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 	}
 	if (count <=0) {
 		string=calloc(1000,sizeof(char));
-		snprintf(string, sizeof(string),"exit mit count=%d",count);
+		snprintf(string, sizeof(string),"exit mit count=%ld",count);
 		logIT(LOG_ERR,string);;
 		free(string);
 	}

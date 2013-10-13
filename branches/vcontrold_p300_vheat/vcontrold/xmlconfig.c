@@ -1206,7 +1206,7 @@ protocolPtr parseProtocol(xmlNodePtr cur) {
 			(cur->next &&
 			(!(cur->next->type==XML_TEXT_NODE)|| cur->next->next)) ? (cur=cur->next) : (cur=prevPtr->next);
 		}
-		else if (protoFound && strstr(cur->name,"macros"))  {
+		else if (protoFound && strstr((const char *)cur->name,"macros"))  {
 			mPtr=parseMacro(cur->children);
 			if (mPtr) 
 				protoPtr->mPtr=mPtr;

@@ -27,7 +27,9 @@
 #include "client.h"
 
 
+#ifndef VERSION
 #define VERSION "0.3alpha"
+#endif
 
 
 void usage() {
