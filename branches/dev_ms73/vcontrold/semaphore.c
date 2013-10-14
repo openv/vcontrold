@@ -133,9 +133,7 @@ int vcontrol_semfree()
 
 int vcontrol_semget()
 {
-  char string[1000];
-  sprintf(string,"Process %d tries to aquire lock",getpid());
-  logIT(LOG_INFO,string);
+  VCLog(LOG_INFO, "Process %d tries to aquire lock", getpid());
 
   struct sembuf sb;
 
@@ -146,17 +144,14 @@ int vcontrol_semget()
     perror("semop");
     exit(1);
   }
-  sprintf(string,"Process %d got lock",getpid());
-  logIT(LOG_INFO,string);
+  VCLog(LOG_INFO, "Process %d got lock", getpid());
   return 1;
 }
 
 int vcontrol_semrelease()
 {
   struct sembuf sb;
-  char string[1000];
-  sprintf(string,"Process %d released lock",getpid());
-  logIT(LOG_INFO,string);
+  VCLog(LOG_INFO, "Process %d released lock", getpid());
 
   sb.sem_num = 0;
   sb.sem_op = 1; /* free resource */

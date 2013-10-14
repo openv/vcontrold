@@ -35,7 +35,6 @@ void *getUnit(char *str) {
 
 int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 	int token=0;
-	char string[1000];
 	if(strstr(line,"WAIT")==line) 
 		token=WAIT;
 	else if(strstr(line,"SEND BYTES")==line) {
@@ -53,8 +52,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 		char *ptr;
 		ptr=strchr(line,' ');
 		if (!ptr) {
-			sprintf(string,"Parse error, kein Leerzeichen gefunden: %s",line);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "Parse error, kein Leerzeichen gefunden: %s", line);
 		}
 		else {
 			/* wir nudeln den Rest der Zeile durch */
@@ -131,7 +129,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 
 	bzero(simIn,sizeof(simIn));
 	bzero(simOut,sizeof(simOut));
-	/* wir wandeln zuerst die zu sendenen Bytes, nicht daas wir mittendrin abbrechen muessen */
+	/* wir wandeln zuerst die zu sendenen Bytes, nicht das wir mittendrin abbrechen muessen */
 	if (!supressUnit) 
 		while (cPtr) {
 			if (cPtr->token != BYTES) {
@@ -140,8 +138,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 			}
 			if (cPtr->uPtr) {
 				if(procSetUnit(cPtr->uPtr,sendBuf,&len,bitpos,pRecvPtr)<=0) {
-					sprintf(string,"Fehler Unit Wandlung:%s",sendBuf);
-					logIT(LOG_ERR,string);
+					VCLog(LOG_ERR,"Fehler Unit Wandlung:%s",sendBuf);
 					return(-1);
 				}
 				if (cPtr->send) { /* wir haben das schon mal gesendet, der Speicher war noch alloziert */
@@ -161,7 +158,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 			switch(cmpPtr->token) {
 			case WAIT:
 				if (!waitfor(fd,cmpPtr->send,cmpPtr->len)) {
-					logIT(LOG_ERR,"Fehler wait, Abbruch");
+					VCLog(LOG_ERR,"Fehler wait, Abbruch");
 					return(-1);
 				}
 				bzero(string,sizeof(string));
@@ -171,7 +168,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 			case SEND:
 				if (!my_send(fd,cmpPtr->send,cmpPtr->len)) {
-					logIT(LOG_ERR,"Fehler send, Abbruch");
+					VCLog(LOG_ERR,"Fehler send, Abbruch");
 					return(-1);
 				}
 				if (iniFD && *simIn && *simOut) { /* wir haben schon was gesendet und empfangen, das geben wir nun aus */
@@ -186,37 +183,32 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 			case RECV:
 				if (cmpPtr->len > recvLen) {
-					sprintf(string,"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,cmpPtr->len);
-					logIT(LOG_ERR,string);
+					VCLog(LOG_ERR, "Recv Buffer zu klein. Ist: %d Soll %d", recvLen, cmpPtr->len);
 					cmpPtr->len=recvLen; /* hoffentlich kommen wir hier nicht hin */
 				}	
 				etime=0;
 				bzero(recvBuf,sizeof(recvBuf));
 				if (receive(fd,recvBuf,cmpPtr->len,&etime)<=0) {
-					logIT(LOG_ERR,"Fehler recv, Abbruch");
+					VCLog(LOG_ERR,"Fehler recv, Abbruch");
 					return(-1);	
 				}
 				/* falls wir beim empfangen laenger als der Timeout gebraucht haben gehts in die 
 				naechste Rune */
 				if (recvTimeout && (etime > recvTimeout)) {
-				  sprintf(string,"Recv Timeout: %ld ms  > %d ms (Retry: %d)",etime,recvTimeout,(int)(retry-1));
-					logIT(LOG_NOTICE,string);
-					if (retry <=1) {
-						sprintf(string,"Recv Timeout, Abbruch");
-						logIT(LOG_ERR,string);
-						return(-1);
-					}
-					goto RETRY;
+				  VCLog(LOG_NOTICE, "Recv Timeout: %ld ms  > %d ms (Retry: %d)", etime, recvTimeout, (int)(retry-1));
+				  if (retry <=1) {
+				    VCLog(LOG_ERR, "Recv Timeout, Abbruch");
+				    return(-1);
+				  }
+				  goto RETRY;
 				}
 				
 				/*  falls ein errStr definiert ist, schauen wir mal ob das Ergebnis richtig ist */
 				if (cmpPtr->errStr && *cmpPtr->errStr) {
 					if (memcmp(recvBuf,cmpPtr->errStr,cmpPtr->len)==0) { /* falsche Antwort */
-						sprintf(string,"Errstr matched, Ergebnis falsch (Retry:%d)",retry-1);
-						logIT(LOG_NOTICE,string);
+						VCLog(LOG_NOTICE, "Errstr matched, Ergebnis falsch (Retry:%d)", retry-1);
 						if (retry <=1) {
-							sprintf(string,"Ergebnis falsch, Abbruch");
-							logIT(LOG_ERR,string);
+							VCLog(LOG_ERR, "Ergebnis falsch, Abbruch");
 							return(-1);
 						}
 						goto RETRY;
@@ -231,8 +223,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				bzero(result,sizeof(result));
 				if (!supressUnit && cmpPtr->uPtr) {
 					if (procGetUnit(cmpPtr->uPtr,recvBuf,cmpPtr->len,result,bitpos,pRecvPtr)<=0) {
-						sprintf(string,"Fehler Unit Wandlung:%s",result);
-						logIT(LOG_ERR,string);
+						VCLog(LOG_ERR, "Fehler Unit Wandlung:%s", result);
 						return(-1);
 					}
 					strncpy(recvBuf,result,recvLen);
@@ -246,21 +237,20 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				return(cmpPtr->len);
 				break;
 			case PAUSE:
-				sprintf(string,"Warte %i ms",cmpPtr->len);
-				logIT(LOG_INFO,string);
-				usleep(cmpPtr->len * 1000L);
+			  VCLog(LOG_INFO, "Warte %i ms", cmpPtr->len);
+			  usleep(cmpPtr->len * 1000L);
 				/* t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
 				t_sleep.tv_nsec=(long) cmpPtr->len * 1000000; 
 				if (nanosleep(&t_sleep,&t_sleep_rem)==-1) 
 					nanosleep(&t_sleep_rem,NULL);
 				*/
-				break;
+			  break;
 			case BYTES:
 				/* wir senden den sendBuffer, der uebergeben wurde */
 				/* es fand keine Wandlung statt */
 				if (sendLen) {
 					if (!my_send(fd,sendBuf,sendLen)) {
-						logIT(LOG_ERR,"Fehler send, Abbruch");
+						VCLog(LOG_ERR, "Fehler send, Abbruch");
 						return(-1);
 					}
 					char2hex(string,sendBuf,sendLen);
@@ -270,7 +260,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				/* es ist eine Einheit definiert soll benutzt werden und wir haben das oben schon gewandelt */
 				else if (cmpPtr->len) {
 					if (!my_send(fd,cmpPtr->send,cmpPtr->len)) {
-						logIT(LOG_ERR,"Fehler send unit Bytes, Abbruch");
+						VCLog(LOG_ERR, "Fehler send unit Bytes, Abbruch");
 						free(cmpPtr->send);
 						cmpPtr->send=NULL;
 						cmpPtr->len=0;
@@ -287,8 +277,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 
 			default:
-				sprintf(string,"unbekanntes Token: %d",cmpPtr->token);
-				logIT(LOG_ERR,string);
+				VCLog(LOG_ERR, "unbekanntes Token: %d", cmpPtr->token);
 				return(-1);
 			}
 			cmpPtr=cmpPtr->next;
@@ -301,11 +290,9 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 }
 
 int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
-	char string[1000];
 	char uString[100];
 	/*char *uSPtr=uString;*/
-	sprintf(string,"Execute %s",cmd);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "Execute %s", cmd);
 	/* wir parsen die einzelnen Zeilen */
 	char hex[MAXBUF];
 	int token;
@@ -317,43 +304,39 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 	switch (token) {
 		case WAIT:
 			if (!waitfor(fd,hex,hexlen)) {
-				logIT(LOG_ERR,"Fehler wait, Abbruch");
+				VCLog(LOG_ERR,"Fehler wait, Abbruch");
 				return(-1);
 			}
 			break;
 		case SEND:
 			if (!my_send(fd,hex,hexlen)) {
-				logIT(LOG_ERR,"Fehler send, Abbruch");
+			        VCLog(LOG_ERR,"Fehler send, Abbruch");
 				exit(1);
 			}
 			break;
 		case RECV:
 			if (hexlen > recvLen) {
-				sprintf(string,"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,hexlen);
-				logIT(LOG_ERR,string);
+				VCLog(LOG_ERR,"Recv Buffer zu klein. Ist: %d Soll %d", recvLen, hexlen);
 				hexlen=recvLen;
 			}	
 			etime=0;
 			if (receive(fd,recvBuf,hexlen,&etime)<=0) {
-				logIT(LOG_ERR,"Fehler recv, Abbruch");
+				VCLog(LOG_ERR,"Fehler recv, Abbruch");
 				exit(1);
 			}
-			sprintf(string,"Recv: %ld ms",etime);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Recv: %ld ms", etime);
 			/* falls wir eine Unit haben (==uPtr) rechnen wir den 
  * 			empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck */
 			return(hexlen);
 			break;
 		case PAUSE:
 			t=(int) hexlen/1000;
-			sprintf(string,"Warte %i s",t);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Warte %i s", t);
 			sleep(t);
 			break;
 
 		default:
-			sprintf(string,"unbekannter Befehl: %s",cmd);
-				logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "unbekannter Befehl: %s", cmd);
 	}
 	return(0);
 }
@@ -416,8 +399,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	/* send des Kommand Pointers muss gebaut werden 
 	1. Suche Kommando pcmd bei den Kommandos des Protokolls */
 	if (!(iPtr= (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
-		sprintf(string,"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR,"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
 		exit(3);
 	}
 /*	2. Parse die zeile und ersetze die Variablen durch Werte in cPtr */
@@ -425,8 +407,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	sendStartPtr=iPtr->send;
 	if (!sendPtr) 
 		return(0);
-	sprintf(string,"protocmd Zeile: %s",sendPtr);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "protocmd Zeile: %s", sendPtr);
 	bzero(eString,sizeof(eString));
 	cPtr->retry=iPtr->retry; /* wir uebernehmen den Retry Wert aus des Protokoll Kommandos */	
 	cPtr->recvTimeout=iPtr->recvTimeout; /* dito fuer den Receive Timeout */ 
@@ -477,15 +458,13 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 				}
 			}
 			else {
-				sprintf(string,"Variable %s unbekannt",var);
-				logIT(LOG_ERR,string);
+				VCLog(LOG_ERR, "Variable %s unbekannt", var);
 				exit(3);
 			}
 		}
 		sendPtr=bptr;
 	} while(*sendPtr);
-	sprintf (string,"  Nach Ersetzung: %s",eString);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "  Nach Ersetzung: %s", eString);
 	tmpPtr=calloc(strlen(eString)+1,sizeof(char));
 	strcpy(tmpPtr,eString);
 	
@@ -518,10 +497,9 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 		sendPtr=ptr+1;
 	} while(*sendPtr);
 	free(tmpPtr);
-	sprintf (string,"   nach EXPAND:%s",eString);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO,"   nach EXPAND:%s", eString);
 	if (!(cPtr->send=calloc(strlen(eString)+1,sizeof(char)))) {
-			logIT(LOG_ERR,"calloc gescheitert");
+			VCLog(LOG_ERR,"calloc gescheitert");
 			exit(1);
 	}
 	strcpy(cPtr->send,eString);
@@ -548,7 +526,6 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 	int token;
 	char uString[100];
 	char *uSPtr=uString;
-	char string[1000];
 
 	compilePtr cmpPtr,cmpStartPtr;
 
@@ -561,8 +538,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 	sendStartPtr=cPtr->send;
 	if (!sendPtr) /* hier gibt es nichts zu tun */
 		return(0);
-	sprintf(string,"BuildByteCode:%s",sendPtr);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO,"BuildByteCode:%s",sendPtr);
 	bzero(eString,sizeof(eString));
 	do {
 		ptr=sendPtr;
@@ -576,8 +552,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		hexlen=0;
 		bzero(uSPtr,sizeof(uString));
 		token=parseLine(cmd,hex,&hexlen,uString, sizeof(uString));
-		sprintf(string,"\t\tToken: %d Hexlen:%d, Unit: %s",token,hexlen,uSPtr);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "\t\tToken: %d Hexlen:%d, Unit: %s", token, hexlen, uSPtr);
 		cmpPtr=newCompileNode(cmpStartPtr);
 		if(!cmpStartPtr)
 			cmpStartPtr=cmpPtr;
@@ -587,8 +562,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		cmpPtr->send=calloc(hexlen,sizeof(char));
 		memcpy(cmpPtr->send,hex,hexlen);
 		if (*uSPtr && !(cmpPtr->uPtr=getUnitNode(uPtr,uSPtr))) {
-			sprintf(string,"Unit %s nicht definiert",uSPtr);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "Unit %s nicht definiert", uSPtr);
 			exit(3);
 		}
 				
@@ -604,14 +578,7 @@ void compileCommand(devicePtr dPtr,unitPtr uPtr) {
 	if (dPtr->next)
 		compileCommand(dPtr->next,uPtr);
 	
-	char string[1000];
-
-	
-	sprintf(string,"Expandiere Kommandos fuer Device %s", dPtr->id);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "Expandiere Kommandos fuer Device %s", dPtr->id);
 	expand(dPtr->cmdPtr,dPtr->protoPtr);
 	buildByteCode(dPtr->cmdPtr,uPtr); 
-
-	
 }
-

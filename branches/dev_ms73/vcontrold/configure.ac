@@ -1,8 +1,8 @@
-#                                               -*- Autoconf -*-
+##                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(vcontrol, 1.0, mschroether@gmx.de)
+AC_INIT(vcontrol, 0.98, mschroether@gmx.de)
 
 AM_INIT_AUTOMAKE(no-dependencies)
 

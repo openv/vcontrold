@@ -40,12 +40,7 @@ static jmp_buf  env_alrm;
 
 int openSocket(int tcpport) {
 	int listenfd;
-	//socklen_t clilen;
 	struct sockaddr_in servaddr;
-	//struct sockaddr_in cliaddr;
-	char string[1000];
-	//char buf[1000];
-	//int cliport;
 
 	listenfd=socket(AF_INET,SOCK_STREAM,0);
 	
@@ -57,18 +52,15 @@ int openSocket(int tcpport) {
 	// this will configure the socket to reuse the address if it was in use and is not free allready.
 	int optval =1;
 	if(listenfd < 0 || setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
-		sprintf(string,"setsockopt gescheitert!");
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "setsockopt gescheitert!");
 		exit(1);
 	}
 	
 	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
-			sprintf(string,"bind auf port %d gescheitert (in use / closewait)",tcpport);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "bind auf port %d gescheitert (in use / closewait)", tcpport);
 			exit(1);
 	}
-	sprintf(string,"TCP socket %d geoeffnet",tcpport);
-	logIT(LOG_NOTICE,string);
+	VCLog(LOG_NOTICE, "TCP socket %d geoeffnet", tcpport);
 	listen(listenfd, LISTENQ);
 	return(listenfd);
 }
@@ -78,7 +70,6 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 	pid_t	childpid;
 	socklen_t clilen;
 	struct sockaddr_in cliaddr;
-	char string[1000];
 	char buf[1000];
 	int cliport;
 
@@ -90,13 +81,11 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 		inet_ntop(AF_INET,&cliaddr.sin_addr, buf, sizeof(buf));
 		cliport=ntohs(cliaddr.sin_port);
 		if(checkP && !(*checkP)(buf)) {
-			sprintf(string,"Access denied %s:%d",buf,cliport);
-			logIT(LOG_NOTICE,string);
+			VCLog(LOG_NOTICE, "Access denied %s:%d", buf, cliport);
 			close(connfd);
 			continue;
 		}
-		sprintf(string,"Client verbunden %s:%d (FD:%d)",buf,cliport,connfd);
-		logIT(LOG_NOTICE,string);
+		VCLog(LOG_NOTICE, "Client verbunden %s:%d (FD:%d)", buf, cliport, connfd);
 		if (!makeChild) {
 			return(connfd);
 		}
@@ -105,17 +94,15 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 			return(connfd);
 		}
 		else {
-			sprintf(string,"Child Prozess mit pid:%d gestartet",childpid);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Child Prozess mit pid:%d gestartet", childpid);
 		}
 		close(connfd);
 	}
 }
 
-void closeSocket(int sockfd) {
-	char string[1000];
-        sprintf(string,"Verbindung beendet (fd:%d)",sockfd);
-	logIT(LOG_INFO,string);
+void closeSocket(int sockfd)
+{
+        VCLog(LOG_INFO, "Verbindung beendet (fd:%d)", sockfd);
 	close(sockfd);
 }
 
@@ -126,12 +113,9 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 	int sockfd;
 	extern int errno;
 	char *errstr;
-	char string[1000];
-
 
 	if ((hp=gethostbyname(host))== NULL) {	
-		sprintf(string,"Fehler gethostbyname: %s:%s",host,hstrerror(h_errno));
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Fehler gethostbyname: %s:%s", host, hstrerror(h_errno));
 		exit(1);
 	}
 	pptr= (struct in_addr **) hp->h_addr_list;
@@ -142,10 +126,9 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 		servaddr.sin_port=htons(port);
 		memcpy(&servaddr.sin_addr,*pptr,sizeof(struct in_addr));
 		if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-			logIT(LOG_ERR,"SIGALRM error");
+			VCLog(LOG_ERR,"SIGALRM error");
 		if(setjmp(env_alrm) !=0) {
-			sprintf(string,"connect timeout %s:%d",host,port);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "connect timeout %s:%d", host, port);
 			close(sockfd); /* anscheinend besteht manchmal schon noch eine Verbindung??? */
 			alarm(0);
                         return(-1);
@@ -159,17 +142,14 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 		close(sockfd);
 	}
 	if (*pptr == NULL) {
-		sprintf(string,"TTY Net: Keine Verbingung zu %s:%d",host,port);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "TTY Net: Keine Verbingung zu %s:%d", host, port);
 		return(-1);
 	}
-	sprintf(string,"ClI Net: verbunden %s:%d (FD:%d)",host,port,sockfd);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "ClI Net: verbunden %s:%d (FD:%d)", host, port, sockfd);
 	int flag=1;
 	if (noTCPdelay && (setsockopt(sockfd,IPPROTO_TCP,TCP_NODELAY, (char*) &flag,sizeof(int)))) {
 		errstr=strerror(errno);
-		sprintf(string,"Fehler setsockopt TCP_NODELAY (%s)",errstr);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Fehler setsockopt TCP_NODELAY (%s)", errstr);
 	}
 	
 
@@ -216,7 +196,7 @@ ssize_t
 Writen(int fd, void *ptr, size_t nbytes)
 {
 	if (writen(fd, ptr, nbytes) != nbytes) {
-		logIT(LOG_ERR,"Fehler beim schreiben auf socket");
+		VCLog(LOG_ERR, "Fehler beim schreiben auf socket");
 		return(0);
 	}
 	return(nbytes);
@@ -263,7 +243,7 @@ Readn(int fd, void *ptr, size_t nbytes)
 	ssize_t		n;
 
 	if ( (n = readn(fd, ptr, nbytes)) < 0) {
-		logIT(LOG_ERR,"Fehler beim lesen von socket");
+		VCLog(LOG_ERR,"Fehler beim lesen von socket");
 		return(0);
 	}
 	return(n);
@@ -328,7 +308,7 @@ Readline(int fd, void *ptr, size_t maxlen)
 	ssize_t		n;
 
 	if ( (n = readline(fd, ptr, maxlen)) < 0) {
-		logIT(LOG_ERR,"Fehler beim lesen von socket");
+		VCLog(LOG_ERR, "Fehler beim lesen von socket");
 		return(0);
 	}
 	return(n);

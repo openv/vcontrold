@@ -1,7 +1,10 @@
 /* socket.h */
 /* $Id: socket.h 13 2008-03-02 13:13:41Z marcust $ */
 
-#include<arpa/inet.h>
+#ifndef _SOCKET_H_
+#define _SOCKET_H_
+
+#include <arpa/inet.h>
 
 int openSocket(int tcpport);
 int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *));
@@ -21,3 +24,5 @@ ssize_t Readline(int fd, void *ptr, size_t maxlen);
 #define MAXLINE 1000
 
 #define CONNECT_TIMEOUT 3 
+
+#endif // _SOCKET_H_

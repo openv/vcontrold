@@ -1,6 +1,9 @@
 /* parser.h */
 /* $Id: parser.h 34 2008-04-06 19:39:29Z marcust $ */
 
+#ifndef _PARSER_H_
+#define _PARSER_H_
+
 int parseLine(char *lineo,char *hex, int *hexlen,char *uSPtr, ssize_t uSPtrLen);
 int execCmd(char *cmd,int fd,char *result, int resultLen);
 void removeCompileList(compilePtr ptr);
@@ -15,7 +18,4 @@ void compileCommand(devicePtr dPtr,unitPtr uPtr);
 #define PAUSE   4
 #define BYTES   5
 
-#ifndef MAXBUF
-	#define MAXBUF 4096
-#endif
-
+#endif // _PARSER_H_

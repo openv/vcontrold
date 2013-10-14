@@ -22,7 +22,7 @@
 #include <arpa/inet.h>
 
 
-#include"io.h"
+#include "io.h"
 #include "common.h"
 #include "xmlconfig.h"
 #include "parser.h"
@@ -38,8 +38,9 @@
 #define INIOUTFILE "/tmp/sim-%s.ini"
 #endif
 
+#ifndef VERSION
 #define VERSION "0.98"
-
+#endif
 
 /* Globale Variablen */
 char xmlfile[200]=XMLFILE;
@@ -75,30 +76,25 @@ void usage() {
 
 short checkIP(char *ip) {
 	allowPtr aPtr;
-	char string[1000];
 	if ((aPtr = getAllowNode(cfgPtr->aPtr,inet_addr(ip)))) {
-		sprintf(string,"%s in allowList (%s)",ip,aPtr->text);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO,"%s in allowList (%s)", ip, aPtr->text);
 		return(1);
 	}
 	else { 
-		sprintf(string,"%s nicht in allowList",ip);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "%s nicht in allowList", ip);
 		return(0);
 	}
 }
 
-int reloadConfig() {
-	char string[200];
+int reloadConfig()
+{
 	if (parseXMLFile(xmlfile)) {
 		compileCommand(devPtr,uPtr);
-		sprintf(string,"XMLFile %s neu geladen",xmlfile);
-		logIT(LOG_NOTICE,string);
+		VCLog(LOG_NOTICE, "XMLFile %s neu geladen", xmlfile);
 		return(1);
 	}
 	else {
-		sprintf(string,"Laden von XMLFile %s gescheitert",xmlfile);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Laden von XMLFile %s gescheitert", xmlfile);
 		return(0);
 	}
 }
@@ -121,8 +117,7 @@ int readCmdFile(char *filename,char *result,int *resultLen,char *device ) {
 
 	/* das Device wird erst geoeffnet, wenn wir was zu tun haben */
 	if ((fd=openDevice(device))== -1) {
-		sprintf(string,"Fehler beim oeffnen %s",device);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Fehler beim oeffnen %s", device);
 		result="\0";
 		*resultLen=0;
 		return(0);
@@ -130,14 +125,12 @@ int readCmdFile(char *filename,char *result,int *resultLen,char *device ) {
 	
 	cmdPtr=fopen(filename,"r");
 	if (!cmdPtr) {
-		sprintf(string,"Kann Cmd File %s nicht oeffnen",filename);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Kann Cmd File %s nicht oeffnen", filename);
 		result="\0";
 		*resultLen=0;
 		return(0);
 	} 
-	sprintf(string,"Lese Cmd File %s",filename);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "Lese Cmd File %s", filename);
 	/* Queue leeren */
 	vcontrol_semget();
         tcflush(fd,TCIOFLUSH);
@@ -168,8 +161,7 @@ int readCmdFile(char *filename,char *result,int *resultLen,char *device ) {
 			/* timeout */
 		}
 		if (count) {
-			sprintf(string,"Empfangen: %s",buffer);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Empfangen: %s", buffer);
 		}
 			
 	}
@@ -212,18 +204,16 @@ int rawModus(int socketfd,char *device) {
 	if (!mkstemp(tmpfile)) {
 		/* noch ein Versuch */
 		if (!mkstemp(tmpfile)) {
-			logIT(LOG_ERR,"Fehler Erzeugung mkstemp");
+			VCLog(LOG_ERR, "Fehler Erzeugung mkstemp");
 			return(0);
 		}
 	}
 	filePtr=fopen(tmpfile,"w+");
 	if (!filePtr) {
-		sprintf(string,"Kann Tmp File %s nicht anlegen",tmpfile);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Kann Tmp File %s nicht anlegen", tmpfile);
 		return(0);
 	} 
-	sprintf(string,"Raw Modus: Temp Datei: %s",tmpfile);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "Raw Modus: Temp Datei: %s", tmpfile);
 	while(Readline(socketfd,readBuf,sizeof(readBuf))) {
 		/* hier werden die einzelnen Befehle geparst */
 		if (strstr(readBuf,"END")==readBuf) {
@@ -240,14 +230,13 @@ int rawModus(int socketfd,char *device) {
 			remove(tmpfile);	
 			return(1);
 		}
-		sprintf(string,"Raw: Gelesen: %s",readBuf);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Raw: Gelesen: %s", readBuf);
 		/*
 		int n;
 		if ((n=fputs(readBuf,filePtr))== 0) {
 		*/
 		if (fputs(readBuf,filePtr)== EOF) {
-			logIT(LOG_ERR,"Fehler beim schreiben tmp Datei");
+			VCLog(LOG_ERR, "Fehler beim schreiben tmp Datei");
 		}
 		else {
 			/* debug stuff */
@@ -291,8 +280,7 @@ int interactive(int socketfd,char *device ) {
 		readPtr=readBuf+rcount;
 		while(iscntrl(*readPtr))
 			*readPtr--='\0';
-		sprintf(string,"Befehl: %s",readBuf);
-		logIT(LOG_INFO,string);	
+		VCLog(LOG_INFO, "Befehl: %s", readBuf);
 
 		/* wir trennen Kommando und evtl. Optionen am ersten Blank */
 		bzero(cmd,sizeof(cmd));
@@ -403,8 +391,7 @@ int interactive(int socketfd,char *device ) {
 			bzero(sendBuf,sizeof(sendBuf));
 			if((noUnit|!cPtr->unit) && *para) {
 				if((sendLen=string2chr(para,sendBuf,sizeof(sendBuf)))==-1) {
-					sprintf(string,"Kein Hex string: %s",para);
-					logIT(LOG_ERR,string);
+					VCLog(LOG_ERR, "Kein Hex string: %s", para);
 					sendErrMsg(socketfd);
 					if (!Writen(socketfd,prompt,strlen(prompt))) {
 						sendErrMsg(socketfd);
@@ -415,8 +402,7 @@ int interactive(int socketfd,char *device ) {
 				}
 				/* falls sendLen > als len der Befehls, nehmen wir len */
 				if (sendLen > cPtr->len) {
-					sprintf(string,"Laenge des Hex Strings > Sendelaenge des Befehls, sende nur %d Byte",cPtr->len);
-					logIT(LOG_WARNING,string);
+					VCLog(LOG_WARNING,"Laenge des Hex Strings > Sendelaenge des Befehls, sende nur %d Byte", cPtr->len);
 					sendLen=cPtr->len;
 				}
 			}
@@ -431,8 +417,7 @@ int interactive(int socketfd,char *device ) {
 			/* das Device wird erst geoeffnet, wenn wir was zu tun haben */
 			/* aber nur, falls es nicht schon offen ist */
 			if ((fd<0) && (fd=openDevice(device))== -1) {
-				sprintf(string,"Fehler beim oeffnen %s",device);
-				logIT(LOG_ERR,string);
+				VCLog(LOG_ERR, "Fehler beim oeffnen %s", device);
 				sendErrMsg(socketfd);
 				if (!Writen(socketfd,prompt,strlen(prompt))) {
 					sendErrMsg(socketfd);
@@ -446,21 +431,18 @@ int interactive(int socketfd,char *device ) {
 
 			/* falls ein Pre-Kommando definiert wurde, fuehren wir dies zuerst aus */
 			if (cPtr->precmd &&(pcPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cPtr->precmd))) {
-				sprintf(string,"Fuehre Pre Kommando %s aus",cPtr->precmd);
-				logIT(LOG_INFO,string);
+				VCLog(LOG_INFO, "Fuehre Pre Kommando %s aus", cPtr->precmd);
 
 				if (execByteCode(pcPtr->cmpPtr,fd,pRecvBuf,sizeof(pRecvBuf),sendBuf,sendLen,1,pcPtr->bit,pcPtr->retry,pRecvBuf,pcPtr->recvTimeout)==-1) {	
 				  vcontrol_semrelease();
-				  sprintf(string,"Fehler beim ausfuehren von %s",readBuf);
-				  logIT(LOG_ERR,string);
+				  VCLog(LOG_ERR, "Fehler beim ausfuehren von %s", readBuf);
 				  sendErrMsg(socketfd);
 				  break;
 				}
 				else {
 					bzero(buffer,sizeof(buffer));
 					char2hex(buffer,pRecvBuf,pcPtr->len);
-					sprintf(string,"Ergebnis Pre-Kommand: %s",buffer);
-					logIT(LOG_INFO,string);
+					VCLog(LOG_INFO, "Ergebnis Pre-Kommand: %s", buffer);
 				}
 	
 					
@@ -475,15 +457,14 @@ int interactive(int socketfd,char *device ) {
 			vcontrol_semrelease();
 
 			if (count==-1) {	
-				sprintf(string,"Fehler beim ausfuehren von %s",readBuf);
-				logIT(LOG_ERR,string);
+				VCLog(LOG_ERR, "Fehler beim ausfuehren von %s", readBuf);
 				sendErrMsg(socketfd);
 			}
 			else if (*recvBuf && (count==0)) { /* Unit gewandelt */
 				
-				logIT(LOG_INFO,recvBuf);
-				sprintf(string,"%s\n",recvBuf);
-				Writen(socketfd,string,strlen(string));
+			  VCLog(LOG_INFO,"%s", recvBuf);
+			  sprintf(string,"%s\n",recvBuf);
+			  Writen(socketfd,string,strlen(string));
 			}
 			else {
 				int n;
@@ -502,8 +483,7 @@ int interactive(int socketfd,char *device ) {
 				if (count) {
 					sprintf(string,"%s\n",buffer);
 					Writen(socketfd,string,strlen(string));
-					sprintf(string,"Empfangen: %s",buffer);
-					logIT(LOG_INFO,string);
+					VCLog(LOG_INFO, "Empfangen: %s", buffer);
 				}
 			}
 			if (iniFD)
@@ -621,11 +601,11 @@ int interactive(int socketfd,char *device ) {
 } 
 
 static void sigPipeHandler(int signo) {
-	logIT(LOG_ERR,"SIGPIPE empfangen");
+	VCLog(LOG_ERR, "SIGPIPE empfangen");
 }
 
 static void sigHupHandler(int signo) {
-	logIT(LOG_NOTICE,"SIGHUP empfangen");
+	VCLog(LOG_NOTICE, "SIGHUP empfangen - Konfiguration wird neu eingelesen");
 	reloadConfig();
 }
 
@@ -728,8 +708,10 @@ int main(int argc,char* argv[])  {
 	if (!initLog(useSyslog,logfile,debug)) 
 		exit(1);
 
+	VCLog(LOG_NOTICE, "Start vcontrold version %s", VERSION);
+
 	if (signal(SIGHUP,sigHupHandler)== SIG_ERR) {
-		logIT(LOG_ERR,"Fehler beim Signalhandling SIGHUP");
+		VCLog(LOG_ERR,"Fehler beim Signalhandling SIGHUP");
 		exit(1);
 	}
 		
@@ -739,8 +721,7 @@ int main(int argc,char* argv[])  {
 		char file[100];
 		sprintf(file,INIOUTFILE,cfgPtr->devID);
 		if (!(iniFD=fopen(file,"w"))) {
-			sprintf(string,"Konnte Simulator INI File %s nicht anlegen",file);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "Konnte Simulator INI File %s nicht anlegen", file);
 		}
 		fprintf(iniFD,"[DATA]\n");
 	}	
@@ -762,14 +743,13 @@ int main(int argc,char* argv[])  {
 			int pid;
 			/* etwas Siganl Handling */
 			if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) {
-				logIT(LOG_ERR,"Fehler beim Signalhandling SIGCHLD");
+				VCLog(LOG_ERR, "Fehler beim Signalhandling SIGCHLD");
 			}
 			
 			pid=fork();
 			if (pid <0) {
-				sprintf(string,"fork fehlgeschlagen (%d)",pid);
-				logIT(LOG_ERR,string);
-				exit(1);
+			  VCLog(LOG_ERR, "fork fehlgeschlagen (%d)", pid);
+			  exit(1);
 			}
 			if (pid > 0) 
 				exit(0); /* Vater wird beendet, Kind laueft weiter */
@@ -784,11 +764,11 @@ int main(int argc,char* argv[])  {
 
 			sid=setsid();
 			if(sid <0) {
-				logIT(LOG_ERR, "setsid fehlgeschlagen");
+				VCLog(LOG_ERR, "setsid fehlgeschlagen");
 				exit(1);
 			}
 			if (chdir("/") <0) {
-				logIT(LOG_ERR, "chdir / fehlgeschlagen");
+				VCLog(LOG_ERR, "chdir / fehlgeschlagen");
 				exit(1);
 			}	
 
@@ -811,7 +791,7 @@ int main(int argc,char* argv[])  {
 		while(1) {
 			sockfd=listenToSocket(listenfd,makeDaemon,checkP);
 			if (signal(SIGPIPE,sigPipeHandler)== SIG_ERR) {
-				logIT(LOG_ERR,"Signal error");
+				VCLog(LOG_ERR, "Signal error");
 				exit(1);
 			}
 			if (sockfd>=0) {
@@ -820,13 +800,12 @@ int main(int argc,char* argv[])  {
 				closeSocket(sockfd);
 				setDebugFD(-1);
 				if (makeDaemon) {
-					sprintf(string,"Child Prozess pid:%d beendet",getpid());
-					logIT(LOG_INFO,string);
+					VCLog(LOG_INFO, "Child Prozess pid:%d beendet", getpid());
 					exit(0); /* das Kind verabschiedet sich */
 				}
 			}
 			else {
-				logIT(LOG_ERR,"Fehler bei Verbindungsaufbau");
+				VCLog(LOG_ERR, "Fehler bei Verbindungsaufbau");
 			}
 		}
 	}
@@ -839,11 +818,7 @@ int main(int argc,char* argv[])  {
 	vcontrol_semfree();
 
 	close(fd);
-	logIT(LOG_LOCAL0,"vcontrold beendet");
+	VCLog(LOG_NOTICE, "vcontrold beendet");
 	
 	return 0;
 }
-
-
-
-

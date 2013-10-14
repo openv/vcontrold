@@ -26,9 +26,9 @@
 #include "io.h"
 #include "client.h"
 
-
-#define VERSION "0.3alpha"
-
+#ifndef VERSION
+#define VERSION "0.98"
+#endif
 
 void usage() {
 	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>][-v]\n\n\
@@ -123,9 +123,8 @@ main(int argc,char* argv[])  {
 		usage();
 	sockfd=connectServer(host);
 	if (sockfd < 0) {
-		sprintf(string,"Keine Verbindung zu %s",host);
-		logIT(LOG_ERR,string);
-		exit(1);
+	  VCLog(LOG_ERR, "Keine Verbindung zu %s",host);
+	  exit(1);
 	}
 	/* Kommandos direkt angegeben */
 	resPtr=NULL;
@@ -136,20 +135,17 @@ main(int argc,char* argv[])  {
 		resPtr=sendCmdFile(sockfd,cmdfile);
 	}
 	if (!resPtr) {
-		logIT(LOG_ERR,"Fehler bei der Server Kommunikation");
+		VCLog(LOG_ERR,"Fehler bei der Server Kommunikation");
 		exit(1);
 	}
 	disconnectServer(sockfd);
 
 	if(*outfile) {
 		if (!(ofilePtr=fopen(outfile,"w"))) {
-			sprintf(string,"Kann Datei %s nicht anlegen",outfile);
-			logIT(LOG_ERR,string);
-			exit(1);
+		  VCLog(LOG_ERR, "Kann Datei %s nicht anlegen", outfile);
+		  exit(1);
 		}
-		bzero(string,sizeof(string));
-		sprintf(string,"Ausgabe Datei %s",outfile);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Ausgabe Datei %s", outfile);
 	}
 	else {
 		ofilePtr=fdopen(fileno(stdout),"w");
@@ -159,9 +155,8 @@ main(int argc,char* argv[])  {
 	if (*csvfile) {
 		/* Kompakt Format mit Semikolon getrennt */
 		if (!(filePtr=fopen(csvfile,"a"))) {
-			sprintf(string,"Kann Datei %s nicht anlegen",csvfile);
-			logIT(LOG_ERR,string);
-			exit(1);
+		  VCLog(LOG_ERR, "Kann Datei %s nicht anlegen", csvfile);
+		  exit(1);
 		}
 		bzero(string,sizeof(string));
 		bzero(result,sizeof(result));
@@ -217,9 +212,8 @@ main(int argc,char* argv[])  {
 
 
 		if (!(filePtr=fopen(tmplfile,"r"))) {
-			sprintf(string,"Kann Template-Datei %s nicht oeffnen",tmplfile);
-			logIT(LOG_ERR,string);
-			exit(1);
+		  VCLog(LOG_ERR, "Kann Template-Datei %s nicht oeffnen", tmplfile);
+		  exit(1);
 		}
 		/*
 		Es gibt folgende Variablen zum Ersetzen:
@@ -227,8 +221,7 @@ main(int argc,char* argv[])  {
 			$n: Float (trPtr->result)
 		*/
 		while((fgets(line,sizeof(line)-1,filePtr))) {
-			sprintf(string,"Tmpl Zeile:%s",line);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Tmpl Zeile:%s", line);
 			lSptr=line;
 			while((lptr=strchr(lSptr,'$'))) {	
 				varReplaced=0;
@@ -245,8 +238,7 @@ main(int argc,char* argv[])  {
 					lEptr++;
 				bzero(varname,sizeof(varname));
 				strncpy(varname,lptr+1,lEptr-lptr-1);
-				sprintf(string,"\tVariable erkannt:%s",varname);
-				logIT(LOG_INFO,string);
+				VCLog(LOG_INFO, "\tVariable erkannt:%s", varname);
 
 				/* wir geben schon mal alles bis dahin aus */
 				bzero(string,sizeof(string));
@@ -262,14 +254,12 @@ main(int argc,char* argv[])  {
 					/* Variable R Index dahinter in idx */
 					if ((idx-1) < maxIdx) {
 						tPtr=idxPtr[idx-1];
-						sprintf(string,"%s:%s",tPtr->cmd,tPtr->raw);
-						logIT(LOG_INFO,string);
+						VCLog(LOG_INFO, "%s:%s", tPtr->cmd, tPtr->raw);
 						if (tPtr->raw)
 							fprintf(ofilePtr,"%s",tPtr->raw);
 					}
 					else {
-						sprintf(string,"Index der Variable $%s > %d",varname,maxIdx-1);
-						logIT(LOG_ERR,string);
+					  VCLog(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx-1);
 					}
 				}
 				/* $Cn */
@@ -279,14 +269,12 @@ main(int argc,char* argv[])  {
 					/* Variable R Index dahinter in idx */
 					if ((idx-1) < maxIdx) {
 						tPtr=idxPtr[idx-1];
-						sprintf(string,"Kommando: %s",tPtr->cmd);
-						logIT(LOG_INFO,string);
+						VCLog(LOG_INFO, "Kommando: %s", tPtr->cmd);
 						if (tPtr->cmd)
 							fprintf(ofilePtr,"%s",tPtr->cmd);
 					}
 					else {
-						sprintf(string,"Index der Variable $%s > %d",varname,maxIdx-1);
-						logIT(LOG_ERR,string);
+					  VCLog(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx-1);
 					}
 				}
 				/* $En */
@@ -296,28 +284,24 @@ main(int argc,char* argv[])  {
 					/* Variable R Index dahinter in idx */
 					if ((idx-1) < maxIdx) {
 						tPtr=idxPtr[idx-1];
-						sprintf(string,"Fehler: %s:%s",tPtr->cmd,tPtr->err);
-						logIT(LOG_INFO,string);
+						VCLog(LOG_INFO, "Fehler: %s:%s", tPtr->cmd, tPtr->err);
 						if (tPtr->err)
 							fprintf(ofilePtr,"%s",tPtr->err);
 					}
 					else {
-						sprintf(string,"Index der Variable $%s > %d",varname,maxIdx-1);
-						logIT(LOG_ERR,string);
+						VCLog(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx-1);
 					}
 				}
 				/* $n */
 				else if (isdigit(*varname) && (idx=atoi(varname)))  {
 					if ((idx-1) < maxIdx) {
 						tPtr=idxPtr[idx-1];
-						sprintf(string,"%s:%f",tPtr->cmd,tPtr->result);
-						logIT(LOG_INFO,string);
+						VCLog(LOG_INFO, "%s:%f", tPtr->cmd, tPtr->result);
 						if (tPtr->result)
 							fprintf(ofilePtr,"%f",tPtr->result);
 					}
 					else {
-						sprintf(string,"Index der Variable $%s > %d",varname,maxIdx-1);
-						logIT(LOG_ERR,string);
+						VCLog(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx-1);
 					}
 				}
 				else {
@@ -332,22 +316,17 @@ main(int argc,char* argv[])  {
 		fclose(filePtr);
 		if (*outfile && execMe) { /* Datei ausfuerhbar machen und starten */
 			fclose(ofilePtr);
-			bzero(string,sizeof(string));
-			sprintf(string,"Fuehre Datei %s aus",outfile);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Fuehre Datei %s aus", outfile);
 			if (chmod(outfile,S_IXUSR|S_IRUSR|S_IWUSR)!=0) {
-				sprintf(string,"Fehler chmod +x %s",outfile);
-				logIT(LOG_ERR,string);
-				exit(1);
+			  VCLog(LOG_ERR, "Fehler chmod +x %s", outfile);
+			  exit(1);
 			}
 			short ret;
 			if ((ret=system(outfile)) == -1) { 
-				sprintf(string,"Fehler system(%s)",outfile);
-				logIT(LOG_ERR,string);
-				exit(1);
+			  VCLog(LOG_ERR, "Fehler system(%s)", outfile);
+			  exit(1);
 			}
-			sprintf(string,"Ret Code: %d",ret);
-                        logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Ret Code: %d", ret);
                         exit(ret);
 		}
 	}

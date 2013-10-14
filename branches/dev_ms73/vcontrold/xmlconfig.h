@@ -1,8 +1,10 @@
 /* xmlconfig.h */
 /* $Id: xmlconfig.h 34 2008-04-06 19:39:29Z marcust $ */
 
-#include <arpa/inet.h>
+#ifndef _XMLCONFIG_H_
+#define _XMLCONFIG_H_
 
+#include <arpa/inet.h>
 
 typedef struct config *configPtr;
 typedef struct protocol *protocolPtr;
@@ -121,5 +123,4 @@ struct enumerate {
 	enumPtr next;
 } Enumerate;
 	
-	
-	
+#endif // _XMLCONFIG_H_

@@ -61,12 +61,9 @@ int openDevice(char *device) {
 
 int opentty(char *device) {
 	int fd;
-	char string[1000];
-	sprintf(string,"konfiguriere serielle Schnittstelle %s",device);
-	logIT(LOG_LOCAL0,string);
+	VCLog(LOG_INFO, "konfiguriere serielle Schnittstelle %s", device);
 	if ((fd=open(device,O_RDWR)) < 0) {
-		sprintf(string,"cannot open %s:%s",device, strerror (errno));
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "cannot open %s:%s", device, strerror (errno));
 		exit(1);
 	}
 	int s;
@@ -74,8 +71,7 @@ int opentty(char *device) {
 	s=tcgetattr(fd,&oldsb);
 
 	if (s<0) {
-		sprintf(string,"error tcgetattr %s:%s",device, strerror (errno));
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "error tcgetattr %s:%s", device, strerror (errno));
 		exit(1);
 	}
 	newsb=oldsb;
@@ -102,8 +98,7 @@ int opentty(char *device) {
 	modemctl |= TIOCM_DTR;
 	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
-		sprintf(string,"error ioctl TIOCMSET %s:%s",device, strerror (errno));
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "error ioctl TIOCMSET %s:%s", device, strerror (errno));
 		exit(1); 
 	}
 
@@ -116,24 +111,23 @@ int my_send(int fd,char *s_buf, int len) {
 
 	/* Buffer leeren */
 	/* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
-	fcntl(fd,F_SETFL,O_NONBLOCK);
+	int flags = fcntl(fd, F_GETFL, 0);
+	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 	while(readn(fd,string,sizeof(string))>0);
-	fcntl(fd,F_SETFL,!O_NONBLOCK);
+	fcntl(fd, F_SETFL, flags);
 	
 	tcflush(fd,TCIFLUSH);
 	for (i=0;i<len;i++) {
 		/* wir benutzen die Socket feste Vairante aus socket.c */
 		writen(fd,&s_buf[i],1);
 		unsigned char byte=s_buf[i] & 255;
-		sprintf(string,">SEND: %02X",(int)byte);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, ">SEND: %02X", (int)byte);
 	}
 	return(1);
 }
 
 int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	int i;
-	char string[1000];
 
 	struct tms tms_t;
 	clock_t start,end,mid,mid1;
@@ -142,25 +136,24 @@ int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	start=times(&tms_t);
 	mid1=start;
 	for(i=0;i<r_len;i++) {
-		if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-			logIT(LOG_ERR,"SIGALRM error");
-			if(setjmp(env_alrm) !=0) {
-				logIT(LOG_ERR,"read timeout");
-				return(-1);
-			}
-			alarm(TIMEOUT);
-			/* wir benutzen die Socket feste Vairante aus socket.c */
-			if (readn(fd,&r_buf[i],1) <= 0) {
-				logIT(LOG_ERR,"error read tty");;
-				alarm(0);
-				return(-1);
-			}
-			alarm(0);
-			unsigned char byte=r_buf[i] & 255;
-			mid=times(&tms_t);
-			sprintf(string,"<RECV: %02X (%0.1f ms)", byte,((float)(mid-mid1)/clktck)*1000);
-			logIT(LOG_INFO,string);
-			mid1=mid;
+	  if (signal(SIGALRM, sig_alrm) == SIG_ERR)
+	    VCLog(LOG_ERR, "SIGALRM error");
+	  if(setjmp(env_alrm) !=0) {
+	    VCLog(LOG_ERR, "read timeout");
+	    return(-1);
+	  }
+	  alarm(TIMEOUT);
+	  /* wir benutzen die Socket feste Vairante aus socket.c */
+	  if (readn(fd,&r_buf[i],1) <= 0) {
+	    VCLog(LOG_ERR, "error read tty");;
+	    alarm(0);
+	    return(-1);
+	  }
+	  alarm(0);
+	  unsigned char byte=r_buf[i] & 255;
+	  mid=times(&tms_t);
+	  VCLog(LOG_INFO,"<RECV: %02X (%0.1f ms)", byte,((float)(mid-mid1)/clktck)*1000);
+	  mid1=mid;
 	}
 	end=times(&tms_t);
 	*etime=((float)(end-start)/clktck)*1000;
@@ -175,7 +168,6 @@ int waitfor(int fd, char *w_buf,int w_len) {
 	int i;
 	time_t start;
 	char r_buf[MAXBUF];
-	char string[1000];
 	char hexString[1000]="\0";
 	char dummy[3];
 	unsigned long etime;
@@ -184,8 +176,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		strncat(hexString,dummy,999);
 	}
 	
-	sprintf(string,"Warte auf %s",hexString);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "Warte auf %s", hexString);
 	start=time(NULL);
 	
 	/* wir warten auf das erste Zeichen, danach muss es passen */
@@ -194,7 +185,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		if (receive(fd,r_buf,1,&etime)<0) 
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
-			logIT(LOG_WARNING,"Timeout wait");
+			VCLog(LOG_WARNING, "Timeout wait");
 			return(0);
 		}
 	} while (r_buf[0] != w_buf[0]);
@@ -203,14 +194,13 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		if (receive(fd,r_buf,1,&etime)<0) 
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
-			logIT(LOG_WARNING,"Timeout wait");
+			VCLog(LOG_WARNING, "Timeout wait");
 			return(0);
 		}
 		if( r_buf[0] != w_buf[i]) {
-			logIT(LOG_ERR,"Synchronisation verloren");
+			VCLog(LOG_ERR, "Synchronisation verloren");
 			exit(1);
 		}
         }		
-/*	logIT(LOG_INFO,"Zeichenkette erkannt"); */
 	return(1);
 }

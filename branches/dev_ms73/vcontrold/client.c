@@ -42,24 +42,20 @@ trPtr newTrNode(trPtr ptr) {
 
 
 ssize_t recvSync(int fd,char *wait,char **recv) {
-	char *string;
 	char *rptr;
 	char *pptr;
 	char c;
 	ssize_t count;
 	int rcount=1;
 	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-		logIT(LOG_ERR,"SIGALRM error");
+		VCLog(LOG_ERR,"SIGALRM error");
 	if(setjmp(env_alrm) !=0) {
-		string=calloc(1000,sizeof(char));
-		sprintf(string,"timeout wait:%s",wait);
-		logIT(LOG_ERR,string);
-		free(string);
+		VCLog(LOG_ERR, "timeout wait:%s", wait);
 		return(-1);
 	}
 	alarm(CL_TIMEOUT);
 	if (!(*recv=calloc(ALLOCSIZE,sizeof(char)))) {
-			logIT(LOG_ERR,"Fehler calloc");
+			VCLog(LOG_ERR, "Fehler calloc");
 			exit(1);
 	}
 	rptr=*recv;
@@ -70,29 +66,23 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		*rptr++=c;
 		if(!((rptr-*recv+1)%ALLOCSIZE)) {
 			if (realloc(*recv,ALLOCSIZE * sizeof(char) *  ++rcount)==NULL) { 
-				logIT(LOG_ERR,"Fehler realloc");
+				VCLog(LOG_ERR, "Fehler realloc");
 				exit(1);
 			}
 		}
 		if ((pptr=strstr(*recv,wait))) {
 			*pptr='\0';
-			string=calloc(strlen(*recv)+100,sizeof(char));
-			sprintf(string,"recv:%s",*recv);
-			logIT(LOG_INFO,string);
-			free(string);
+			VCLog(LOG_INFO, "recv:%s", *recv);
 			break;
 		}
 		alarm(CL_TIMEOUT);
 	}
 	if (!realloc(*recv,strlen(*recv)+1)) {
-		logIT(LOG_ERR,"realloc Fehler!!");
+		VCLog(LOG_ERR,"realloc Fehler!!");
 		exit(1);
 	}
 	if (count <=0) {
-		string=calloc(1000,sizeof(char));
-		sprintf(string,"exit mit count=%ld",count);
-		logIT(LOG_ERR,string);;
-		free(string);
+		VCLog(LOG_ERR, "exit mit count=%ld", count);
 	}
 	return(count);
 }
@@ -100,7 +90,6 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 int connectServer(char *host) {
 	char *dptr;
 	int sockfd;
-	char string[1000];
 	if (host[0] != '/' && (dptr=strchr(host,':'))) {
                 char serv[MAXBUF];
                 int port;
@@ -110,18 +99,15 @@ int connectServer(char *host) {
                 strncpy(serv,host,dptr-host);
                 sockfd=openCliSocket(serv,port,0);
 		if (sockfd) {
-			sprintf(string,"Verbindung zu %s Port %d aufgebaut",host,port);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Verbindung zu %s Port %d aufgebaut", host, port);
 		}
 		else {
-			sprintf(string,"Verbindung zu %s Port %d gescheitert",host,port);
-			logIT(LOG_INFO,string);
+			VCLog(LOG_INFO, "Verbindung zu %s Port %d gescheitert", host,port);
 			return(-1);
 		}
         }
 	else {
-		sprintf(string,"Host Format: IP|Name:Port");
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Host Format: IP|Name:Port");
 		return(-1);
 	}
 	return(sockfd);
@@ -138,20 +124,20 @@ void disconnectServer(int sockfd) {
 	close(sockfd);
 }
 
-size_t sendServer(int fd,char *s_buf, size_t len) {
-	
+size_t sendServer(int fd,char *s_buf, size_t len)
+{
 	char string[1000];
 	/* Buffer leeren */
         /* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
-        fcntl(fd,F_SETFL,O_NONBLOCK);
+	int flags = fcntl(fd, F_GETFL, 0);
+	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
         while(readn(fd,string,sizeof(string))>0);
-        fcntl(fd,F_SETFL,!O_NONBLOCK);
+	fcntl(fd, F_SETFL, flags);
 	return(Writen(fd,s_buf,len));
 }
 
 trPtr sendCmdFile(int sockfd,char *filename) {
 	FILE *filePtr;
-	char string[1000];
 	char line[MAXBUF];
 	trPtr	ptr;
 	trPtr	startPtr=NULL;
@@ -160,8 +146,7 @@ trPtr sendCmdFile(int sockfd,char *filename) {
 		return NULL;
 	}
 	else {
-		sprintf(string,"Kommando-Datei %s geoeffnet",filename);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Kommando-Datei %s geoeffnet ",filename);
 	}
 	bzero(line,sizeof(line));
 	while(fgets(line,MAXBUF-1,filePtr)){
@@ -213,8 +198,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 		if (sendServer(sockfd,string,strlen(string))<=0)
 			return(0);
 		bzero(string,sizeof(string));
-		sprintf(string,"SEND:%s",ptr->cmd);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "SEND:%s", ptr->cmd);
 		if(recvSync(sockfd,prompt,&sptr)<=0) {
 			free(sptr);
 			return(0);
@@ -222,10 +206,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 		ptr->raw=sptr;
 		if (iscntrl(*(ptr->raw+strlen(ptr->raw)-1)))
 			*(ptr->raw+strlen(ptr->raw)-1)='\0';
-		dumPtr=calloc(strlen(sptr)+20,sizeof(char));
-		sprintf(dumPtr,"RECV:%s",sptr);
-		logIT(LOG_INFO,dumPtr);
-		free(dumPtr);
+		VCLog(LOG_INFO, "RECV:%s",sptr);
 		/* wir fuellen Fehler und result */
 		if (strstr(ptr->raw,errTXT)==ptr->raw) {
 			ptr->err=ptr->raw;

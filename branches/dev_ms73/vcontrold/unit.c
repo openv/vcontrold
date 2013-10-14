@@ -89,7 +89,6 @@ int getCycleTime(char *recv,int len,char *result) {
 int setCycleTime(char *input,char *sendBuf) {
 	char *sptr,*cptr;
 	char *bptr=sendBuf;
-	char string[200];      
 	int hour,min;
 	int count=0;
 	
@@ -111,8 +110,7 @@ int setCycleTime(char *input,char *sendBuf) {
 		  bptr++;
 		  count++;
 		  sptr=strtok(NULL," ");
-		  sprintf(string,"Cycle Time: -- -- -> [%02X%02X]",0xff, 0xff);
-		  logIT(LOG_INFO,string);
+		  VCLog(LOG_INFO, "Cycle Time: -- -- -> [%02X%02X]", 0xff, 0xff);
 		}
 		else {
 		  /* haben wir einen Doppelpunkt im String? */
@@ -122,8 +120,7 @@ int setCycleTime(char *input,char *sendBuf) {
 		  }
 		  sscanf(sptr,"%i:%i",&hour,&min);
 		  *bptr=((hour <<3) + (min/10)) & 0xff;	
-		  sprintf(string,"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
-		  logIT(LOG_INFO,string);
+		  VCLog(LOG_INFO, "Cycle Time: %02d:%02d -> [%02X]", hour, min, (unsigned char) *bptr);
 		}
 		bptr++;
 		cptr=sptr;
@@ -131,8 +128,7 @@ int setCycleTime(char *input,char *sendBuf) {
 	
 	} while((sptr=strtok(NULL," ")) != NULL);
 	if ((count/2)*2 !=count) {
-		sprintf(string,"Anzahl Zeiten ungerade, ignoriere %s",cptr);
-		logIT(LOG_WARNING,string);
+		VCLog(LOG_WARNING, "Anzahl Zeiten ungerade, ignoriere %s", cptr);
 		*(bptr-1)=0xff;
 	}
 	return(8);
@@ -170,12 +166,9 @@ int getSysTime(char *recv,int len,char *result) {
 	return(1); 
 }
 
-int setSysTime(char *input,char *sendBuf,short bufsize) {
-/* 	char *bptr=sendBuf; */
-	char string[200];      
+int setSysTime(char *input,char *sendBuf,short bufsize)
+{
 	char systime[200];      
-/* 	int hour,min; */
-/* 	int count=0; */
 	time_t tt;
 	struct tm *t;
 
@@ -183,20 +176,18 @@ int setSysTime(char *input,char *sendBuf,short bufsize) {
 	if (!*input) {
 		time(&tt);
 		t=localtime(&tt);
-		bzero(string,sizeof(string));
 		bzero(systime,sizeof(systime));
 		sprintf(systime,"%04d  %02d %02d %02d %02d %02d %02d",t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_wday,t->tm_hour,t->tm_min,t->tm_sec);
 		/* wir fummeln uns nun ein Blank zwischen die Jahreszahl */
 		systime[4]=systime[3];
 		systime[3]=systime[2];
 		systime[2]=' ';
-		sprintf(string,"aktuelle Sys.Zeit %s",systime);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "aktuelle Sys.Zeit %s", systime);
 		return(string2chr(systime,sendBuf,bufsize));
 	}
 	else {
 		sprintf(sendBuf,"Setzen von explizieten Zeit noch nicht unterstuetzt");
-		logIT(LOG_ERR,"Setzen von explizieten Zeit noch nicht unterstuetzt");
+		VCLog(LOG_ERR, "Setzen von explizieten Zeit noch nicht unterstuetzt");
 		return(0);
 	}
 }
@@ -252,7 +243,7 @@ short bytes2Enum(enumPtr ptr,char *bytes,char **text,short len) {
 		char2hex(string,bytes,len);
 		strcat(string," -> ");
 		strcat(string,ePtr->text);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "%s", string);
 		return(1);
 	}
 	else
@@ -274,7 +265,7 @@ short text2Enum(enumPtr ptr,char *text,char **bytes,short *len){
 	bzero(string2,sizeof(string2));
 	char2hex(string2,ePtr->bytes,ePtr->len);
 	strcat(string,string2);
-	logIT(LOG_INFO,string);
+	VCLog(LOG_INFO, "%s", string);
 	return(*len);
 }
 
@@ -385,9 +376,7 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 		sprintf(formatI,"%%08X %%s");
 	}
 	else if (uPtr->type) {
-		bzero(string,sizeof(string));
-		sprintf(string,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
-		logIT(LOG_ERR,string);
+		VCLog(LOG_ERR, "Unbekannter Typ %s in Unit %s", uPtr->type, uPtr->name);
 		return(-1);
 	}
 		
@@ -407,15 +396,13 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 			break;
 	}
 	if (uPtr->gCalc && *uPtr->gCalc) { /* <calc im XML und get darin definiert */
-		sprintf(string,"Typ: %s (in float: %f)",uPtr->type,floatV);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Typ: %s (in float: %f)", uPtr->type, floatV);
 		inPtr=uPtr->gCalc;
-		sprintf(string,"(FLOAT) Exp:%s [%s]",inPtr,buffer);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "(FLOAT) Exp:%s [%s]", inPtr, buffer);
 		erg=execExpression(&inPtr,recvBuf,floatV,errPtr);
 		if (*errPtr) {
 			sprintf(string,"Exec %s: %s",uPtr->gCalc,error);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "%s", string);
 			strcpy(result,string);
 			return(-1);
 		}
@@ -423,17 +410,15 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	}
 	else if (uPtr->gICalc && *uPtr->gICalc) { /* <icalc im XML und get darin definiert */
 		inPtr=uPtr->gICalc;
-		sprintf(string,"(INT) Exp:%s [BP:%d] [%s]",inPtr,bitpos,buffer);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "(INT) Exp:%s [BP:%d] [%s]", inPtr, bitpos, buffer);
 		ergI=execIExpression(&inPtr,recvBuf,bitpos,pRecvPtr,errPtr);
 		if (*errPtr) {
 			sprintf(string,"Exec %s: %s",uPtr->gCalc,error);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "%s", string);
 			strcpy(result,string);
 			return(-1);
 		}
-		sprintf(string,"Erg: (Hex max. 4Byte) %08x",ergI);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Erg: (Hex max. 4Byte) %08x", ergI);
 		res=ergI;
 		if( uPtr->ePtr && bytes2Enum(uPtr->ePtr,&res,&tPtr,recvLen)) {
 			strcpy(result,tPtr);
@@ -524,12 +509,11 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 	if (uPtr->sCalc && *uPtr->sCalc) { /* <calc im XML und set darin definiert */
 		floatV=atof(input);
 		inPtr=uPtr->sCalc;
-		sprintf(string,"Send Exp:%s [V=%f]",inPtr,floatV);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Send Exp:%s [V=%f]", inPtr, floatV);
 		erg=execExpression(&inPtr,dumBuf,floatV,errPtr);
 		if (*errPtr) {
 			sprintf(string,"Exec %s: %s",uPtr->sCalc,error);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "%s", string);
 			strcpy(sendBuf,string);
 			return(-1);
 		}
@@ -549,12 +533,11 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 			else {
 				bzero(dumBuf,sizeof(dumBuf));
 				memcpy(dumBuf,ptr,count);
-				sprintf(string,"(INT) Exp:%s [BP:%d]",inPtr,bitpos);
-				logIT(LOG_INFO,string);
+				VCLog(LOG_INFO, "(INT) Exp:%s [BP:%d]", inPtr, bitpos);
 				ergI=execIExpression(&inPtr,dumBuf,bitpos,pRecvPtr,errPtr);
 				if (*errPtr) {
 					sprintf(string,"Exec %s: %s",uPtr->sICalc,error);
-					logIT(LOG_ERR,string);
+					VCLog(LOG_ERR, "%s", string);
 					strcpy(sendBuf,string);
 					return(-1);
 				}
@@ -606,8 +589,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 		}
 		else if (uPtr->type) {
 			bzero(string,sizeof(string));
-			sprintf(string,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
-			logIT(LOG_ERR,string);
+			VCLog(LOG_ERR, "Unbekannter Typ %s in Unit %s", uPtr->type, uPtr->name);
 			return(-1);
 		}
 		bzero(buffer,sizeof(buffer));
@@ -620,11 +602,8 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 			if (n >= MAXBUF-3)	/* FN Wo wird 'n' eigentlich initialisiert */
 				break;
 		}
-		sprintf(string,"Typ: %s (Bytes: %s)  ",uPtr->type,buffer);
-		logIT(LOG_INFO,string);
+		VCLog(LOG_INFO, "Typ: %s (Bytes: %s)  ", uPtr->type, buffer);
 		return(1);
 	}
 	return (0);	/* Wenn ich das richtig verstehe, sollten wir hier nie landen FN, deshalb; keep compiler happy */
 }
-
-

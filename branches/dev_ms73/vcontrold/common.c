@@ -12,9 +12,6 @@
 #include <ctype.h>
 
 #include"common.h" 
-/* #include"parser.h" */
-
-
 
 
 /* globale Variablen */
@@ -44,19 +41,25 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 	return(1);
  
 }
-	
-void logIT (int class,char *string) {
 
-	
+const char* LevelName[LOG_DEBUG+1] = { "EME",
+                                       "ALE",
+                                       "CRI",
+                                       "ERR",
+                                       "WAR",
+                                       "NOT",
+                                       "INF",
+                                       "DEB" };
+
+void logWrite(int class,char *string, char* sourcefile, long sourceline)
+{
 	time_t t;
 	char *tPtr;
 	char *cPtr;
 	time(&t);
 	tPtr=ctime(&t);
-	char dbg[1000];
+	char dbg[LOG_BUFFER_SIZE];
 	int pid;
-
-		
 
 	if (class <= LOG_ERR)  {
 		strncat(errMsg,string,sizeof(errMsg)-strlen(string)-2);
@@ -75,7 +78,7 @@ void logIT (int class,char *string) {
 	if (dbgFD>=0) {
 		/* der Debug FD ist gesetzt und wir senden die Infos zuerst dort hin */
 		bzero(dbg,sizeof(dbg));
-		sprintf(dbg,"DEBUG:%s: %s\n",tPtr,string);
+		snprintf(dbg, LOG_BUFFER_SIZE-2, "DEBUG:%s: %s (%s:%ld)\n", tPtr, string, sourcefile, sourceline);
 		write(dbgFD,dbg,strlen(dbg));
 	}
 
@@ -87,7 +90,7 @@ void logIT (int class,char *string) {
 	if (syslogger)
 		syslog(class,"%s",string);
 	if (logFD) {
-		fprintf(logFD,"[%d] %s: %s\n",pid,tPtr,string);
+		fprintf(logFD,"[%d] %s: %s (%s:%ld)\n", pid, tPtr, string, sourcefile, sourceline);
 		fflush(logFD);
 	}
 	/* Ausgabe nur, wenn 2 als STDERR geoeffnet ist */
@@ -118,68 +121,10 @@ char hex2chr(char *hex) {
 	sprintf(buffer, "0x%s", hex);
 	if (sscanf(hex, "%x", &hex_value) != 1) {
 		char string[64];
-		sprintf(string, "Ungültige Hex Zeichen in %s", hex);
-		logIT(LOG_WARNING, string);
+		VCLog(LOG_WARNING, "Ungültige Hex Zeichen in %s", hex);
 	}
 	return hex_value;
 }
-
-#if 0
-char hex2chr(char *hex) {
-	/* wandelt 1-2stellige Hex-Strings in Character */
-	size_t n;
-	n=strlen(hex);
-	int i;
-	int result=0;
-	int val;
-	char string[1000];
-	char c[2];
-	for(i=0;i<n;i++) {
-		if (!isxdigit(hex[i])) {
-			sprintf(string,"Kein Hex Zeichen %x",hex[i]);
-			logIT(LOG_WARNING,string);
-			continue;
-		}
-		switch(hex[i]) {
-			case '0': case '1': case '2': case '3': case '4': 
-			case '5': case '6': case '7': case '8': case '9': 
-				c[0]=hex[i];
-				c[1]='\0';
-				val=atoi(c);
-				break;
-			case 'a': case 'A':
-				val=10;
-				break;
-			case 'b': case 'B':
-				val=11;
-				break;
-			case 'c': case 'C':
-				val=12;
-				break;
-			case 'd': case 'D':
-				val=13;
-				break;
-			case 'e': case 'E':
-				val=14;
-				break;
-			case 'f': case 'F':
-				val=15;
-				break;
-			default:
-				sprintf(string,"Fehler Typumwandlung Hex->Chr %s",hex);
-				logIT(LOG_ERR,string);
-				return(-1);
-				break;
-		}
-		int factor=1;
-		int f;
-		for(f=0;f<(n-i-1);f++)
-			factor*=16;
-		result+=factor*val;
-	}
-	return((char) result);		
-}
-#endif
 
 int char2hex(char *outString, const char *charPtr, int len) {
 	int n;

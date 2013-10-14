@@ -1,11 +1,10 @@
 /* client.h, Header Dateien fuer client.c */
 /* $Id: client.h 35 2008-05-05 17:28:07Z marcust $ */
 
-#define CL_TIMEOUT 25 
+#ifndef _CLIENT_H_
+#define _CLIENT_H_
 
-#ifndef MAXBUF
-        #define MAXBUF 4096
-#endif
+#define CL_TIMEOUT 25 
 
 #define ALLOCSIZE 256 
 
@@ -29,3 +28,4 @@ struct txRx {
 	trPtr next;
 } TxRx;
 
+#endif // _CLIENT_H_
