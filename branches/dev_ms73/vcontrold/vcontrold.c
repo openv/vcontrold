@@ -682,7 +682,8 @@ int main(int argc,char* argv[])  {
 	initLog(useSyslog,logfile,debug);
 
 	if (!parseXMLFile(xmlfile)){
-		fprintf(stderr,"Fehler beim Laden von %s, terminiere!\n",xmlfile); 
+		fprintf(stderr,"Fehler beim Laden von %s, terminiere!\n", xmlfile); 
+		VCLog(LOG_EMERG, "Fehler beim Laden von %s, terminiere!", xmlfile); 
 		exit(1);
 	}
 
@@ -711,7 +712,7 @@ int main(int argc,char* argv[])  {
 	VCLog(LOG_NOTICE, "Start vcontrold version %s", VERSION);
 
 	if (signal(SIGHUP,sigHupHandler)== SIG_ERR) {
-		VCLog(LOG_ERR,"Fehler beim Signalhandling SIGHUP");
+		VCLog(LOG_EMERG,"Fehler beim Signalhandling SIGHUP");
 		exit(1);
 	}
 		
@@ -748,7 +749,7 @@ int main(int argc,char* argv[])  {
 			
 			pid=fork();
 			if (pid <0) {
-			  VCLog(LOG_ERR, "fork fehlgeschlagen (%d)", pid);
+			  VCLog(LOG_EMERG, "fork fehlgeschlagen (%d)", pid);
 			  exit(1);
 			}
 			if (pid > 0) 
@@ -764,11 +765,11 @@ int main(int argc,char* argv[])  {
 
 			sid=setsid();
 			if(sid <0) {
-				VCLog(LOG_ERR, "setsid fehlgeschlagen");
+				VCLog(LOG_EMERG, "setsid fehlgeschlagen");
 				exit(1);
 			}
 			if (chdir("/") <0) {
-				VCLog(LOG_ERR, "chdir / fehlgeschlagen");
+				VCLog(LOG_EMERG, "chdir / fehlgeschlagen");
 				exit(1);
 			}	
 
@@ -791,7 +792,7 @@ int main(int argc,char* argv[])  {
 		while(1) {
 			sockfd=listenToSocket(listenfd,makeDaemon,checkP);
 			if (signal(SIGPIPE,sigPipeHandler)== SIG_ERR) {
-				VCLog(LOG_ERR, "Signal error");
+				VCLog(LOG_EMERG, "Signal error");
 				exit(1);
 			}
 			if (sockfd>=0) {

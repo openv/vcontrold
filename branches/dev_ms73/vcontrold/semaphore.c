@@ -98,7 +98,7 @@ int vcontrol_seminit()
 
   strncpy(tmpfilename, TMPFILENAME, sizeof(TMPFILENAME));
   if ((tmpfile = mkstemp(tmpfilename)) < 0) {
-    perror("mkstemp");
+    VCLog(LOG_EMERG, "Fehler in mkstemp: %d (%s)", errno, strerror(errno));
     exit(1);
   }
   close(tmpfile);
@@ -108,13 +108,13 @@ int vcontrol_seminit()
   sb.sem_flg = SEM_UNDO;
 
   if ((key = ftok(tmpfilename, 'V')) == -1) {
-    perror("ftok");
+    VCLog(LOG_EMERG, "Fehler in ftok: %d (%s)", errno, strerror(errno));
     exit(1);
   }
 
   /* grab the semaphore set created by seminit.c: */
   if ((semid = initsem(key, 1)) == -1) {
-    perror("initsem");
+    VCLog(LOG_EMERG, "Fehler in initsem: %d (%s)", errno, strerror(errno));
     exit(1);
   }
   return 1;
@@ -124,7 +124,7 @@ int vcontrol_semfree()
 {
   /* remove it: */
   if (semctl(semid, 0, IPC_RMID) == -1) {
-    perror("semctl");
+    VCLog(LOG_EMERG, "Fehler in semctl: %d (%s)", errno, strerror(errno));
     exit(1);
   }
   unlink(tmpfilename);
@@ -141,7 +141,7 @@ int vcontrol_semget()
   sb.sem_op = -1;  /* set to allocate resource */
   sb.sem_flg = SEM_UNDO;
   if (semop(semid, &sb, 1) == -1) {
-    perror("semop");
+    VCLog(LOG_EMERG, "Fehler in semop: %d (%s)", errno, strerror(errno));
     exit(1);
   }
   VCLog(LOG_INFO, "Process %d got lock", getpid());
@@ -157,7 +157,7 @@ int vcontrol_semrelease()
   sb.sem_op = 1; /* free resource */
   sb.sem_flg = SEM_UNDO;
   if (semop(semid, &sb, 1) == -1) {
-    perror("semop");
+    VCLog(LOG_EMERG, "Fehler in semop: %d (%s)", errno, strerror(errno));
     exit(1);
   }
   return 1;

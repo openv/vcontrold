@@ -42,14 +42,22 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
  
 }
 
-const char* LevelName[LOG_DEBUG+1] = { "EME",
+const char* LevelName[LOG_DEBUG+2] = { "EME",
                                        "ALE",
                                        "CRI",
                                        "ERR",
                                        "WAR",
                                        "NOT",
                                        "INF",
-                                       "DEB" };
+                                       "DEB",
+				       "OTR" };
+
+const char* getLevelName(int level)
+{
+  if ((level < 0) || (level > LOG_DEBUG+1))
+    level = LOG_DEBUG+1;
+  return LevelName[level];
+}
 
 void logWrite(int class,char *string, char* sourcefile, long sourceline)
 {
@@ -88,14 +96,16 @@ void logWrite(int class,char *string, char* sourcefile, long sourceline)
 	pid=getpid();
 
 	if (syslogger)
-		syslog(class,"%s",string);
+	  syslog(class,"%s",string);
+	if ((strlen(tPtr) > 0) && (tPtr[strlen(tPtr)-1] == '\n')) // cut off trailing newline
+	  tPtr[strlen(tPtr)] = '\0';
 	if (logFD) {
-		fprintf(logFD,"[%d] %s: %s (%s:%ld)\n", pid, tPtr, string, sourcefile, sourceline);
-		fflush(logFD);
+	  fprintf(logFD,"[%d] %s %s: %s (%s:%ld)\n", pid, getLevelName(class), tPtr, string, sourcefile, sourceline);
+	  fflush(logFD);
 	}
 	/* Ausgabe nur, wenn 2 als STDERR geoeffnet ist */
 	if(isatty(2))
-		fprintf(stderr,"[%d] %s: %s\n",pid,tPtr,string);
+	  fprintf(stderr,"[%d] %s: %s (%s:%ld)\n", pid, tPtr, string, sourcefile, sourceline);
 }
 
 void sendErrMsg(int fd) {

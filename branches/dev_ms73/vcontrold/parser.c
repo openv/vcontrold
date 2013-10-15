@@ -310,7 +310,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 			break;
 		case SEND:
 			if (!my_send(fd,hex,hexlen)) {
-			        VCLog(LOG_ERR,"Fehler send, Abbruch");
+			        VCLog(LOG_EMERG,"Fehler send, Abbruch");
 				exit(1);
 			}
 			break;
@@ -321,7 +321,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 			}	
 			etime=0;
 			if (receive(fd,recvBuf,hexlen,&etime)<=0) {
-				VCLog(LOG_ERR,"Fehler recv, Abbruch");
+				VCLog(LOG_EMERG,"Fehler recv, Abbruch");
 				exit(1);
 			}
 			VCLog(LOG_INFO, "Recv: %ld ms", etime);
@@ -348,8 +348,8 @@ compilePtr newCompileNode(compilePtr ptr) {
         }
         nptr=calloc(1,sizeof(Compile));
         if (!nptr) {
-                fprintf(stderr,"malloc gescheitert\n");
-                exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
         }
         if (ptr)
                 ptr->next=nptr;
@@ -399,7 +399,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	/* send des Kommand Pointers muss gebaut werden 
 	1. Suche Kommando pcmd bei den Kommandos des Protokolls */
 	if (!(iPtr= (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
-		VCLog(LOG_ERR,"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
+		VCLog(LOG_EMERG,"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
 		exit(3);
 	}
 /*	2. Parse die zeile und ersetze die Variablen durch Werte in cPtr */
@@ -458,7 +458,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 				}
 			}
 			else {
-				VCLog(LOG_ERR, "Variable %s unbekannt", var);
+				VCLog(LOG_EMERG, "Variable %s unbekannt", var);
 				exit(3);
 			}
 		}
@@ -499,7 +499,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	free(tmpPtr);
 	VCLog(LOG_INFO,"   nach EXPAND:%s", eString);
 	if (!(cPtr->send=calloc(strlen(eString)+1,sizeof(char)))) {
-			VCLog(LOG_ERR,"calloc gescheitert");
+			VCLog(LOG_EMERG,"calloc gescheitert");
 			exit(1);
 	}
 	strcpy(cPtr->send,eString);
@@ -562,7 +562,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 		cmpPtr->send=calloc(hexlen,sizeof(char));
 		memcpy(cmpPtr->send,hex,hexlen);
 		if (*uSPtr && !(cmpPtr->uPtr=getUnitNode(uPtr,uSPtr))) {
-			VCLog(LOG_ERR, "Unit %s nicht definiert", uSPtr);
+			VCLog(LOG_EMERG, "Unit %s nicht definiert", uSPtr);
 			exit(3);
 		}
 				

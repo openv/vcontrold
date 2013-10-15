@@ -50,8 +50,8 @@ protocolPtr newProtocolNode(protocolPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Protocol));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -88,8 +88,8 @@ unitPtr newUnitNode(unitPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Unit));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -129,8 +129,8 @@ macroPtr newMacroNode(macroPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Macro));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -164,8 +164,8 @@ commandPtr newCommandNode(commandPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Command));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -228,8 +228,8 @@ devicePtr newDeviceNode(devicePtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Device));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -265,8 +265,8 @@ icmdPtr newIcmdNode(icmdPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(iCmd));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -309,8 +309,8 @@ allowPtr newAllowNode(allowPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Allow));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;
@@ -335,8 +335,8 @@ enumPtr newEnumNode(enumPtr ptr) {
 	}
 	nptr=calloc(1,sizeof(Enumerate));
 	if (!nptr) {
-		fprintf(stderr,"malloc gescheitert\n");
-		exit(1);
+	  VCLog(LOG_EMERG, "malloc gescheitert");
+	  exit(1);
 	}
 	if (ptr) 
 		ptr->next=nptr;

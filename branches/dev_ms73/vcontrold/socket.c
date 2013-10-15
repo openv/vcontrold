@@ -52,12 +52,12 @@ int openSocket(int tcpport) {
 	// this will configure the socket to reuse the address if it was in use and is not free allready.
 	int optval =1;
 	if(listenfd < 0 || setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
-		VCLog(LOG_ERR, "setsockopt gescheitert!");
+		VCLog(LOG_EMERG, "setsockopt gescheitert!");
 		exit(1);
 	}
 	
 	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
-			VCLog(LOG_ERR, "bind auf port %d gescheitert (in use / closewait)", tcpport);
+			VCLog(LOG_EMERG, "bind auf port %d gescheitert (in use / closewait)", tcpport);
 			exit(1);
 	}
 	VCLog(LOG_NOTICE, "TCP socket %d geoeffnet", tcpport);
@@ -115,7 +115,7 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 	char *errstr;
 
 	if ((hp=gethostbyname(host))== NULL) {	
-		VCLog(LOG_ERR, "Fehler gethostbyname: %s:%s", host, hstrerror(h_errno));
+		VCLog(LOG_EMERG, "Fehler gethostbyname: %s:%s", host, hstrerror(h_errno));
 		exit(1);
 	}
 	pptr= (struct in_addr **) hp->h_addr_list;

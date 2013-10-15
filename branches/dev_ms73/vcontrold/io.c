@@ -63,7 +63,7 @@ int opentty(char *device) {
 	int fd;
 	VCLog(LOG_INFO, "konfiguriere serielle Schnittstelle %s", device);
 	if ((fd=open(device,O_RDWR)) < 0) {
-		VCLog(LOG_ERR, "cannot open %s:%s", device, strerror (errno));
+		VCLog(LOG_EMERG, "cannot open %s:%s", device, strerror (errno));
 		exit(1);
 	}
 	int s;
@@ -71,7 +71,7 @@ int opentty(char *device) {
 	s=tcgetattr(fd,&oldsb);
 
 	if (s<0) {
-		VCLog(LOG_ERR, "error tcgetattr %s:%s", device, strerror (errno));
+		VCLog(LOG_EMERG, "error tcgetattr %s:%s", device, strerror (errno));
 		exit(1);
 	}
 	newsb=oldsb;
@@ -83,25 +83,33 @@ int opentty(char *device) {
 #else
 	bzero (&newsb, sizeof(newsb));
 #endif
+
 	newsb.c_iflag=IGNBRK | IGNPAR;
 	newsb.c_oflag = 0;
 	newsb.c_lflag = ISIG;
-	newsb.c_cflag = (CLOCAL | B4800 | CS8 | CREAD| PARENB | CSTOPB);
+newsb.c_lflag = 0;
+	newsb.c_cflag = (CLOCAL | B4800 | CS8 | CREAD| PARENB | CSTOPB );
 	newsb.c_cc[VMIN]   = 1;
 	newsb.c_cc[VTIME]  = 0;
 
-	tcsetattr(fd, TCSADRAIN, &newsb);
+	/* tcsetattr(fd, TCSADRAIN, &newsb); */
+	if (tcflush(fd, TCIFLUSH) < 0)
+	  VCLog(LOG_ERR, "Error in tcflush %d:%s", errno, strerror (errno));
+	if (tcsetattr(fd, TCSANOW, &newsb) < 0)
+	  VCLog(LOG_ERR, "Error in tcsetattr %d:%s", errno, strerror (errno));
 
 	/* DTR High fuer Spannungsversorgung */
+	/*
 	int modemctl = 0;
 	ioctl(fd, TIOCMGET, &modemctl);
 	modemctl |= TIOCM_DTR;
+	modemctl &= !TIOCM_DTR;
 	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
-		VCLog(LOG_ERR, "error ioctl TIOCMSET %s:%s", device, strerror (errno));
+		VCLog(LOG_EMERG, "error ioctl TIOCMSET %s:%s", device, strerror (errno));
 		exit(1); 
 	}
-
+	*/
 	return(fd);
 }
 
@@ -126,42 +134,55 @@ int my_send(int fd,char *s_buf, int len) {
 	return(1);
 }
 
-int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
-	int i;
+int receive(int fd,char *r_buf,int r_len,unsigned long *etime)
+{
+  int i;
+  int rv;
+  fd_set set;
+  struct timeval timeout;
+  struct tms tms_t;
+  clock_t start,mid,mid1;
+  unsigned long clktck;
+  unsigned long totaltime;
+  clktck=sysconf(_SC_CLK_TCK);
+  totaltime = 0;
+  timeout.tv_sec = TIMEOUT;
+  timeout.tv_usec = 0;
 
-	struct tms tms_t;
-	clock_t start,end,mid,mid1;
-	unsigned long clktck;
-	clktck=sysconf(_SC_CLK_TCK);
-	start=times(&tms_t);
-	mid1=start;
-	for(i=0;i<r_len;i++) {
-	  if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-	    VCLog(LOG_ERR, "SIGALRM error");
-	  if(setjmp(env_alrm) !=0) {
-	    VCLog(LOG_ERR, "read timeout");
-	    return(-1);
-	  }
-	  alarm(TIMEOUT);
-	  /* wir benutzen die Socket feste Vairante aus socket.c */
-	  if (readn(fd,&r_buf[i],1) <= 0) {
-	    VCLog(LOG_ERR, "error read tty");;
-	    alarm(0);
-	    return(-1);
-	  }
-	  alarm(0);
-	  unsigned char byte=r_buf[i] & 255;
-	  mid=times(&tms_t);
-	  VCLog(LOG_INFO,"<RECV: %02X (%0.1f ms)", byte,((float)(mid-mid1)/clktck)*1000);
-	  mid1=mid;
+  FD_ZERO(&set); /* clear the set */
+  FD_SET(fd, &set); /* add our file descriptor to the set */
+
+  start=times(&tms_t);
+  mid1=start;
+  for (i=0; i<r_len; i++) {
+    if (totaltime > (1000*TIMEOUT)) {
+      VCLog(LOG_ERR, "Cumulative timeout in read: read took %ld msec", totaltime);
+      return(-1);
+    }
+    rv = select(fd + 1, &set, NULL, NULL, &timeout);
+    if(rv == -1) {
+      VCLog(LOG_ERR, "Error in select call %d(%s)", errno, strerror(errno));
+      return(-1);
+    }
+    else 
+      if(rv == 0) {
+	VCLog(LOG_ERR, "Individual timeout in read");
+	return(-1);
+      }
+      else {
+	if (read(fd,&r_buf[i],1) <= 0) { /* there was data to read */
+	  VCLog(LOG_ERR, "Error read tty %d(%s)", errno, strerror(errno));
+	  return(-1);      
 	}
-	end=times(&tms_t);
-	*etime=((float)(end-start)/clktck)*1000;
-	return i;
-}
-
-static void sig_alrm(int signo) {
-	longjmp(env_alrm,1);
+      }
+    unsigned char byte=r_buf[i] & 255;
+    mid=times(&tms_t);
+    VCLog(LOG_INFO,"<RECV: %02X (%0.1f ms)", byte,((float)(mid-mid1)/clktck)*1000);
+    mid1=mid;
+    totaltime=((float)(mid-start)/clktck)*1000;
+  }
+  *etime = totaltime;
+  return i;
 }
 
 int waitfor(int fd, char *w_buf,int w_len) {
@@ -198,7 +219,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 			return(0);
 		}
 		if( r_buf[0] != w_buf[i]) {
-			VCLog(LOG_ERR, "Synchronisation verloren");
+			VCLog(LOG_EMERG, "Synchronisation verloren");
 			exit(1);
 		}
         }		

@@ -123,7 +123,7 @@ main(int argc,char* argv[])  {
 		usage();
 	sockfd=connectServer(host);
 	if (sockfd < 0) {
-	  VCLog(LOG_ERR, "Keine Verbindung zu %s",host);
+	  VCLog(LOG_EMERG, "Keine Verbindung zu %s",host);
 	  exit(1);
 	}
 	/* Kommandos direkt angegeben */
@@ -135,14 +135,14 @@ main(int argc,char* argv[])  {
 		resPtr=sendCmdFile(sockfd,cmdfile);
 	}
 	if (!resPtr) {
-		VCLog(LOG_ERR,"Fehler bei der Server Kommunikation");
+		VCLog(LOG_EMERG,"Fehler bei der Server Kommunikation");
 		exit(1);
 	}
 	disconnectServer(sockfd);
 
 	if(*outfile) {
 		if (!(ofilePtr=fopen(outfile,"w"))) {
-		  VCLog(LOG_ERR, "Kann Datei %s nicht anlegen", outfile);
+		  VCLog(LOG_EMERG, "Kann Datei %s nicht anlegen", outfile);
 		  exit(1);
 		}
 		VCLog(LOG_INFO, "Ausgabe Datei %s", outfile);
@@ -155,7 +155,7 @@ main(int argc,char* argv[])  {
 	if (*csvfile) {
 		/* Kompakt Format mit Semikolon getrennt */
 		if (!(filePtr=fopen(csvfile,"a"))) {
-		  VCLog(LOG_ERR, "Kann Datei %s nicht anlegen", csvfile);
+		  VCLog(LOG_EMERG, "Kann Datei %s nicht anlegen", csvfile);
 		  exit(1);
 		}
 		bzero(string,sizeof(string));
@@ -212,7 +212,7 @@ main(int argc,char* argv[])  {
 
 
 		if (!(filePtr=fopen(tmplfile,"r"))) {
-		  VCLog(LOG_ERR, "Kann Template-Datei %s nicht oeffnen", tmplfile);
+		  VCLog(LOG_EMERG, "Kann Template-Datei %s nicht oeffnen", tmplfile);
 		  exit(1);
 		}
 		/*
@@ -318,12 +318,12 @@ main(int argc,char* argv[])  {
 			fclose(ofilePtr);
 			VCLog(LOG_INFO, "Fuehre Datei %s aus", outfile);
 			if (chmod(outfile,S_IXUSR|S_IRUSR|S_IWUSR)!=0) {
-			  VCLog(LOG_ERR, "Fehler chmod +x %s", outfile);
+			  VCLog(LOG_EMERG, "Fehler chmod +x %s", outfile);
 			  exit(1);
 			}
 			short ret;
 			if ((ret=system(outfile)) == -1) { 
-			  VCLog(LOG_ERR, "Fehler system(%s)", outfile);
+			  VCLog(LOG_EMERG, "Fehler system(%s)", outfile);
 			  exit(1);
 			}
 			VCLog(LOG_INFO, "Ret Code: %d", ret);
