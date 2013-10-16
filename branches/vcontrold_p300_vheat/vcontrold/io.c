@@ -213,7 +213,7 @@ static char * dump( char *dest, char *title, char *buf, int len) {
 
 int receive_nb(int fd,char *r_buf,int r_len, unsigned long *etime) {
 	int i;
-	int len;
+	ssize_t len;
 	char string[100];
 
     fd_set rfds;
@@ -275,7 +275,7 @@ int receive_nb(int fd,char *r_buf,int r_len, unsigned long *etime) {
 			} else {
 				unsigned char byte=r_buf[i] & 255;
 				mid=times(&tms_t);
-				snprintf(string, sizeof(string),"<RECV: len=%d %02X (%0.1f ms)", len, byte, ((float)(mid-mid1)/clktck)*1000);
+				snprintf(string, sizeof(string),"<RECV: len=%zd %02X (%0.1f ms)", len, byte, ((float)(mid-mid1)/clktck)*1000);
 				logIT(LOG_INFO,string);
 				mid1=mid;
 				i += len;

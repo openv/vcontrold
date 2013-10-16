@@ -55,7 +55,7 @@ void logIT (int class,char *string) {
 	tPtr=ctime(&t);
 	char dbg[1000];
 	int pid;
-	int avail;
+	long avail;
 
 		
 
