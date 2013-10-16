@@ -25,11 +25,6 @@
 #include "socket.h"
 #include "common.h"
 
-#ifdef __CYGWIN__
-/* NCC is not defined under cygwin */
-#define NCC NCCS
-#endif
-
 static void sig_alrm(int);
 static jmp_buf	env_alrm;
 
@@ -76,13 +71,7 @@ int opentty(char *device) {
 	}
 	newsb=oldsb;
 
-#ifdef NCC
-	/* NCC is not always defined */
-	for (s = 0; s < NCC; s++)
-		newsb.c_cc[s] = 0;
-#else
 	bzero (&newsb, sizeof(newsb));
-#endif
 
 	newsb.c_iflag=IGNBRK | IGNPAR;
 	newsb.c_oflag = 0;
@@ -92,24 +81,24 @@ newsb.c_lflag = 0;
 	newsb.c_cc[VMIN]   = 1;
 	newsb.c_cc[VTIME]  = 0;
 
-	/* tcsetattr(fd, TCSADRAIN, &newsb); */
+	if (tcsetattr(fd, TCSADRAIN, &newsb) < 0)
+	  VCLog(LOG_ERR, "Error in tcsetattr %d:%s", errno, strerror (errno));
+	/*
 	if (tcflush(fd, TCIFLUSH) < 0)
 	  VCLog(LOG_ERR, "Error in tcflush %d:%s", errno, strerror (errno));
 	if (tcsetattr(fd, TCSANOW, &newsb) < 0)
 	  VCLog(LOG_ERR, "Error in tcsetattr %d:%s", errno, strerror (errno));
+	*/
 
 	/* DTR High fuer Spannungsversorgung */
-	/*
 	int modemctl = 0;
 	ioctl(fd, TIOCMGET, &modemctl);
 	modemctl |= TIOCM_DTR;
-	modemctl &= !TIOCM_DTR;
 	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
 		VCLog(LOG_EMERG, "error ioctl TIOCMSET %s:%s", device, strerror (errno));
 		exit(1); 
 	}
-	*/
 	return(fd);
 }
 
@@ -206,7 +195,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		if (receive(fd,r_buf,1,&etime)<0) 
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
-			VCLog(LOG_WARNING, "Timeout wait");
+			VCLog(LOG_WARNING, "Timeout wait first char");
 			return(0);
 		}
 	} while (r_buf[0] != w_buf[0]);
@@ -215,7 +204,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		if (receive(fd,r_buf,1,&etime)<0) 
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
-			VCLog(LOG_WARNING, "Timeout wait");
+			VCLog(LOG_WARNING, "Timeout wait subsequent chars");
 			return(0);
 		}
 		if( r_buf[0] != w_buf[i]) {

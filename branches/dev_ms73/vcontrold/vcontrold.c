@@ -246,8 +246,8 @@ int rawModus(int socketfd,char *device) {
 	return 0;			// is this correct?
 }
 
-int interactive(int socketfd,char *device ) {
-	
+int interactive(int socketfd,char *device )
+{
 	char readBuf[1000];
 	char *readPtr;
 	char prompt[]=PROMPT;
@@ -268,9 +268,10 @@ int interactive(int socketfd,char *device ) {
 	short sendLen;
 	char buffer[MAXBUF];
 
+	VCLog(LOG_DEBUG, "vcontrol::interactive(socketfd=%d, device=%s)", socketfd, device);
+
 	Writen(socketfd,prompt,strlen(prompt));
 	bzero(readBuf,sizeof(readBuf));
-	
 	
 	while((rcount=Readline(socketfd,readBuf,sizeof(readBuf)))) {
 				
@@ -730,13 +731,8 @@ int main(int argc,char* argv[])  {
 	/* die Macros werden ersetzt und die zu sendenden Strings in Bytecode gewandelt */
 	compileCommand(devPtr,uPtr);
 
-	int fd = 0;
-	//char s_buf[MAXBUF];
-	//char r_buf[MAXBUF];
 	char result[MAXBUF];
 	int resultLen=sizeof(result);
-	//int count;
-	//int n;
 	int sid;
 
 	if (tcpport) {
@@ -810,15 +806,15 @@ int main(int argc,char* argv[])  {
 			}
 		}
 	}
-	else
+	else {
 	  vcontrol_seminit();
 
-	if (*cmdfile)
-		readCmdFile(cmdfile,result,&resultLen,device);
+	  if (*cmdfile)
+	    readCmdFile(cmdfile,result,&resultLen,device);
 
-	vcontrol_semfree();
+	  vcontrol_semfree();
+	}
 
-	close(fd);
 	VCLog(LOG_NOTICE, "vcontrold beendet");
 	
 	return 0;
