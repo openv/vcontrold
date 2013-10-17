@@ -249,7 +249,7 @@ int framer_send(int fd, char *s_buf, int len) {
 	char string[1000];
 
 	if ((len < 1) || (!s_buf)) {
-		snprintf(string, sizeof(string), ">FRAMER: invalid buffer %d %08X", len, s_buf);
+		snprintf(string, sizeof(string), ">FRAMER: invalid buffer %d %p", len, s_buf);
 		logIT(LOG_ERR, string);
 		return FRAMER_ERROR;
 	}
@@ -339,7 +339,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime) {
 	l_buf[5] = 0; // to identify TimerWWMi bug
 
 	if ((r_len < 1) || (!r_buf)) {
-		snprintf(string, sizeof(string), ">FRAMER: invalid read buffer %d %08X", r_len, r_buf);
+		snprintf(string, sizeof(string), ">FRAMER: invalid read buffer %d %p", r_len, r_buf);
 		logIT(LOG_ERR, string);
 		return FRAMER_ERROR;
 	}
