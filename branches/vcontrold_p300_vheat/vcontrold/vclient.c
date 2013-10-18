@@ -32,8 +32,11 @@
 #define VERSION "0.3alpha"
 #endif
 
-
+#ifdef __APPLE__
 size_t safe_strlcat(char * restrict dst, const char * restrict src, size_t size);
+#else
+size_t safe_strlcat(char * dst, const char * src, size_t size);
+#endif
 
 void usage() {
 	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
@@ -147,7 +150,7 @@ main(int argc,char* argv[])  {
 			case 'c':
 				if (verbose) {
 					printf ("option -c with value `%s'\n", optarg);
-					printf ("sizeof optarg:%lu, strlen:%lu, sizeof commannds:%lu, strlen:%lu,  [%s]\n", sizeof(optarg), strlen(optarg),sizeof(commands),strlen(commands), commands);
+					printf ("sizeof optarg:%lu, strlen:%lu, sizeof commands:%lu, strlen:%lu,  [%s]\n", sizeof(optarg), strlen(optarg),sizeof(commands),strlen(commands), commands);
 				}
 				if (strlen(commands)==0) {
 					strncpy(commands, optarg, sizeof(commands));
@@ -209,7 +212,7 @@ main(int argc,char* argv[])  {
 				strncpy(commands, argv[optind], sizeof(commands));
 			} else {
 				if (strlen(argv[optind]) + 2 > sizeof(commands) - strlen(commands)) {
-					fprintf(stderr, "too much commands\n");
+					fprintf(stderr, "Kommandoliste zu lang\n");
 					optind++;
 					break;
 				}
@@ -505,7 +508,11 @@ main(int argc,char* argv[])  {
 	return 0;
 }
 
+#ifdef __APPLE__
 size_t safe_strlcat(char * restrict dst, const char * restrict src, size_t size)
+#else
+size_t safe_strlcat(char * dst, const char * src, size_t size)
+#endif
 {
 	size_t len;
 	
