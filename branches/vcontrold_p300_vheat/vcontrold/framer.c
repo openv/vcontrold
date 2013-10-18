@@ -334,6 +334,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime) {
 	int rtmp;
 	char l_buf[256];
 	unsigned long etime;
+	char chk;
 
 	l_buf[4] = 0;
 	l_buf[5] = 0; // to identify TimerWWMi bug
@@ -421,9 +422,10 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime) {
 		return FRAMER_READ_TIMEOUT;
 	}
 
-	if (l_buf[total - 1] != framer_chksum(l_buf + 1, total - 2)) {
+	chk = framer_chksum(l_buf + 1, total - 2);
+	if (l_buf[total - 1] != chk) {
 		framer_reset_actaddr();
-		snprintf(string, sizeof(string), ">FRAMER: read chksum error");
+		snprintf(string, sizeof(string), ">FRAMER: read chksum error received 0x%02X calc 0x%02X", (unsigned char)l_buf[total - 1], (unsigned char)chk);
 		logIT(LOG_ERR, string);
 		return FRAMER_READ_ERROR;
 	}
