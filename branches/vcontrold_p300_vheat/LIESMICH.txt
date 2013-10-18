@@ -4,6 +4,45 @@ Disclaimer:
 Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
 immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
 
+----------------
+18.10.2013 vheat
+Es sind einige Bugs behoben
+1) KW und P300 gehen, ausgewählt wird mit dem Device in vito.xml
+2) Es geht ein einzelnes oder eine Sequenz von Kommandos mit einem einzelnen vclient-Aufruf
+3) Der semop() Crash bei eingeschaltetem Logging ist behoben
+4) fnobis hat im vclient die Parameterbehandlung auf getopt_long umgestellt
+
+Bekanntes Problem:
+100) Es gibt zeitweilig häufige Lesefehler (warmup / andere). Es ist derzeit nicht klar, woher diese kommen. Sie sind nicht 
+der P300 Änderung zuzuordnen, treten bei beiden P300 und KW auf, wurden in diesem Zshg zunächst auf RaspberryPI gemeldet, 
+allerdings sind sie auch anderweitig gesehen. Problem ist bekannt und soll demnächst mit einer Statistik-Funktion angegangen
+werden. 
+
+Tests:
+Scenario 1: Linux Debian Squeeze mit Benutzung vsim Simulator, 
+vcontrold, vclient auf dem Linux Rechner, 
+vcontrold läuft gegen vsim  
+KW und P300, jeweils einzelnes oder mehrere getTempA
+
+siehe r61: Socket connection based simulation in vsim kann jetzt getTempA für sowohl KW als auch P300 beantworten. 
+Der Vsim hier ist einfach ein Frage/Antwort-Spiel mit bekannten Fragen und generiert auch nur dazu passende fixe Antworten. 
+vsim.c: Struktur cmds = {{Frage Länge, Frage Daten, Antwort Länge, Antwort Daten},...}. Nicht vergessen, Zähler cmdc mit aufdaten! 
+vcontrold muss statt des tty zum Optolink, IP und Port des VSIM mitbekommen.
+
+Scenario 2: Linux Debian Squeeze für vclient, 
+RaspberryPi für vcontrold gegen Vitodens 300W über 3.3V TXD/RXD Adapter an ttyAMA0 (onboard UART), 
+Adapter siehe FriendlyARM mini2440 im Forum
+KW und P300, jeweils einzelnes oder mehrere getTempA oder mit getTempWWist oder getTempKist
+
+Messungen:
+Abfrage eines einzelnen Wertes: sowohl KW wie P300 ca. 2 Sekunden pro Wert. 
+KW,   Sequenz von 10 * getTempA mit einem vclient Aufruf: jeweils auch 2 Sekunden pro Wert
+P300, Sequenz von 10 * getTempA mit einem vclient Aufruf: jeweils 0,3 Sekunden pro Wert, 
+                                  das geht umso weiter runter je mehr Werte in einen vclient Aufruf gesteckt werden.
+
+----------------
+05.10.2013 vheat
+
 Diese P300 Variante läuft bei mir auf vcontrold/FriendlyARM mini2440 und vclient+Cati/QNAP TS559 Pro II seit dem Frühjahr 2013 
 ohne Probleme.
 
