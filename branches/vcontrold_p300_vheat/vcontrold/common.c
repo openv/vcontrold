@@ -65,7 +65,7 @@ void logIT (int class,char *string) {
 			strncat(errMsg,string,avail);
 			strcat(errMsg,"\n");
 		} else {
-			strcat(&errMsg[sizeof(errMsg)-12], "OVERFLOW\n");
+			strcpy(&errMsg[sizeof(errMsg)-12], "OVERFLOW\n"); /* sollte den semop Fehler loesen */
 		}
 	}
 
@@ -110,6 +110,11 @@ void sendErrMsg(int fd) {
 		errClass=99; /* damit wird sie nur ein mal angezeigt */
 		bzero(errMsg,sizeof(errMsg));
 	}
+	*errMsg='\0';
+	/* zurück auf Anfang, egal, ob wirklich ausgegeben -
+	 * kann für debugging auskommentiert werden, dann
+	 * sammeln sich in errMsg die Fehler
+	 */
 }
 
 void setDebugFD(int fd) {
