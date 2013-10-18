@@ -32,12 +32,6 @@
 #define VERSION "0.3alpha"
 #endif
 
-#ifdef __APPLE__
-size_t safe_strlcat(char * restrict dst, const char * restrict src, size_t size);
-#else
-size_t safe_strlcat(char * dst, const char * src, size_t size);
-#endif
-
 void usage() {
 	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
 \t-h|--host\t<IP>:<Port> des vcontrold\n\
@@ -506,18 +500,4 @@ main(int argc,char* argv[])  {
 		}
 	}
 	return 0;
-}
-
-#ifdef __APPLE__
-size_t safe_strlcat(char * restrict dst, const char * restrict src, size_t size)
-#else
-size_t safe_strlcat(char * dst, const char * src, size_t size)
-#endif
-{
-	size_t len;
-	
-	len = strlen(dst);
-	printf("len=%ld\n", len);
-	
-	return len;
 }
