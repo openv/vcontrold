@@ -199,7 +199,9 @@ main(int argc,char* argv[])  {
 	 */
 	if (optind < argc)
     {
-		printf ("non-option ARGV-elements: ");
+		if (verbose) {
+			printf ("non-option ARGV-elements: ");
+		}
 		while (optind < argc) {
 			printf ("%s ", argv[optind]);
 			if (strlen(commands)==0) {
