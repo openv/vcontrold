@@ -27,7 +27,6 @@ int interactive(int socketfd,char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd,char *device);
 static void sigPipeHandler(int signo);
-static void sigHupHandler(int signo);
 short checkIP(char *ip);
 
 void logIT (int class,char *string) {
@@ -36,10 +35,6 @@ void logIT (int class,char *string) {
 
 static void sigPipeHandler(int signo) {
 	logIT(LOG_ERR,"SIGPIPE empfangen");
-}
-
-static void sigHupHandler(int signo) {
-	logIT(LOG_NOTICE,"SIGHUP empfangen");
 }
 
 static void dump(char * buf, int len, char * txt)
@@ -81,7 +76,6 @@ char inpidx=0;
 static void handle(int fd)
 {
 	char buf[1] = "\0";
-	char line[100];
 	int len;
 
 	while ( 1 ) {
@@ -122,7 +116,6 @@ int main(int argc, char *argv[])
 {
 	int sockfd=-1;
 	int listenfd=-1;
-	char string[1000];
 
 	listenfd = openSocket(SERVERPORT);
 	while(1) {
