@@ -187,6 +187,7 @@
 				A494AE2A14896FB8003A7995 /* vclient.c */,
 				A4336BDC181055E000A39E11 /* vclient.1 */,
 				A4336BEA1812BEA400A39E11 /* vsim.c */,
+				A4336BE51812BE4C00A39E11 /* vsim.1 */,
 				A494AE0814896FB8003A7995 /* examples */,
 				A494AE0F14896FB8003A7995 /* license.txt */,
 				A494AE1014896FB8003A7995 /* Makefile */,
@@ -207,7 +208,6 @@
 		A4336BE21812BE4C00A39E11 /* vsim */ = {
 			isa = PBXGroup;
 			children = (
-				A4336BE51812BE4C00A39E11 /* vsim.1 */,
 			);
 			path = vsim;
 			sourceTree = "<group>";
