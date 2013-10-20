@@ -12,6 +12,7 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <getopt.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -27,19 +28,22 @@
 #include "client.h"
 
 
+#ifndef VERSION
 #define VERSION "0.3alpha"
-
+#endif
 
 void usage() {
-	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>][-v]\n\n\
-\t-h : IP:Port des vcontrold\n\
-\t-c: Liste von auszufuehrenden Kommandos, durch Komma getrennt\n\
-\t-f: Optional Datei mit Kommandos, pro Zeile ein Kommando\n\
-\t-s: Ausgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
-\t-t: Template, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
-\t-o Output, der stdout Output wird in die angegebene Datei geschrieben\n\
-\t-x Das umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
-\t-v: Verbose Modus zum testen\n"); 
+	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
+\t-h|--host\t<IP>:<Port> des vcontrold\n\
+\t-c|--command\tListe von auszufuehrenden Kommandos, durch Komma getrennt\n\
+\t-f|--commandfile\tOptional Datei mit Kommandos, pro Zeile ein Kommando\n\
+\t-s|--cvsfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
+\t-t|--template\tTemplate, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
+\t-o|--output\tOutput, der stdout Output wird in die angegebene Datei geschrieben\n\
+\t-x|--execute\tDas umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
+\t-m|--munin\tMunin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
+\t-k|--cacti\tCactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
+\t-v|--verbose\tVerbose Modus zum testen\n");
 	
 	exit(1);
 }
@@ -50,75 +54,173 @@ int
 main(int argc,char* argv[])  {
 
 	/* Auswertung der Kommandozeilenschalter */
-	char c;
-	char host[200] = "";
-	char commands[400] = "";
+	char host[256] = "";
+	char commands[512] = "";
 	char cmdfile[MAXPATHLEN] = "";
 	char csvfile[MAXPATHLEN] = "";
 	char tmplfile[MAXPATHLEN] = "";
 	char outfile[MAXPATHLEN] = "";
-	char string[1000] = "";
-	char result[1000] = "";
+	char string[1024] = "";
+	char result[1024] = "";
 	int sockfd;
 	char dummylog[]="\0";
-	short verbose=0;
+	int opt;
+	static int verbose=0;
+	static int munin=0;
+	static int cacti=0;
 	short execMe=0;
 	trPtr resPtr;
 	FILE *filePtr;
 	FILE *ofilePtr;
 	
+/* ToDo: vheat(2013-10-05):
+ * derzeitige Implementierung crasht, wenn zwei Optionen ohne Parameter auf einander folgen
+ * zB: "vclient -h 1..0 -c xyz -v -k"
+ * Es wird ein String erwartet wie bei -h oder -c, der Bindestrich wird nicht erwartet.
+ *
+ * Fix sollte sein: Umbau auf getopt(), um die Parameter zu lesen.
+ */
 
-	while (--argc > 0 && (*++argv)[0] == '-') {
-			c=*++argv[0];
-			switch (c) {
-			case 'h':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(host,argv[0],sizeof(host));
+	while (1)
+	{
+		static struct option long_options[] =
+		{
+			
+			{"host",		required_argument,	0, 'h'},
+			{"command",		required_argument,	0, 'c'},
+			{"commandfile",	required_argument,	0, 'f'},
+			{"csvfile",		required_argument,	0, 's'},
+			{"template",	required_argument,	0, 't'},
+			{"output",		required_argument,	0, 'o'},
+			{"execute",		required_argument,	0, 'x'},
+			{"verbose",		no_argument,		&verbose, 1},
+			{"munin",		no_argument,		&munin, 1},
+			{"cacti",		no_argument,		&cacti, 1},
+			{0,0,0,0}
+		};
+		/* getopt_long stores the option index here. */
+		int option_index = 0;
+		opt = getopt_long (argc, argv, "c:f:h:kmo:s:t:vx:",
+						   long_options, &option_index);
+		
+		/* Detect the end of the options. */
+		if (opt == -1)
+			break;
+		
+		switch (opt) {
+			case 0:
+				/* If this option sets a flag, we do nothing for now */
+				if (long_options[option_index].flag != 0)
+					break;
+				printf("option %s", long_options[option_index].name);
+				if (optarg)
+					printf(" with arg %s", optarg);
+				printf("\n");
 				break;
-			case 'c':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(commands,argv[0],sizeof(commands));
-				break;
+
 			case 'v':
-				++argv;
-				verbose=1;
+				puts ("option -v\n");
+				verbose = 1;
 				break;
+				
+			case 'm':
+				if (verbose)
+					puts ("option -m\n");
+				munin = 1;
+				break;
+				
+			case 'k':
+				if (verbose)
+					puts ("option -k\n");
+				cacti = 1;
+				break;
+				
+			case 'h':
+				if (verbose)
+					printf ("option -h with value `%s'\n", optarg);
+				strncpy(host, optarg, sizeof(host));
+				break;
+				
+			case 'c':
+				if (verbose) {
+					printf ("option -c with value `%s'\n", optarg);
+					printf ("sizeof optarg:%lu, strlen:%lu, sizeof commands:%lu, strlen:%lu,  [%s]\n", sizeof(optarg), strlen(optarg),sizeof(commands),strlen(commands), commands);
+				}
+				if (strlen(commands)==0) {
+					strncpy(commands, optarg, sizeof(commands));
+				} else {
+					if (strlen(optarg) + 2 > sizeof(commands) - strlen(commands)) {
+						fprintf(stderr, "too much commands\n");
+						break;
+					}
+					strncat(commands, ",", 1);
+					strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
+				}
+				break;
+				
 			case 'f':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(cmdfile,argv[0],sizeof(cmdfile));
+				if (verbose)
+					printf ("option -f with value `%s'\n", optarg);
+				strncpy(cmdfile, optarg, sizeof(cmdfile));
 				break;
+				
+			case 's':
+				if (verbose)
+					printf ("option -s with value `%s'\n", optarg);
+				break;
+				
 			case 't':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(tmplfile,argv[0],sizeof(tmplfile));
+				if (verbose)
+					printf ("option -t with value `%s'\n", optarg);
+				strncpy(tmplfile, optarg, sizeof(tmplfile));
 				break;
+				
 			case 'o':
 			case 'x':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(outfile,argv[0],sizeof(outfile));
-				if (c == 'x')  /* wir merken uns den execute Mode */	
-					execMe=1;
+				if (verbose)
+					printf ("option -%c with value `%s'\n", opt, optarg);
+				strncpy(outfile, optarg, sizeof(outfile));
+				if (opt == 'x')
+					execMe = 1;
 				break;
-			case 's':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(csvfile,argv[0],sizeof(cmdfile));
-				break;
-			default:
+				
+			case '?':
+				/* getopt_long already printed an error message. */
 				usage();
+				break;
+ 				
+			default:
+				abort();
+		}
+	}
+	
+	/* Collect any remaining command line arguments (not options).
+	 * and use the as commands like for the -c option.
+	 */
+	if (optind < argc)
+    {
+		if (verbose) {
+			printf ("non-option ARGV-elements: ");
+		}
+		while (optind < argc) {
+			printf ("%s ", argv[optind]);
+			if (strlen(commands)==0) {
+				strncpy(commands, argv[optind], sizeof(commands));
+			} else {
+				if (strlen(argv[optind]) + 2 > sizeof(commands) - strlen(commands)) {
+					fprintf(stderr, "Kommandoliste zu lang\n");
+					optind++;
+					break;
+				}
+				strncat(commands, ",", 1);
+				strncat(commands, argv[optind], sizeof(commands) - strlen(commands) - 2);
 			}
-	}	
-	initLog(0,dummylog,verbose);	
+			optind++;
+		}
+		putchar ('\n');
+    }
+	
+	initLog(0,dummylog,verbose);
 	if (!*commands && (cmdfile[0] == 0))
 		usage();
 	sockfd=connectServer(host);
@@ -351,6 +453,40 @@ main(int argc,char* argv[])  {
                         exit(ret);
 		}
 	}
+	else if (munin) { /*Munin Format ausgeben*/
+		while (resPtr) {
+			fprintf(ofilePtr,"%s.value ",resPtr->cmd);
+			if (resPtr->err) {
+				fprintf(ofilePtr,"U\n");
+				resPtr=resPtr->next;
+				continue;
+			}
+			if (resPtr->raw)
+				fprintf(ofilePtr,"%f\n",resPtr->result);
+			else
+				fprintf(ofilePtr,"U\n");
+			resPtr=resPtr->next;
+		}
+	}
+	else if (cacti) { /*Cacti Format ausgeben*/
+		int index = 1;
+		while (resPtr) {
+			fprintf(ofilePtr,"v%d:",index);
+			if (resPtr->err) {
+				fprintf(ofilePtr,"U ");
+				resPtr=resPtr->next;
+				index++;
+				continue;
+			}
+			if (resPtr->raw)
+				fprintf(ofilePtr,"%f ",resPtr->result);
+			else
+				fprintf(ofilePtr,"U ");
+			index++;
+			resPtr=resPtr->next;
+		}
+		fprintf(ofilePtr,"\n");
+	}
 	else {
 		while (resPtr) {
 			fprintf(ofilePtr,"%s:\n",resPtr->cmd);
@@ -366,4 +502,4 @@ main(int argc,char* argv[])  {
 		}
 	}
 	return 0;
-}	
+}

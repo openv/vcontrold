@@ -52,7 +52,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		logIT(LOG_ERR,"SIGALRM error");
 	if(setjmp(env_alrm) !=0) {
 		string=calloc(1000,sizeof(char));
-		sprintf(string,"timeout wait:%s",wait);
+		snprintf(string, 1000-10 ,"timeout wait:%s",wait);
 		logIT(LOG_ERR,string);
 		free(string);
 		return(-1);
@@ -77,7 +77,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		if ((pptr=strstr(*recv,wait))) {
 			*pptr='\0';
 			string=calloc(strlen(*recv)+100,sizeof(char));
-			sprintf(string,"recv:%s",*recv);
+			snprintf(string, sizeof(string),"recv:%s",*recv);
 			logIT(LOG_INFO,string);
 			free(string);
 			break;
@@ -90,7 +90,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 	}
 	if (count <=0) {
 		string=calloc(1000,sizeof(char));
-		sprintf(string,"exit mit count=%ld",count);
+		snprintf(string, sizeof(string),"exit mit count=%ld",count);
 		logIT(LOG_ERR,string);;
 		free(string);
 	}
@@ -110,17 +110,17 @@ int connectServer(char *host) {
                 strncpy(serv,host,dptr-host);
                 sockfd=openCliSocket(serv,port,0);
 		if (sockfd) {
-			sprintf(string,"Verbindung zu %s Port %d aufgebaut",host,port);
+			snprintf(string, sizeof(string),"Verbindung zu %s Port %d aufgebaut",host,port);
 			logIT(LOG_INFO,string);
 		}
 		else {
-			sprintf(string,"Verbindung zu %s Port %d gescheitert",host,port);
+			snprintf(string, sizeof(string),"Verbindung zu %s Port %d gescheitert",host,port);
 			logIT(LOG_INFO,string);
 			return(-1);
 		}
         }
 	else {
-		sprintf(string,"Host Format: IP|Name:Port");
+		snprintf(string, sizeof(string),"Host Format: IP|Name:Port");
 		logIT(LOG_ERR,string);
 		return(-1);
 	}
@@ -131,7 +131,7 @@ void disconnectServer(int sockfd) {
 	char string[1000];
 	char *ptr;
 	bzero(string,sizeof(string));
-	sprintf(string,"quit\n");
+	snprintf(string, sizeof(string),"quit\n");
 	sendServer(sockfd,string,strlen(string));
 	recvSync(sockfd,BYE,&ptr);
 	free(ptr);
@@ -160,7 +160,7 @@ trPtr sendCmdFile(int sockfd,char *filename) {
 		return NULL;
 	}
 	else {
-		sprintf(string,"Kommando-Datei %s geoeffnet",filename);
+		snprintf(string, sizeof(string),"Kommando-Datei %s geoeffnet",filename);
 		logIT(LOG_INFO,string);
 	}
 	bzero(line,sizeof(line));
@@ -209,11 +209,11 @@ int sendTrList(int sockfd, trPtr ptr) {
 	}
 	while(ptr){
 		bzero(string,sizeof(string));
-		sprintf(string,"%s\n",ptr->cmd);
+		snprintf(string, sizeof(string),"%s\n",ptr->cmd);
 		if (sendServer(sockfd,string,strlen(string))<=0)
 			return(0);
 		bzero(string,sizeof(string));
-		sprintf(string,"SEND:%s",ptr->cmd);
+		snprintf(string, sizeof(string),"SEND:%s",ptr->cmd);
 		logIT(LOG_INFO,string);
 		if(recvSync(sockfd,prompt,&sptr)<=0) {
 			free(sptr);
@@ -223,7 +223,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 		if (iscntrl(*(ptr->raw+strlen(ptr->raw)-1)))
 			*(ptr->raw+strlen(ptr->raw)-1)='\0';
 		dumPtr=calloc(strlen(sptr)+20,sizeof(char));
-		sprintf(dumPtr,"RECV:%s",sptr);
+		snprintf(dumPtr,strlen(sptr)+20,"RECV:%s",sptr);
 		logIT(LOG_INFO,dumPtr);
 		free(dumPtr);
 		/* wir fuellen Fehler und result */

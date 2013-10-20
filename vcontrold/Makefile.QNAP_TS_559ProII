@@ -1,0 +1,48 @@
+# Makefile fuer vcontrol Daemon
+# Crosscompiling for QNAP TS 559 Pro II / Intel(R) Atom(TM) CPU D525   @ 1.80GHz
+# Created from Synology example
+# $Id: Makefile.QNAP_TS_559ProII 1 2013-10-05 17:28:07Z vheat $
+
+ARCH = i686
+STAGINGDIR = /opt
+BINDIR = $(STAGINGDIR)/bin
+CC = $(BINDIR)/gcc
+STRIP = $(BINDIR)/strip
+LDFLAGS =  -L $(STAGINGDIR)/lib -lxml2 -lz 
+CFLAGS =
+IFLAGS = -I $(STAGINGDIR)/include -I $(STAGINGDIR)/include/libxml2
+MAKE = make
+SHELL = /bin/sh
+MAKEFLAGS = b
+
+SRCS = vcontrold.c parser.c io.c common.c socket.c xmlconfig.c arithmetic.c semaphore.c client.c unit.c framer.c
+OBJS = vcontrold.o parser.o io.o common.o socket.o xmlconfig.o arithmetic.o semaphore.o unit.o framer.o
+HDRS = parser.h io.h common.h socket.h xmlconfig.h arithmetic.h semaphore.h unit.h framer.h
+BIN = vcontrold
+VERSION=0.96-1-p300
+PACKAGE = vcontrold-$(VERSION).tgz
+FILES = $(SRCS) $(HDRS) Makefile Makefile.QNAP_TS_559ProII $(BIN).xml
+
+CL_OBJS = vclient.o common.o socket.o io.o client.o
+CL_BIN = vclient
+
+
+.c.o:
+	$(CC) $(CFLAGS) $(IFLAGS) -c $<
+
+
+$(BIN): $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) -o $@-$(ARCH)
+	$(STRIP) $@-$(ARCH) 
+
+$(CL_BIN): $(CL_OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(CL_OBJS) -o $@-$(ARCH)
+	$(STRIP) $@-$(ARCH) 
+
+
+all: $(BIN) $(CL_BIN)
+
+clean:
+	rm -rf $(OBJS) $(BIN) $(CL_OBJS) $(CL_BIN)
+tar: 
+	tar cvf $(PACKAGE) $(FILES) 

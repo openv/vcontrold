@@ -57,17 +57,17 @@ int openSocket(int tcpport) {
 	// this will configure the socket to reuse the address if it was in use and is not free allready.
 	int optval =1;
 	if(listenfd < 0 || setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
-		sprintf(string,"setsockopt gescheitert!");
+		snprintf(string, sizeof(string),"setsockopt gescheitert!");
 		logIT(LOG_ERR,string);
 		exit(1);
 	}
 	
 	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
-			sprintf(string,"bind auf port %d gescheitert (in use / closewait)",tcpport);
+			snprintf(string, sizeof(string),"bind auf port %d gescheitert (in use / closewait)",tcpport);
 			logIT(LOG_ERR,string);
 			exit(1);
 	}
-	sprintf(string,"TCP socket %d geoeffnet",tcpport);
+	snprintf(string, sizeof(string),"TCP socket %d geoeffnet",tcpport);
 	logIT(LOG_NOTICE,string);
 	listen(listenfd, LISTENQ);
 	return(listenfd);
@@ -90,12 +90,12 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 		inet_ntop(AF_INET,&cliaddr.sin_addr, buf, sizeof(buf));
 		cliport=ntohs(cliaddr.sin_port);
 		if(checkP && !(*checkP)(buf)) {
-			sprintf(string,"Access denied %s:%d",buf,cliport);
+			snprintf(string, sizeof(string),"Access denied %s:%d",buf,cliport);
 			logIT(LOG_NOTICE,string);
 			close(connfd);
 			continue;
 		}
-		sprintf(string,"Client verbunden %s:%d (FD:%d)",buf,cliport,connfd);
+		snprintf(string, sizeof(string),"Client verbunden %s:%d (FD:%d)",buf,cliport,connfd);
 		logIT(LOG_NOTICE,string);
 		if (!makeChild) {
 			return(connfd);
@@ -105,7 +105,7 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 			return(connfd);
 		}
 		else {
-			sprintf(string,"Child Prozess mit pid:%d gestartet",childpid);
+			snprintf(string, sizeof(string),"Child Prozess mit pid:%d gestartet",childpid);
 			logIT(LOG_INFO,string);
 		}
 		close(connfd);
@@ -114,7 +114,7 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 
 void closeSocket(int sockfd) {
 	char string[1000];
-        sprintf(string,"Verbindung beendet (fd:%d)",sockfd);
+        snprintf(string, sizeof(string),"Verbindung beendet (fd:%d)",sockfd);
 	logIT(LOG_INFO,string);
 	close(sockfd);
 }
@@ -130,7 +130,7 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 
 
 	if ((hp=gethostbyname(host))== NULL) {	
-		sprintf(string,"Fehler gethostbyname: %s:%s",host,hstrerror(h_errno));
+		snprintf(string, sizeof(string),"Fehler gethostbyname: %s:%s",host,hstrerror(h_errno));
 		logIT(LOG_ERR,string);
 		exit(1);
 	}
@@ -144,7 +144,7 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 		if (signal(SIGALRM, sig_alrm) == SIG_ERR)
 			logIT(LOG_ERR,"SIGALRM error");
 		if(setjmp(env_alrm) !=0) {
-			sprintf(string,"connect timeout %s:%d",host,port);
+			snprintf(string, sizeof(string),"connect timeout %s:%d",host,port);
 			logIT(LOG_ERR,string);
 			close(sockfd); /* anscheinend besteht manchmal schon noch eine Verbindung??? */
 			alarm(0);
@@ -159,16 +159,16 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 		close(sockfd);
 	}
 	if (*pptr == NULL) {
-		sprintf(string,"TTY Net: Keine Verbingung zu %s:%d",host,port);
+		snprintf(string, sizeof(string),"TTY Net: Keine Verbingung zu %s:%d",host,port);
 		logIT(LOG_ERR,string);
 		return(-1);
 	}
-	sprintf(string,"ClI Net: verbunden %s:%d (FD:%d)",host,port,sockfd);
+	snprintf(string, sizeof(string),"ClI Net: verbunden %s:%d (FD:%d)",host,port,sockfd);
 	logIT(LOG_INFO,string);
 	int flag=1;
 	if (noTCPdelay && (setsockopt(sockfd,IPPROTO_TCP,TCP_NODELAY, (char*) &flag,sizeof(int)))) {
 		errstr=strerror(errno);
-		sprintf(string,"Fehler setsockopt TCP_NODELAY (%s)",errstr);
+		snprintf(string, sizeof(string),"Fehler setsockopt TCP_NODELAY (%s)",errstr);
 		logIT(LOG_ERR,string);
 	}
 	
