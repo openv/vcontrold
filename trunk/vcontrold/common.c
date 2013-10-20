@@ -55,12 +55,18 @@ void logIT (int class,char *string) {
 	tPtr=ctime(&t);
 	char dbg[1000];
 	int pid;
+	long avail;
 
 		
 
 	if (class <= LOG_ERR)  {
-		strncat(errMsg,string,sizeof(errMsg)-strlen(string)-2);
-		strcat(errMsg,"\n");
+		avail = sizeof(errMsg)-strlen(errMsg)-2;
+		if ( avail > 0 ) {
+			strncat(errMsg,string,avail);
+			strcat(errMsg,"\n");
+		} else {
+			strcpy(&errMsg[sizeof(errMsg)-12], "OVERFLOW\n"); /* sollte den semop Fehler loesen */
+		}
 	}
 
 	errClass=class;
@@ -75,7 +81,7 @@ void logIT (int class,char *string) {
 	if (dbgFD>=0) {
 		/* der Debug FD ist gesetzt und wir senden die Infos zuerst dort hin */
 		bzero(dbg,sizeof(dbg));
-		sprintf(dbg,"DEBUG:%s: %s\n",tPtr,string);
+		snprintf(dbg, sizeof(dbg), "DEBUG:%s: %s\n",tPtr,string);
 		write(dbgFD,dbg,strlen(dbg));
 	}
 
@@ -99,11 +105,16 @@ void sendErrMsg(int fd) {
 	char string[1010];
 
 	if ((fd>=0) && (errClass<=3)) {
-		sprintf(string,"ERR: %s",errMsg);
+		snprintf(string, sizeof(string), "ERR: %s",errMsg);
 		write(fd,string,strlen(string));
 		errClass=99; /* damit wird sie nur ein mal angezeigt */
 		bzero(errMsg,sizeof(errMsg));
 	}
+	*errMsg='\0';
+	/* zurück auf Anfang, egal, ob wirklich ausgegeben -
+	 * kann für debugging auskommentiert werden, dann
+	 * sammeln sich in errMsg die Fehler
+	 */
 }
 
 void setDebugFD(int fd) {
@@ -115,10 +126,10 @@ char hex2chr(char *hex) {
 	char buffer[16];
 	int hex_value=-1;
 	
-	sprintf(buffer, "0x%s", hex);
+	snprintf(buffer, sizeof(buffer), "0x%s", hex);
 	if (sscanf(hex, "%x", &hex_value) != 1) {
 		char string[64];
-		sprintf(string, "Ungültige Hex Zeichen in %s", hex);
+		snprintf(string, sizeof(string), "Ungültige Hex Zeichen in %s", hex);
 		logIT(LOG_WARNING, string);
 	}
 	return hex_value;
@@ -136,7 +147,7 @@ char hex2chr(char *hex) {
 	char c[2];
 	for(i=0;i<n;i++) {
 		if (!isxdigit(hex[i])) {
-			sprintf(string,"Kein Hex Zeichen %x",hex[i]);
+			snprintf(string, sizeof(string),"Kein Hex Zeichen %x",hex[i]);
 			logIT(LOG_WARNING,string);
 			continue;
 		}
@@ -166,7 +177,7 @@ char hex2chr(char *hex) {
 				val=15;
 				break;
 			default:
-				sprintf(string,"Fehler Typumwandlung Hex->Chr %s",hex);
+				snprintf(string, sizeof(string), "Fehler Typumwandlung Hex->Chr %s",hex);
 				logIT(LOG_ERR,string);
 				return(-1);
 				break;
@@ -187,7 +198,7 @@ int char2hex(char *outString, const char *charPtr, int len) {
 	bzero(string,sizeof(string));
 	for (n=0;n<len;n++) {
 		unsigned char byte=*charPtr++ & 255;
-		sprintf(string,"%02X ",byte);
+		snprintf(string, sizeof(string),"%02X ",byte);
 		strcat(outString,string);
 	}
 	/* letztes Leerzeichen verdampfen */

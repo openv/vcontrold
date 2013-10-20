@@ -56,6 +56,7 @@ struct config {
 
 struct protocol {
 	char *name;
+	char id;
 	macroPtr mPtr;
 	icmdPtr icPtr;
 	protocolPtr next;

@@ -75,9 +75,9 @@ int getCycleTime(char *recv,int len,char *result) {
 
 	for(i=0;i<len;i+=2) {
 		if (recv[i] == (char)0xff) 
-			sprintf(string,"%d:An:--     Aus:--\n",(i/2)+1);
+			snprintf(string, sizeof(string),"%d:An:--     Aus:--\n",(i/2)+1);
 		else
-			sprintf(string,"%d:An:%02d:%02d  Aus:%02d:%02d\n",(i/2)+1,
+			snprintf(string, sizeof(string),"%d:An:%02d:%02d  Aus:%02d:%02d\n",(i/2)+1,
 				(recv[i] & 0xF8)>>3,(recv[i] & 7)*10,
 				(recv[i+1] & 0xF8)>>3,(recv[i+1] & 7)*10);
 		strcat(result,string);
@@ -107,11 +107,11 @@ int setCycleTime(char *input,char *sendBuf) {
 			sptr++;
 		/* besteht der String nur aus ein oder zwei Minus? -> diese Zeit bleibt leer */
 		if ((0 == strcmp(sptr,"-")) ||  (0 == strcmp(sptr,"--"))) {
-		  /* Wir Ÿberspringen die nŠchste Zeitangabe, da die ja auch "-" sein mu§ */
+		  /* Wir ï¿½berspringen die nï¿½chste Zeitangabe, da die ja auch "-" sein muï¿½ */
 		  bptr++;
 		  count++;
 		  sptr=strtok(NULL," ");
-		  sprintf(string,"Cycle Time: -- -- -> [%02X%02X]",0xff, 0xff);
+		  snprintf(string, sizeof(string),"Cycle Time: -- -- -> [%02X%02X]",0xff, 0xff);
 		  logIT(LOG_INFO,string);
 		}
 		else {
@@ -122,7 +122,7 @@ int setCycleTime(char *input,char *sendBuf) {
 		  }
 		  sscanf(sptr,"%i:%i",&hour,&min);
 		  *bptr=((hour <<3) + (min/10)) & 0xff;	
-		  sprintf(string,"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
+		  snprintf(string, sizeof(string),"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
 		  logIT(LOG_INFO,string);
 		}
 		bptr++;
@@ -131,7 +131,7 @@ int setCycleTime(char *input,char *sendBuf) {
 	
 	} while((sptr=strtok(NULL," ")) != NULL);
 	if ((count/2)*2 !=count) {
-		sprintf(string,"Anzahl Zeiten ungerade, ignoriere %s",cptr);
+		snprintf(string, sizeof(string),"Anzahl Zeiten ungerade, ignoriere %s",cptr);
 		logIT(LOG_WARNING,string);
 		*(bptr-1)=0xff;
 	}
@@ -160,6 +160,8 @@ int getSysTime(char *recv,int len,char *result) {
 			break;	
 		case 6: strcpy(day,"Sa");
 			break;	
+		case 7: strcpy(day,"So");
+			break;
 		default: sprintf(result,"Fehler Tagwandlung: %02X",recv[4]);
 			return(0);
 	}
@@ -190,7 +192,7 @@ int setSysTime(char *input,char *sendBuf,short bufsize) {
 		systime[4]=systime[3];
 		systime[3]=systime[2];
 		systime[2]=' ';
-		sprintf(string,"aktuelle Sys.Zeit %s",systime);
+		snprintf(string, sizeof(string),"aktuelle Sys.Zeit %s",systime);
 		logIT(LOG_INFO,string);
 		return(string2chr(systime,sendBuf,bufsize));
 	}
@@ -225,7 +227,7 @@ int getErrState(enumPtr ePtr,char *recv,int len,char *result) {
 		if (bytes2Enum(ePtr,ptr,&errtext,1))
 			/* Rest SysTime */
 			if(getSysTime(ptr+1,8,systime)) {
-				sprintf(string,"%s %s (%02X)\n",systime,errtext,(unsigned char)*ptr);
+				snprintf(string, sizeof(string),"%s %s (%02X)\n",systime,errtext,(unsigned char)*ptr);
 				strcat(result,string);
 				continue;
 			}
@@ -386,7 +388,7 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	}
 	else if (uPtr->type) {
 		bzero(string,sizeof(string));
-		sprintf(string,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
+		snprintf(string, sizeof(string),"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
 		logIT(LOG_ERR,string);
 		return(-1);
 	}
@@ -401,20 +403,20 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	for(n=0;n<=9;n++) {/* Bytes 0..9 sind von Interesse */ 
 		bzero(string,sizeof(string));
 		unsigned char byte=*ptr++ & 255;
-		sprintf(string,"B%d:%02X ",n,byte);
+		snprintf(string, sizeof(string),"B%d:%02X ",n,byte);
 		strcat(buffer,string);
 		if (n >= MAXBUF-3)
 			break;
 	}
 	if (uPtr->gCalc && *uPtr->gCalc) { /* <calc im XML und get darin definiert */
-		sprintf(string,"Typ: %s (in float: %f)",uPtr->type,floatV);
+		snprintf(string, sizeof(string),"Typ: %s (in float: %f)",uPtr->type,floatV);
 		logIT(LOG_INFO,string);
 		inPtr=uPtr->gCalc;
-		sprintf(string,"(FLOAT) Exp:%s [%s]",inPtr,buffer);
+		snprintf(string, sizeof(string),"(FLOAT) Exp:%s [%s]",inPtr,buffer);
 		logIT(LOG_INFO,string);
 		erg=execExpression(&inPtr,recvBuf,floatV,errPtr);
 		if (*errPtr) {
-			sprintf(string,"Exec %s: %s",uPtr->gCalc,error);
+			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->gCalc,error);
 			logIT(LOG_ERR,string);
 			strcpy(result,string);
 			return(-1);
@@ -423,16 +425,16 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	}
 	else if (uPtr->gICalc && *uPtr->gICalc) { /* <icalc im XML und get darin definiert */
 		inPtr=uPtr->gICalc;
-		sprintf(string,"(INT) Exp:%s [BP:%d] [%s]",inPtr,bitpos,buffer);
+		snprintf(string, sizeof(string),"(INT) Exp:%s [BP:%d] [%s]",inPtr,bitpos,buffer);
 		logIT(LOG_INFO,string);
 		ergI=execIExpression(&inPtr,recvBuf,bitpos,pRecvPtr,errPtr);
 		if (*errPtr) {
-			sprintf(string,"Exec %s: %s",uPtr->gCalc,error);
+			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->gCalc,error);
 			logIT(LOG_ERR,string);
 			strcpy(result,string);
 			return(-1);
 		}
-		sprintf(string,"Erg: (Hex max. 4Byte) %08x",ergI);
+		snprintf(string, sizeof(string),"Erg: (Hex max. 4Byte) %08x",ergI);
 		logIT(LOG_INFO,string);
 		res=ergI;
 		if( uPtr->ePtr && bytes2Enum(uPtr->ePtr,&res,&tPtr,recvLen)) {
@@ -524,11 +526,11 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 	if (uPtr->sCalc && *uPtr->sCalc) { /* <calc im XML und set darin definiert */
 		floatV=atof(input);
 		inPtr=uPtr->sCalc;
-		sprintf(string,"Send Exp:%s [V=%f]",inPtr,floatV);
+		snprintf(string, sizeof(string),"Send Exp:%s [V=%f]",inPtr,floatV);
 		logIT(LOG_INFO,string);
 		erg=execExpression(&inPtr,dumBuf,floatV,errPtr);
 		if (*errPtr) {
-			sprintf(string,"Exec %s: %s",uPtr->sCalc,error);
+			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->sCalc,error);
 			logIT(LOG_ERR,string);
 			strcpy(sendBuf,string);
 			return(-1);
@@ -549,17 +551,17 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 			else {
 				bzero(dumBuf,sizeof(dumBuf));
 				memcpy(dumBuf,ptr,count);
-				sprintf(string,"(INT) Exp:%s [BP:%d]",inPtr,bitpos);
+				snprintf(string, sizeof(string),"(INT) Exp:%s [BP:%d]",inPtr,bitpos);
 				logIT(LOG_INFO,string);
 				ergI=execIExpression(&inPtr,dumBuf,bitpos,pRecvPtr,errPtr);
 				if (*errPtr) {
-					sprintf(string,"Exec %s: %s",uPtr->sICalc,error);
+					snprintf(string, sizeof(string),"Exec %s: %s",uPtr->sICalc,error);
 					logIT(LOG_ERR,string);
 					strcpy(sendBuf,string);
 					return(-1);
 				}
 				ergType=INT;
-				sprintf(string,"Erg: (Hex max. 4Byte) %08x",ergI);
+				snprintf(string, sizeof(string),"Erg: (Hex max. 4Byte) %08x",ergI);
 			}
 		}
 	}
@@ -606,7 +608,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 		}
 		else if (uPtr->type) {
 			bzero(string,sizeof(string));
-			sprintf(string,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
+			snprintf(string, sizeof(string),"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
 			logIT(LOG_ERR,string);
 			return(-1);
 		}
@@ -615,12 +617,12 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 		while(*ptr) {
 			bzero(string,sizeof(string));
 			unsigned char byte=*ptr++ & 255;
-			sprintf(string,"%02X ",byte);
+			snprintf(string, sizeof(string),"%02X ",byte);
 			strcat(buffer,string);
 			if (n >= MAXBUF-3)	/* FN Wo wird 'n' eigentlich initialisiert */
 				break;
 		}
-		sprintf(string,"Typ: %s (Bytes: %s)  ",uPtr->type,buffer);
+		snprintf(string, sizeof(string),"Typ: %s (Bytes: %s)  ",uPtr->type,buffer);
 		logIT(LOG_INFO,string);
 		return(1);
 	}

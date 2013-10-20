@@ -57,6 +57,7 @@ protocolPtr newProtocolNode(protocolPtr ptr) {
 		ptr->next=nptr;
 	nptr->next=NULL;
 	nptr->icPtr=NULL;
+	nptr->id = 0;
 	return(nptr);
 }
 
@@ -440,7 +441,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 	cfgPtr->debug=0;
 	cfgPtr->aPtr=NULL;
 	while(cur) {
-		sprintf(string,"CONFIG:(%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"CONFIG:(%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (strstr((char *)cur->name,"serial"))  {
 			serialFound=1;
@@ -459,7 +460,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 		}
 		else if (strstr((char *)cur->name,"device"))  {
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"ID");
-			sprintf(string,"     Device ID=%s",cfgPtr->devID);
+			snprintf(string, sizeof(string),"     Device ID=%s",cfgPtr->devID);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cfgPtr->devID=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -472,7 +473,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 			
 		else if (serialFound && strstr((char *)cur->name,"tty"))  {
 		 	chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cfgPtr->tty=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -486,7 +487,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 		}
 		else if (netFound && strstr((char *)cur->name,"port"))  {
 		 	chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cfgPtr->port=atoi(chrPtr);
@@ -496,7 +497,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 		}
 		else if (netFound && strstr((char *)cur->name,"allow"))  {
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"ip");
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 
 			/* wir zerlegen nun chrPtr in ip/size
@@ -537,7 +538,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 				aPtr->ip=inet_addr(ip);
 				if(!cfgPtr->aPtr) 
 					cfgPtr->aPtr=aPtr;
-				sprintf(string,"     Allow IP:%s Size:/%d",ip,size);
+				snprintf(string, sizeof(string),"     Allow IP:%s Size:/%d",ip,size);
 				logIT(LOG_INFO,string);
 			}
 
@@ -546,7 +547,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 		}
 		else if (logFound && strstr((char *)cur->name,"file"))  {
 		 	chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cfgPtr->logfile=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -559,7 +560,7 @@ configPtr parseConfig(xmlNodePtr cur) {
 		}
 		else if (logFound && strstr((char *)cur->name,"syslog"))  {
 		 	chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			((*chrPtr=='y')||(*chrPtr=='1')) ? (cfgPtr->syslog=1) : (cfgPtr->syslog=0);
 			(cur->next && 
@@ -590,7 +591,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 	enumPtr ePtr;
 
 	while(cur) {
-		sprintf(string,"UNIT: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"UNIT: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (cur->type == XML_TEXT_NODE) {
 			cur=cur->next;
@@ -599,7 +600,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		if (strstr((char *)cur->name,"unit"))  {
 			unit=getPropertyNode(cur->properties,(xmlChar *)"name");
 			if (unit) { /* neue Unit gelesen */
-				sprintf(string,"Neue Unit: %s",unit);
+				snprintf(string, sizeof(string),"Neue Unit: %s",unit);
 				logIT(LOG_INFO,string);
 				uPtr=newUnitNode(uStartPtr);
 				if(!uStartPtr) 
@@ -614,7 +615,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		}
 		else if (unitFound && strstr((char *)cur->name,"enum"))  {
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"text");
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s (text)",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s (text)",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				ePtr=newEnumNode(uPtr->ePtr);
@@ -624,7 +625,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 				strncpy(ePtr->text,chrPtr,strlen(chrPtr));
 				chrPtr=getPropertyNode(cur->properties,(xmlChar *)"bytes");
 				if (chrPtr) {
-					sprintf(string,"          (%d) Node::Name=%s Type:%d Content=%s (bytes)",cur->line,cur->name,cur->type,chrPtr);
+					snprintf(string, sizeof(string),"          (%d) Node::Name=%s Type:%d Content=%s (bytes)",cur->line,cur->name,cur->type,chrPtr);
 					logIT(LOG_INFO,string);
 					bzero(string,sizeof(string));
 					ePtr->len=string2chr(chrPtr,string,sizeof(string));
@@ -642,7 +643,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		}
 		else if (unitFound && strstr((char *)cur->name,"abbrev"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				uPtr->abbrev=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -655,7 +656,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		}
 		else if (unitFound && (strcmp((char *)cur->name,"calc")==0))  {
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"get");
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s (get)",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s (get)",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				uPtr->gCalc=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -664,7 +665,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 			else 
 				nullIT(&uPtr->gCalc);
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"set");
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s (set)",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s (set)",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				uPtr->sCalc=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -677,7 +678,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		}
 		else if (unitFound && (strcmp((char *)cur->name,"icalc")==0))  {
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"get");
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s (get)",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s (get)",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				uPtr->gICalc=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -686,7 +687,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 			else 
 				nullIT(&uPtr->gICalc);
 			chrPtr=getPropertyNode(cur->properties,(xmlChar *)"set");
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s (set)",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s (set)",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				uPtr->sICalc=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -699,7 +700,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		}
 		else if (unitFound && strstr((char *)cur->name,"type"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				uPtr->type=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -712,7 +713,7 @@ unitPtr parseUnit(xmlNodePtr cur) {
 		}
 		else if (unitFound && strstr((char *)cur->name,"entity"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if(chrPtr) {
 				uPtr->entity=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -742,7 +743,7 @@ macroPtr parseMacro(xmlNodePtr cur) {
 	char string[1000];
 
 	while(cur) {
-		sprintf(string,"MACRO: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"MACRO: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (cur->type == XML_TEXT_NODE) {
 			cur=cur->next;
@@ -751,7 +752,7 @@ macroPtr parseMacro(xmlNodePtr cur) {
 		if (strstr((char *)cur->name,"macro"))  {
 			macro=getPropertyNode(cur->properties,(xmlChar *)"name");
 			if (macro) { /* neues Macro gelesen */
-				sprintf(string,"Neues Macro: %s",macro);
+				snprintf(string, sizeof(string),"Neues Macro: %s",macro);
 				logIT(LOG_INFO,string);
 				mPtr=newMacroNode(mStartPtr);
 				if(!mStartPtr) 
@@ -766,7 +767,7 @@ macroPtr parseMacro(xmlNodePtr cur) {
 		}
 		else if (macroFound && strstr((char *)cur->name,"command"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) { 
 				mPtr->command=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -778,7 +779,7 @@ macroPtr parseMacro(xmlNodePtr cur) {
 			(!(cur->next->type==XML_TEXT_NODE)|| cur->next->next)) ? (cur=cur->next) : (cur=prevPtr->next);
 		}
 		else {
-			sprintf(string,"Fehler beim parsen macro");
+			snprintf(string, sizeof(string),"Fehler beim parsen macro");
 			logIT(LOG_INFO,string);
 			return(NULL);
 		}
@@ -809,7 +810,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 	}
 
 	while(cur) {
-		sprintf(string,"COMMAND: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"COMMAND: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (xmlIsBlankNode(cur))  {
 			cur=cur->next;
@@ -819,7 +820,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 			command=getPropertyNode(cur->properties,(xmlChar *)"name");
 			protocmd=getPropertyNode(cur->properties,(xmlChar *)"protocmd");
 			if (command) { /* neues Command gelesen */
-				sprintf(string,"Neues Command: %s",command);
+				snprintf(string, sizeof(string),"Neues Command: %s",command);
 				logIT(LOG_INFO,string);
 				cPtr=newCommandNode(cStartPtr);
 				if(!cStartPtr) 
@@ -847,11 +848,11 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 			id=getPropertyNode(cur->properties,(xmlChar *)"ID");
 			protocmd=getPropertyNode(cur->properties,(xmlChar *)"protocmd");
 			if (id) { /* neues Device unterhalb von Command  gelesen */
-				sprintf(string,"    Neues Device-Command: %s",id);
+				snprintf(string, sizeof(string),"    Neues Device-Command: %s",id);
 				logIT(LOG_INFO,string);
 				/* suche device aus der Liste */
 				if (!(dPtr=getDeviceNode(dePtr,id))) {
-					sprintf(string,"Device %s nicht definiert (%d)",id,cur->line);
+					snprintf(string, sizeof(string),"Device %s nicht definiert (%d)",id,cur->line);
 					logIT(LOG_ERR,string);
 					return(NULL);
 				}
@@ -894,7 +895,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"addr"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cPtr->addr=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -912,7 +913,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"error"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				bzero(string,sizeof(string));
@@ -933,7 +934,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"unit"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cPtr->unit=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -951,7 +952,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && (strcmp((char *)cur->name,"precommand")==0))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cPtr->precmd=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -969,7 +970,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"description"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cPtr->description=calloc(strlen(chrPtr)+1,sizeof(char));
@@ -987,7 +988,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"len"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cPtr->len=atoi(chrPtr);
@@ -1002,7 +1003,7 @@ commandPtr parseCommand(xmlNodePtr cur,commandPtr cPtr,devicePtr dePtr) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"bit"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) {
 				cPtr->bit=atoi(chrPtr);
@@ -1033,7 +1034,7 @@ icmdPtr parseICmd(xmlNodePtr cur) {
 	char string[1000];
 
 	while(cur) {
-		sprintf(string,"ICMD: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"ICMD: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (xmlIsBlankNode(cur))  {
 		/* if (cur->type == XML_TEXT_NODE) { */
@@ -1043,7 +1044,7 @@ icmdPtr parseICmd(xmlNodePtr cur) {
 		if (strstr((char *)cur->name,"command"))  {
 			command=getPropertyNode(cur->properties,(xmlChar *)"name");
 			if (command) { /* neues Command gelesen */
-				sprintf(string,"Neues iCommand: %s",command);
+				snprintf(string, sizeof(string),"Neues iCommand: %s",command);
 				logIT(LOG_INFO,string);
 				icPtr=newIcmdNode(icStartPtr);
 				if(!icStartPtr) 
@@ -1058,7 +1059,7 @@ icmdPtr parseICmd(xmlNodePtr cur) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"send"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) { 
 				icPtr->send=calloc(strlen(chrPtr)+2,sizeof(char));
@@ -1071,7 +1072,7 @@ icmdPtr parseICmd(xmlNodePtr cur) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"retry"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) { 
 				icPtr->retry=atoi(chrPtr);
@@ -1081,7 +1082,7 @@ icmdPtr parseICmd(xmlNodePtr cur) {
 		}
 		else if (commandFound && strstr((char *)cur->name,"recvTimeout"))  {
 			chrPtr=getTextNode(cur);	
-			sprintf(string,"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
+			snprintf(string, sizeof(string),"   (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,chrPtr);
 			logIT(LOG_INFO,string);
 			if (chrPtr) { 
 				icPtr->recvTimeout=atoi(chrPtr);
@@ -1107,7 +1108,7 @@ devicePtr parseDevice(xmlNodePtr cur,protocolPtr pPtr) {
 	char string[1000];
 
 	while(cur) {
-		sprintf(string,"DEVICE: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"DEVICE: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (cur->type == XML_TEXT_NODE) {
 			cur=cur->next;
@@ -1118,7 +1119,7 @@ devicePtr parseDevice(xmlNodePtr cur,protocolPtr pPtr) {
 			id=getPropertyNode(cur->properties,(xmlChar *)"ID");
 			proto=getPropertyNode(cur->properties,(xmlChar *)"protocol");
 			if (proto) { /* neues Protocol gelesen */
-				sprintf(string,"    Neues Device: name=%s ID=%s proto=%s",name,id,proto);
+				snprintf(string, sizeof(string),"    Neues Device: name=%s ID=%s proto=%s",name,id,proto);
 				logIT(LOG_INFO,string);
 				dPtr=newDeviceNode(dStartPtr);
 				if (!dStartPtr) 
@@ -1136,7 +1137,7 @@ devicePtr parseDevice(xmlNodePtr cur,protocolPtr pPtr) {
 				else
 					nullIT(&dPtr->id);
 				if (!(dPtr->protoPtr=getProtocolNode(pPtr,proto))) {
-					sprintf(string,"Protokoll %s nicht definiert",proto);
+					snprintf(string, sizeof(string),"Protokoll %s nicht definiert",proto);
 					logIT(LOG_ERR,string);
 					return(NULL);
 				}
@@ -1165,11 +1166,12 @@ protocolPtr parseProtocol(xmlNodePtr cur) {
 	macroPtr mPtr;
 	icmdPtr icPtr;
 	char *proto;
+	char *chrPtr;
 	xmlNodePtr prevPtr;
 	char string[1000];
 
 	while(cur) {
-		sprintf(string,"PROT: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"PROT: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (cur->type == XML_TEXT_NODE) {
 			cur=cur->next;
@@ -1178,7 +1180,7 @@ protocolPtr parseProtocol(xmlNodePtr cur) {
 		if (strstr((char *)cur->name,"protocol"))  {
 			proto=getPropertyNode(cur->properties,(xmlChar *)"name");
 			if (proto) { /* neues Protocol gelesen */
-				sprintf(string,"Neues Protokoll: %s",proto);
+				snprintf(string, sizeof(string),"Neues Protokoll: %s",proto);
 				logIT(LOG_INFO,string);
 				protoPtr=newProtocolNode(protoStartPtr);
 				if (!protoStartPtr) 
@@ -1198,7 +1200,13 @@ protocolPtr parseProtocol(xmlNodePtr cur) {
 			prevPtr=cur;
 			cur=cur->children;
 		}
-		else if (protoFound && strstr((char *)cur->name,"macros"))  {
+		else if (protoFound && strstr((char *)cur->name,"pid"))  {
+			chrPtr=getTextNode(cur);
+			protoPtr->id = hex2chr(chrPtr);
+			(cur->next &&
+			(!(cur->next->type==XML_TEXT_NODE)|| cur->next->next)) ? (cur=cur->next) : (cur=prevPtr->next);
+		}
+		else if (protoFound && strstr((const char *)cur->name,"macros"))  {
 			mPtr=parseMacro(cur->children);
 			if (mPtr) 
 				protoPtr->mPtr=mPtr;
@@ -1262,20 +1270,20 @@ int parseXMLFile(char *filename) {
 	curStart=xmlDocGetRootElement(doc);
 	cur=curStart;
 	if (cur == NULL) {
-	        sprintf(string,"empty document\n");
+	        snprintf(string, sizeof(string),"empty document\n");
 		logIT(LOG_ERR,string);
        		xmlFreeDoc(doc);
         	return(0);
     	}
 	ns=xmlSearchNsByHref(doc,cur,(const xmlChar *) "http://www.openv.de/vcontrol");
 	if (ns == NULL) {
-       		sprintf(string,"document of the wrong type, vcontrol Namespace not found");
+       		snprintf(string, sizeof(string),"document of the wrong type, vcontrol Namespace not found");
 		logIT(LOG_ERR,string);
         	xmlFreeDoc(doc);
         	return(0);
 	}
 	if (xmlStrcmp(cur->name, (const xmlChar *) "V-Control")) {
-		sprintf(string,"document of the wrong type, root node != V-Control");
+		snprintf(string, sizeof(string),"document of the wrong type, root node != V-Control");
 		logIT(LOG_ERR,string);
 		xmlFreeDoc(doc);
 		return(0);
@@ -1283,16 +1291,16 @@ int parseXMLFile(char *filename) {
 	/* Xinlcude durchfuehren */
 	short xc=0;
 	if ((xc=xmlXIncludeProcessFlags(doc,XML_PARSE_XINCLUDE|XML_PARSE_NOXINCNODE))==0) {
-		sprintf(string,"Kein XInclude durchgefuehrt");
+		snprintf(string, sizeof(string),"Kein XInclude durchgefuehrt");
 		logIT(LOG_WARNING,string);
 	}
 	else if (xc<0) {
-		sprintf(string,"Fehler bei XInclude");
+		snprintf(string, sizeof(string),"Fehler bei XInclude");
 		logIT(LOG_ERR,string);
 		return(0);
 	}
 	else {
-		sprintf(string,"%d XInclude durchgefuehrt",xc);
+		snprintf(string, sizeof(string),"%d XInclude durchgefuehrt",xc);
 		logIT(LOG_INFO,string);
 	}
 		
@@ -1302,7 +1310,7 @@ int parseXMLFile(char *filename) {
 	int protocolsFound=0;
 	cur=cur->children;
 	while (cur) {
-		sprintf(string,"XML: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
+		snprintf(string, sizeof(string),"XML: (%d) Node::Name=%s Type:%d Content=%s",cur->line,cur->name,cur->type,cur->content);
 		logIT(LOG_INFO,string);
 		if (xmlIsBlankNode(cur))  {
 			cur=cur->next;
@@ -1376,7 +1384,7 @@ int parseXMLFile(char *filename) {
 		while(dPtr) {
 			if (!getCommandNode(dPtr->cmdPtr,cPtr->name)) {
 			/* den kennen wir nicht und kopieren die Daten */
-				sprintf(string,"Kopiere Kommando %s nach Device %s",cPtr->name,dPtr->id);
+				snprintf(string, sizeof(string),"Kopiere Kommando %s nach Device %s",cPtr->name,dPtr->id);
 				logIT(LOG_INFO,string);
 				ncPtr=newCommandNode(dPtr->cmdPtr);
 				if (!dPtr->cmdPtr) 
@@ -1398,7 +1406,7 @@ int parseXMLFile(char *filename) {
 	/* wir suchen das default Devive  */
 
 	if (!(TcfgPtr->devPtr=getDeviceNode(TdevPtr,TcfgPtr->devID))) {
-			sprintf(string,"Device %s nicht definiert\n",TcfgPtr->devID);
+			snprintf(string, sizeof(string),"Device %s nicht definiert\n",TcfgPtr->devID);
 			logIT(LOG_ERR,string);
 			return(0);
 	}
