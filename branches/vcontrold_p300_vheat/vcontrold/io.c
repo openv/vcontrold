@@ -93,7 +93,7 @@ int opentty(char *device) {
 #endif
 	newsb.c_iflag=IGNBRK | IGNPAR;
 	newsb.c_oflag = 0;
-	newsb.c_lflag = ISIG;
+	newsb.c_lflag = 0;   /* removed ISIG for susp=control-z problem; */
 	newsb.c_cflag = (CLOCAL | B4800 | CS8 | CREAD| PARENB | CSTOPB);
 	newsb.c_cc[VMIN]   = 1;
 	newsb.c_cc[VTIME]  = 0;

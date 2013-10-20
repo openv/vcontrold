@@ -4,6 +4,35 @@ Disclaimer:
 Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
 immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
 
+19.10.2013 vheat
+----------------
+Reihenweise Leseausfälle gelöst:
+zum Problem des reihenweisen Ausfalls von Messwerten, Warmups Freitag Problem :-)
+Gestern hatte ich reproduzierbar Lesefehler beim Auslesen der Brennerstarts, jeder Versuch schlug fehl, heute war alles OK. Gestern hatte ich ein "strace" auf den vcontrold mitlaufen, konte somit die Bytes auf der Schnittstelle zum Optolink sehen, heute das gleiche gemacht.
+gestern: 41 09 01 01 08 8A 04 13 00 00 CE
+heute:   41 09 01 01 08 8A 04 21 13 00 00 D5
+Aus den Dumps erkennt man wo ein Dumps fehlt, war bei allen Versuchen die gleiche Position.
+Also, bc lässt grüßen, augerechnet was fehlt, es kommt das Byte 1A raus, das ist Ctrl Z, ein ganz besonderer Wert. Schaut man mit stty auf das Optolink Device kommen ua die Steuercodes
+# stty -a -F /dev/ttyAMA0
+....
+intr = <undef>; quit = <undef>; erase = <undef>; kill = <undef>; eof = <undef>; eol = <undef>;
+eol2 = <undef>; swtch = <undef>; start = ^Q; stop = ^S; susp = ^Z; rprnt = <undef>; werase = ^W;
+lnext = ^V; flush = ^O; min = 1; time = 0;
+...
+Control Z ist einer davon. Also Verdacht, das macht die Probleme. Aber wie generiert man auf Anforderung ein Byte 1A von der Vito, ganz einfach, eine Schaltzeit von 03:20 hat den Wert 1A, also zB Warmwasserstart-Timer auf 03:20 eingestellt und ausgelesen. Siehe da, kontinuierlich Lesefehler - Timeout.
+Jetzt bei stty die suspend Funktion weggenommen
+# stty -F /dev/ttyAMA0 susp ''     ('' sind zwei Quotes also ein leerer String/Character)
+und siehe da, Lesen geht problemlos, ohne Fehler.
+Jetzt die Suche in den Manpages zum susp Character, 
+http://man7.org/linux/man-pages/man3/termios.3.html:
+       c_lflag flag constants:
+       ISIG   When any of the characters INTR, QUIT, SUSP, or DSUSP are
+              received, generate the corresponding signal.
+Also in io.c geschaut, und da wird tatsächlich ISIG gesetzt. Also rausgenommen, gebaut und siehe da 03:20 wird problemlos gelesen.
+Vermutlich hat das Problem früher bei KW nicht bestanden, da das nächste 05 evtl. die Lesewerte komplettiert hat und es keine Checksumme gab, es gab ggf eigenartige Werte.
+
+(Ich habe beim RaspberryPi einen RXD/TXD Adapter am ttyAMA0 UART direkt angeschlossen, daher obiges Device.)
+
 ----------------
 18.10.2013 vheat
 Es sind einige Bugs behoben
