@@ -1,0 +1,2 @@
+/usr/local/bin/vclient-mips -h 192.168.1.4:3002 -f /root/vc-commands.txt -t /root/rrdb-update.tmpl -x /tmp/rrdb-update.sh
+

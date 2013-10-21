@@ -1,0 +1,174 @@
+Änderungen durch vheat per Februar/Oktober 2013 
+
+Disclaimer: 
+Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
+immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
+
+19.10.2013 vheat
+----------------
+Reihenweise Leseausfälle gelöst:
+zum Problem des reihenweisen Ausfalls von Messwerten, Warmups Freitag Problem :-)
+Gestern hatte ich reproduzierbar Lesefehler beim Auslesen der Brennerstarts, jeder Versuch schlug fehl, heute war alles OK. Gestern hatte ich ein "strace" auf den vcontrold mitlaufen, konte somit die Bytes auf der Schnittstelle zum Optolink sehen, heute das gleiche gemacht.
+gestern: 41 09 01 01 08 8A 04 13 00 00 CE
+heute:   41 09 01 01 08 8A 04 21 13 00 00 D5
+Aus den Dumps erkennt man wo ein Dumps fehlt, war bei allen Versuchen die gleiche Position.
+Also, bc lässt grüßen, augerechnet was fehlt, es kommt das Byte 1A raus, das ist Ctrl Z, ein ganz besonderer Wert. Schaut man mit stty auf das Optolink Device kommen ua die Steuercodes
+# stty -a -F /dev/ttyAMA0
+....
+intr = <undef>; quit = <undef>; erase = <undef>; kill = <undef>; eof = <undef>; eol = <undef>;
+eol2 = <undef>; swtch = <undef>; start = ^Q; stop = ^S; susp = ^Z; rprnt = <undef>; werase = ^W;
+lnext = ^V; flush = ^O; min = 1; time = 0;
+...
+Control Z ist einer davon. Also Verdacht, das macht die Probleme. Aber wie generiert man auf Anforderung ein Byte 1A von der Vito, ganz einfach, eine Schaltzeit von 03:20 hat den Wert 1A, also zB Warmwasserstart-Timer auf 03:20 eingestellt und ausgelesen. Siehe da, kontinuierlich Lesefehler - Timeout.
+Jetzt bei stty die suspend Funktion weggenommen
+# stty -F /dev/ttyAMA0 susp ''     ('' sind zwei Quotes also ein leerer String/Character)
+und siehe da, Lesen geht problemlos, ohne Fehler.
+Jetzt die Suche in den Manpages zum susp Character, 
+http://man7.org/linux/man-pages/man3/termios.3.html:
+       c_lflag flag constants:
+       ISIG   When any of the characters INTR, QUIT, SUSP, or DSUSP are
+              received, generate the corresponding signal.
+Also in io.c geschaut, und da wird tatsächlich ISIG gesetzt. Also rausgenommen, gebaut und siehe da 03:20 wird problemlos gelesen.
+Vermutlich hat das Problem früher bei KW nicht bestanden, da das nächste 05 evtl. die Lesewerte komplettiert hat und es keine Checksumme gab, es gab ggf eigenartige Werte.
+
+(Ich habe beim RaspberryPi einen RXD/TXD Adapter am ttyAMA0 UART direkt angeschlossen, daher obiges Device.)
+
+----------------
+18.10.2013 vheat
+Es sind einige Bugs behoben
+1) KW und P300 gehen, ausgewählt wird mit dem Device in vito.xml
+2) Es geht ein einzelnes oder eine Sequenz von Kommandos mit einem einzelnen vclient-Aufruf
+3) Der semop() Crash bei eingeschaltetem Logging ist behoben
+4) fnobis hat im vclient die Parameterbehandlung auf getopt_long umgestellt
+
+Bekanntes Problem:
+100) Es gibt zeitweilig häufige Lesefehler (warmup / andere). Es ist derzeit nicht klar, woher diese kommen. Sie sind nicht 
+der P300 Änderung zuzuordnen, treten bei beiden P300 und KW auf, wurden in diesem Zshg zunächst auf RaspberryPI gemeldet, 
+allerdings sind sie auch anderweitig gesehen. Problem ist bekannt und soll demnächst mit einer Statistik-Funktion angegangen
+werden. 
+
+Tests:
+Scenario 1: Linux Debian Squeeze mit Benutzung vsim Simulator, 
+vcontrold, vclient auf dem Linux Rechner, 
+vcontrold läuft gegen vsim  
+KW und P300, jeweils einzelnes oder mehrere getTempA
+
+siehe r61: Socket connection based simulation in vsim kann jetzt getTempA für sowohl KW als auch P300 beantworten. 
+Der Vsim hier ist einfach ein Frage/Antwort-Spiel mit bekannten Fragen und generiert auch nur dazu passende fixe Antworten. 
+vsim.c: Struktur cmds = {{Frage Länge, Frage Daten, Antwort Länge, Antwort Daten},...}. Nicht vergessen, Zähler cmdc mit aufdaten! 
+vcontrold muss statt des tty zum Optolink, IP und Port des VSIM mitbekommen.
+
+Scenario 2: Linux Debian Squeeze für vclient, 
+RaspberryPi für vcontrold gegen Vitodens 300W über 3.3V TXD/RXD Adapter an ttyAMA0 (onboard UART), 
+Adapter siehe FriendlyARM mini2440 im Forum
+KW und P300, jeweils einzelnes oder mehrere getTempA oder mit getTempWWist oder getTempKist
+
+Messungen:
+Abfrage eines einzelnen Wertes: sowohl KW wie P300 ca. 2 Sekunden pro Wert. 
+KW,   Sequenz von 10 * getTempA mit einem vclient Aufruf: jeweils auch 2 Sekunden pro Wert
+P300, Sequenz von 10 * getTempA mit einem vclient Aufruf: jeweils 0,3 Sekunden pro Wert, 
+                                  das geht umso weiter runter je mehr Werte in einen vclient Aufruf gesteckt werden.
+
+----------------
+05.10.2013 vheat
+
+Diese P300 Variante läuft bei mir auf vcontrold/FriendlyARM mini2440 und vclient+Cati/QNAP TS559 Pro II seit dem Frühjahr 2013 
+ohne Probleme.
+
+Kompiliert auf Debian, QNAP TS559ProII, FriendlyARM. Vclient auf allen dreien geprüft, vcontrold läuft auf FriendlyARM 
+ 
+Dieser Branch beinhaltet folgende Änderungen zum trunk:
+
+A) vclient:
+Zusätzliche Parameter, um direkt Ausgaben für Multiparameter-Aufrufe für die Datenlogger Munin oder Cacti zu bekommen.
+-m Munin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.
+	in der Ausgabe werden die vcontrold Command Parameter ausgegeben, jeweils gefolgt vom RAW Value, jeweils eine Zeile, 
+	Fehler sind durch U gekennzeichnet, Beispiel:
+		getTempA.value 18.786
+		getTempWWist,value 48.345
+		getUnknown.value U
+-k CactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren. 
+	Es wird angenommen, dass das "Data Template" in Cacti die Ergebnisse in den Variablen "Output Field" v1, v2 bis v<n> 
+	erwartet. Dementsprechend müssen Parameter gefüllt werden.
+	Fehler sind durch U gekenzeichnet, Beispiel:
+	Cacti Parameter im Data Template:
+		p1 getTempA
+		p2 getTempWWist
+		p3 getUnknown
+	vclient ergibt dann	
+		v1:18.786 v2:48.345 v3:U
+		
+	Beispiel Script für Cacti:
+
+<begin>
+	#!/opt/bin/perl
+	use English;
+	
+	$RS='';
+	
+	$cmd=join(',',@ARGV);
+	
+	system "date > /dev/console";
+	system "echo $cmd > /dev/console";
+	open(PROCESS, "/opt/bin/vclient -h 192.168.1.230:3002 -c \"$cmd\" -k|");
+	$answ = <PROCESS>;
+	close(PROCESS);
+	
+	print $answ;
+	system "echo \"xx$answ yy\" > /dev/console";
+	exit;
+<end>
+
+B) vcontrold
+Design der Änderung: Es wird ein "Pseudo"-Protokoll P300 mit Protokoll-Id pid 41 definiert. 
+In einem neuen Framing Layer wird das erkannt und entsprechend verarbeitet. Dieser Layer kennt eine "Transaktion", 
+während der der vcontrold für andere Clients gesperrt ist, somit alle Kommandos nacheinander ungestört ausgeführt werden, 
+es ist also nur einmal die Synchronisation und Protokoll-Umschaltung nötig. 
+Dazu mussten zusätzlich die Semaphore Operationen verschoben werden.
+
+Bekannter Fehler: Wird der vcontrold im Vordergrund mit verbose Information gestartet, tritt nach einiger Zeit ein semop() 
+Semaphore Problem auf.  
+
+C) xml
+	die Konfigurationsfiles für die Benutzung der P300, hier am Beipiel VScotHO1 20CB
+
+siehe vito.xml:	
+<vito>
+	<devices>
+		...
+		<device ID="20CB" name="VScotHO1" protocol="P300" />
+...	
+
+siehe vcontrold.xml:
+  <protocols>
+      <protocol name='P300'>
+	  <pid>41</pid>
+	  <macros>
+		<macro name='GETADDR'>
+		    <command>SEND 00 01</command>
+		</macro>
+		<macro name='SETADDR'>
+		    <command>SEND 01 F4</command>
+		</macro>
+	  </macros>
+	  <commands>
+		<command name="getaddr">
+		     <send>GETADDR $addr $hexlen;RECV $len $unit</send>
+		</command>
+		<command name="setaddr">
+		     <send>SETADDR $addr $hexlen;SEND BYTES $unit;RECV 1 SR</send>
+		</command>
+	  	<command name="gettestaddr">
+		     <send></send>
+		</command>
+	
+	  </commands>
+      </protocol>
+      
+D) Sonstiges
+sprintf->snprintf: war ein Problem bei langen Fehlerstrings
+ 
+Die Leseschleife des seriellen Ports geändert, da der verwendete FriendlyARM mini2440 / Linux mit dem vorherigen Verhalten nicht klar kam, der neue Algorithmus
+sollte allgemein funktionieren. 
+
+Im Wochentagsformat ist 0 sowie 7 Sonntag, Probleme in der Schaltuhr/Zeit Umwandlung
