@@ -363,7 +363,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime) {
 		framer_reset_actaddr();
 		return FRAMER_READ_TIMEOUT;
 		// TODO: add check for protocol P300
-	} else if (*l_buf != P300_LEADIN) {
+	} else if (framer_pid != P300_LEADIN) {
 		// no frame, just forward
 		for (rlen = 0; rlen < r_len; rlen++) {
 			r_buf[rlen] = l_buf[rlen];
