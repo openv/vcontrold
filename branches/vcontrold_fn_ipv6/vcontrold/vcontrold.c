@@ -39,7 +39,7 @@
 #define INIOUTFILE "/tmp/sim-%s.ini"
 #endif
 
-#define VERSION_DAEMON "0.98.1_p300"
+#define VERSION_DAEMON "0.98.2_IPv6"
 
 
 /* Globale Variablen */

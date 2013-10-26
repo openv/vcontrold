@@ -29,12 +29,13 @@
 
 
 #ifndef VERSION
-#define VERSION "0.3alpha"
+#define VERSION "0.98.2-IPv6(r73)"
 #endif
 
 void usage() {
 	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
-\t-h|--host\t<IP>:<Port> des vcontrold\n\
+\t-h|--host\t<IPv4>:<Port> oder <IPv6> des vcontrold\n\
+\t-p|--port\t<Port> des vcontrold bei IPv6\n\
 \t-c|--command\tListe von auszufuehrenden Kommandos, durch Komma getrennt\n\
 \t-f|--commandfile\tOptional Datei mit Kommandos, pro Zeile ein Kommando\n\
 \t-s|--cvsfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
@@ -44,6 +45,7 @@ void usage() {
 \t-m|--munin\tMunin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
 \t-k|--cacti\tCactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
 \t-v|--verbose\tVerbose Modus zum testen\n");
+	printf("\tVERSION %s\n", VERSION);
 	
 	exit(1);
 }
@@ -55,6 +57,7 @@ main(int argc,char* argv[])  {
 
 	/* Auswertung der Kommandozeilenschalter */
 	char host[256] = "";
+	int port = 0;
 	char commands[512] = "";
 	char cmdfile[MAXPATHLEN] = "";
 	char csvfile[MAXPATHLEN] = "";
@@ -73,20 +76,13 @@ main(int argc,char* argv[])  {
 	FILE *filePtr;
 	FILE *ofilePtr;
 	
-/* ToDo: vheat(2013-10-05):
- * derzeitige Implementierung crasht, wenn zwei Optionen ohne Parameter auf einander folgen
- * zB: "vclient -h 1..0 -c xyz -v -k"
- * Es wird ein String erwartet wie bei -h oder -c, der Bindestrich wird nicht erwartet.
- *
- * Fix sollte sein: Umbau auf getopt(), um die Parameter zu lesen.
- */
-
 	while (1)
 	{
 		static struct option long_options[] =
 		{
 			
 			{"host",		required_argument,	0, 'h'},
+			{"port",		required_argument,	0, 'p'},
 			{"command",		required_argument,	0, 'c'},
 			{"commandfile",	required_argument,	0, 'f'},
 			{"csvfile",		required_argument,	0, 's'},
@@ -140,7 +136,11 @@ main(int argc,char* argv[])  {
 					printf ("option -h with value `%s'\n", optarg);
 				strncpy(host, optarg, sizeof(host));
 				break;
-				
+			case 'p':
+				if (verbose)
+					printf ("option -p with value `%s'\n", optarg);
+				port = atoi(optarg);
+				break;
 			case 'c':
 				if (verbose) {
 					printf ("option -c with value `%s'\n", optarg);
@@ -223,7 +223,26 @@ main(int argc,char* argv[])  {
 	initLog(0,dummylog,verbose);
 	if (!*commands && (cmdfile[0] == 0))
 		usage();
-	sockfd=connectServer(host);
+	/* Check for :<port> if port==0
+	 * then separate the port number from the host name
+	 * or the IP adsress. 
+	 * The IP address could be a plain old IPv4 or a IPv6 one,
+	 * which could contain more than one ':', so that makes a bad 
+	 * separator in the IPv6 case and you better use --port
+	 * -h 192.168.2.1:3002 vs --host 2003:abcd:ff::1 --port 3002
+	 * or --host 2003:abcd:ff::1:3002, assume the last :3002 be the port
+	 * This is just for backwards compatibility.
+	 */
+	if (port == 0) {
+		/* check for last ':' in host */
+		char *last_colon = NULL;
+		
+		last_colon = strrchr(host, ':');
+		port = atoi(last_colon+1);
+		printf(">>> port=%d\n", port);
+		*last_colon = '\0';
+	}
+	sockfd=connectServer(host,port);
 	if (sockfd < 0) {
 		sprintf(string,"Keine Verbindung zu %s",host);
 		logIT(LOG_ERR,string);

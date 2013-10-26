@@ -77,7 +77,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		if ((pptr=strstr(*recv,wait))) {
 			*pptr='\0';
 			string=calloc(strlen(*recv)+100,sizeof(char));
-			snprintf(string, sizeof(string),"recv:%s",*recv);
+			snprintf(string, (strlen(*recv)+100)*sizeof(char),"recv:%s",*recv);
 			logIT(LOG_INFO,string);
 			free(string);
 			break;
@@ -97,18 +97,14 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 	return(count);
 }
 
-int connectServer(char *host) {
-	char *dptr;
+/*
+ * port is never 0, which is a bad number for a tcp port
+ */
+int connectServer(char *host, int port) {
 	int sockfd;
 	char string[1000];
-	if (host[0] != '/' && (dptr=strchr(host,':'))) {
-                char serv[MAXBUF];
-                int port;
-                port=atoi(dptr+1);
-                /* dptr-device liefert die Laenge des Hostes */
-                bzero(serv,sizeof(host));
-                strncpy(serv,host,dptr-host);
-                sockfd=openCliSocket(serv,port,0);
+	if (host[0] != '/' ) {
+		sockfd=openCliSocket(host,port,0);
 		if (sockfd) {
 			snprintf(string, sizeof(string),"Verbindung zu %s Port %d aufgebaut",host,port);
 			logIT(LOG_INFO,string);
@@ -223,7 +219,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 		if (iscntrl(*(ptr->raw+strlen(ptr->raw)-1)))
 			*(ptr->raw+strlen(ptr->raw)-1)='\0';
 		dumPtr=calloc(strlen(sptr)+20,sizeof(char));
-		snprintf(dumPtr,strlen(sptr)+20,"RECV:%s",sptr);
+		snprintf(dumPtr,(strlen(sptr)+20)*sizeof(char),"RECV:%s",sptr);
 		logIT(LOG_INFO,dumPtr);
 		free(dumPtr);
 		/* wir fuellen Fehler und result */

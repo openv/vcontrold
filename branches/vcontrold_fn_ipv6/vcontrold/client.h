@@ -13,7 +13,7 @@
 typedef struct txRx *trPtr;
 
 ssize_t recvSync(int fd,char *wait,char **recv);
-int connectServer(char *host);
+int connectServer(char *host, int port);
 void disconnectServer(int sockfd);
 size_t sendServer(int fd,char *s_buf, size_t len);
 trPtr sendCmdFile(int sockfd,char *tmpfile);
