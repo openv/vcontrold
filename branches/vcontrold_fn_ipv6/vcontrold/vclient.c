@@ -33,7 +33,9 @@
 #endif
 
 void usage() {
-	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
+	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x <exec-Datei>] [-k] [-m] [-v]\n\
+or\n\
+usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--commandfile <commandfile>] [--cvsfile <csv-Datei>] [--template <Template-Datei>] [--output <outpout Datei>] [--execute <exec-Datei>] [--cacti] [--munin] [--verbose] [command3 [command4] ...]\n\n\
 \t-h|--host\t<IPv4>:<Port> oder <IPv6> des vcontrold\n\
 \t-p|--port\t<Port> des vcontrold bei IPv6\n\
 \t-c|--command\tListe von auszufuehrenden Kommandos, durch Komma getrennt\n\
@@ -43,7 +45,7 @@ void usage() {
 \t-o|--output\tOutput, der stdout Output wird in die angegebene Datei geschrieben\n\
 \t-x|--execute\tDas umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
 \t-m|--munin\tMunin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
-\t-k|--cacti\tCactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
+\t-k|--cacti\tCacti Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
 \t-v|--verbose\tVerbose Modus zum testen\n");
 	printf("\tVERSION %s\n", VERSION);
 	

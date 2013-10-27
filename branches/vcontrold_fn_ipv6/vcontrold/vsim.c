@@ -76,7 +76,7 @@ char inpidx=0;
 static void handle(int fd)
 {
 	char buf[1] = "\0";
-	int len;
+	ssize_t len;
 
 	while ( 1 ) {
 		len = readn(fd, buf, 1);
