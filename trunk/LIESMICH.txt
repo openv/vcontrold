@@ -4,6 +4,20 @@ Disclaimer:
 Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
 immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
 
+24.10.2013 vheat
+----------------
+Bei Verwendung des KW kam es zu einem "framer chksum" error und damit zu einem am vclient gemeldeten Fehler.
+Der Fehler bestand darin, dass ein 0x41 zu Begin der KW Antwort als eine LeadIn für das P300 interprteiert wurde 
+und die Checksummenprüfung des P300 angestoßen wurde.
+Der Fehler trat immer auf, wenn die 0x41 zu Begin der Antwort kam. 0x41 ist dezimal 65. 
+Es waren besispielsweise die Werte betroffen:
+Druck 6.5 bar
+Temperatur (V/10) 32,1 Grad C oder 6,5 Grad C
+Temperatur (V/2) 32,5 Grad C
+Problem gelöst durch Referenzierung auf die (statische) framer_pid anstatt des gelesenen ersten Bytes.
+der getTempA Testfall in vsim.c liefert jetzt die Temperatur 0x41 0x01 = 32,1 Grad C fpr KW und P300
+Tests: KW und P300 gegen vsim jeweils 1,2,3 mal getTempA in einem vclient Call.
+  
 19.10.2013 vheat
 ----------------
 Reihenweise Leseausfälle gelöst:
