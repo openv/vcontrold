@@ -58,7 +58,7 @@ int
 main(int argc,char* argv[])  {
 
 	/* Auswertung der Kommandozeilenschalter */
-	char host[256] = "";
+	char *host;
 	int port = 0;
 	char commands[512] = "";
 	char cmdfile[MAXPATHLEN] = "";
@@ -136,7 +136,7 @@ main(int argc,char* argv[])  {
 			case 'h':
 				if (verbose)
 					printf ("option -h with value `%s'\n", optarg);
-				strncpy(host, optarg, sizeof(host));
+				host = optarg;
 				break;
 			case 'p':
 				if (verbose)

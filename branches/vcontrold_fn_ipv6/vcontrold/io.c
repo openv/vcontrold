@@ -65,7 +65,7 @@ int openDevice(char *device) {
 
 int opentty(char *device) {
 	int fd;
-	char string[1000];
+	char string[256];
 	snprintf(string, sizeof(string),"konfiguriere serielle Schnittstelle %s",device);
 	logIT(LOG_LOCAL0,string);
 	if ((fd=open(device,O_RDWR)) < 0) {
@@ -116,7 +116,7 @@ int opentty(char *device) {
 
 int my_send(int fd,char *s_buf, int len) {
 	int i;
-	char string[1000];
+	char string[256];
 
 	/* Buffer leeren */
 	/* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
@@ -137,7 +137,7 @@ int my_send(int fd,char *s_buf, int len) {
 
 int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	int i;
-	char string[1000];
+	char string[256];
 
 	struct tms tms_t;
 	clock_t start,end,mid,mid1;
@@ -299,7 +299,6 @@ int waitfor(int fd, char *w_buf,int w_len) {
 	int i;
 	time_t start;
 	char r_buf[MAXBUF];
-	char string[1000];
 	char hexString[1000]="\0";
 	char dummy[3];
 	unsigned long etime;
@@ -308,8 +307,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		strncat(hexString,dummy,999);
 	}
 	
-	snprintf(string, sizeof(string),"Warte auf %s",hexString);
-	logIT(LOG_INFO,string);
+	logIT(LOG_INFO,"Warte auf %s",hexString);
 	start=time(NULL);
 	
 	/* wir warten auf das erste Zeichen, danach muss es passen */

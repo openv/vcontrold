@@ -246,7 +246,7 @@ static char framer_chksum(char *buf, int len) {
  */
 
 int framer_send(int fd, char *s_buf, int len) {
-	char string[1000];
+	char string[256];
 
 	if ((len < 1) || (!s_buf)) {
 		snprintf(string, sizeof(string), ">FRAMER: invalid buffer %d %p", len, s_buf);
@@ -328,7 +328,7 @@ int framer_send(int fd, char *s_buf, int len) {
  */
 
 int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime) {
-	char string[1000];
+	char string[256];
 	int rlen;
 	int total;
 	int rtmp;

@@ -15,9 +15,9 @@
 		A4336BDB180B267B00A39E11 /* framer.c in Sources */ = {isa = PBXBuildFile; fileRef = A4336BD9180B267B00A39E11 /* framer.c */; };
 		A4336BE61812BE4C00A39E11 /* vsim.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A4336BE51812BE4C00A39E11 /* vsim.1 */; };
 		A4336BEC1812BEA400A39E11 /* vsim.c in Sources */ = {isa = PBXBuildFile; fileRef = A4336BEA1812BEA400A39E11 /* vsim.c */; };
-		A4336BED1812BEA400A39E11 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = A4336BEB1812BEA400A39E11 /* socket.c */; };
 		A45AEB761627406C0049941D /* vcontrold.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = A477FD6F16273E0000EBB2DF /* vcontrold.1 */; };
 		A4B6C232181C6EC1007D2033 /* libxml2.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A4B6C231181C6EC1007D2033 /* libxml2.2.dylib */; };
+		A4B6C2541822E507007D2033 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2514896FB8003A7995 /* socket.c */; };
 		A4F2D4B8162383EC00ED5798 /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE0514896FB8003A7995 /* common.c */; };
 		A4F2D4B9162383EC00ED5798 /* arithmetic.c in Sources */ = {isa = PBXBuildFile; fileRef = A494ADFF14896FB8003A7995 /* arithmetic.c */; };
 		A4F2D4BA162383EC00ED5798 /* semaphore.c in Sources */ = {isa = PBXBuildFile; fileRef = A494AE2314896FB8003A7995 /* semaphore.c */; };
@@ -69,7 +69,6 @@
 		A4336BE11812BE4C00A39E11 /* vsim */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vsim; sourceTree = BUILT_PRODUCTS_DIR; };
 		A4336BE51812BE4C00A39E11 /* vsim.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = vsim.1; sourceTree = "<group>"; };
 		A4336BEA1812BEA400A39E11 /* vsim.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = vsim.c; sourceTree = "<group>"; };
-		A4336BEB1812BEA400A39E11 /* socket.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = socket.c; sourceTree = "<group>"; };
 		A477FD6F16273E0000EBB2DF /* vcontrold.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; path = vcontrold.1; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.man; };
 		A494ADFF14896FB8003A7995 /* arithmetic.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = arithmetic.c; sourceTree = "<group>"; };
 		A494AE0014896FB8003A7995 /* arithmetic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = arithmetic.h; sourceTree = "<group>"; };
@@ -117,6 +116,10 @@
 		A494AE2D14896FB8003A7995 /* xmlconfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = xmlconfig.c; sourceTree = "<group>"; };
 		A494AE2E14896FB8003A7995 /* xmlconfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmlconfig.h; sourceTree = "<group>"; };
 		A4B6C231181C6EC1007D2033 /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = usr/lib/libxml2.2.dylib; sourceTree = SDKROOT; };
+		A4B6C256182AEB66007D2033 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		A4B6C257182AEEDB007D2033 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
+		A4B6C258182AEEDC007D2033 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
+		A4B6C259182AEEDC007D2033 /* INSTALL */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = INSTALL; sourceTree = "<group>"; };
 		A4F2D4AD1623827500ED5798 /* vcontrold */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vcontrold; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -149,8 +152,11 @@
 		08FB7794FE84155DC02AAC07 /* vcontrol_svn */ = {
 			isa = PBXGroup;
 			children = (
+				A4B6C257182AEEDB007D2033 /* AUTHORS */,
+				A4B6C258182AEEDC007D2033 /* COPYING */,
+				A4B6C259182AEEDC007D2033 /* INSTALL */,
+				A4B6C256182AEB66007D2033 /* README */,
 				A4B6C231181C6EC1007D2033 /* libxml2.2.dylib */,
-				A4336BEB1812BEA400A39E11 /* socket.c */,
 				A4336BD9180B267B00A39E11 /* framer.c */,
 				A4336BDA180B267B00A39E11 /* framer.h */,
 				A494AE0114896FB8003A7995 /* auto-build.sh */,
@@ -347,8 +353,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A4B6C2541822E507007D2033 /* socket.c in Sources */,
 				A4336BEC1812BEA400A39E11 /* vsim.c in Sources */,
-				A4336BED1812BEA400A39E11 /* socket.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

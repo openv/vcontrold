@@ -76,7 +76,7 @@ void usage() {
 
 short checkIP(char *ip) {
 	allowPtr aPtr;
-	char string[1000];
+	char string[256];
 	if ((aPtr = getAllowNode(cfgPtr->aPtr,inet_addr(ip)))) {
 		snprintf(string, sizeof(string),"%s in allowList (%s)",ip,aPtr->text);
 		logIT(LOG_INFO,string);
@@ -111,7 +111,7 @@ int reloadConfig() {
 int readCmdFile(char *filename,char *result,int *resultLen,char *device ) {
 	FILE *cmdPtr;
 	char line[MAXBUF];
-	char string[1000];
+	char string[256];
 	char recvBuf[MAXBUF];
 	char *resultPtr=result;
 	int fd;
@@ -203,7 +203,7 @@ int rawModus(int socketfd,char *device) {
 	/* hier schreiben wir alle ankommenden Befehle in eine temp. Datei */
 	/* diese Datei wird dann an readCmdFile uerbegeben */
 	char readBuf[MAXBUF];
-	char string[1000];
+	char string[256];
 	
 	#ifdef __CYGWIN__
 	char tmpfile[]="vitotmp-XXXXXX";
@@ -269,7 +269,7 @@ int interactive(int socketfd,char *device ) {
 	char *readPtr;
 	char prompt[]=PROMPT;
 	char bye[]=BYE;
-	char string[1000];
+	char string[256];
 	commandPtr cPtr;
 	commandPtr pcPtr;
 	int fd=-1;
@@ -680,7 +680,7 @@ int main(int argc,char* argv[])  {
 	int cmdOK=0;
 	int tcpport=0;
 	int simuOut=0;
-	char string[1000];
+	char string[256];
 
 	/* wir loggen aus stdout, bis die log Optinen richtig gesetzt sind */
 	while (--argc > 0 && (*++argv)[0] == '-') {

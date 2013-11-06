@@ -46,24 +46,30 @@ unit on|off: Schaltet implizite Umrechnung in die definierte Einheit aus und wie
 vclient- Client Programm zu Kommunikation mit dem vcontrold.
 
 Aufruf:
-vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-v]
 
--h : IP:Port des vcontrold
--c: Liste von auszuführenden Kommandos, durch Komma getrennt
--f: Optional Datei mit Kommandos, pro Zeile ein Kommando
--s: Ausgabe des Ergebnisses im CSV Format zur Weiterverarbeitung
--v: Verbose Modus zum testen
--t: TemplateFile
--o: outfile
--x: execute File: das mit -t angegebene Template wird ersetzt und direkt uasgefuehrt.
+vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x <exec-Datei>] [-k] [-m] [-v]
+oder
+vclient --host <ip> --port <port> [--command <command1,command2,..>] [--commandfile <commandfile>] [--cvsfile <csv-Datei>] [--template <Template-Datei>] [--output <outpout Datei>] [--execute <exec-Datei>] [--cacti] [--munin] [--verbose] [command3 [command4] ...]
+
+	-h|--host	<IPv4>:<Port> oder <IPv6> des vcontrold
+	-p|--port	<Port> des vcontrold bei IPv6
+	-c|--command	Liste von auszufuehrenden Kommandos, durch Komma getrennt
+	-f|--commandfile	Optional Datei mit Kommandos, pro Zeile ein Kommando
+	-s|--cvsfile	Ausgabe des Ergebnisses im CSV Format zur Weiterverarbeitung
+	-t|--template	Template, Variablen werden mit zurueckgelieferten Werten ersetzt.
+	-o|--output	Output, der stdout Output wird in die angegebene Datei geschrieben
+	-x|--execute	Das umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.
+	-m|--munin	Munin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.
+	-k|--cacti	Cacti Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.
+	-v|--verbose	Verbose Modus zum testen
 
 Template Modus
 Im Template Modus (-t) wird ein Template eingelesen und die dort enthaltenen Variablen ersetzt. Die Ausgabe erfolgt dann auf stdout.
 Damt ist es einfach möglich, die Messwerte der Heizung auszulesen und direkt in eine Datenbank zu schreiben.
 
 Variable Funktion
-$1..$n    Rückgabewert gewandelt in Gleitkommazahl
-$R1..$Rn  Rückgabewert ungewandelt (Text)
+$1..$n    Rueckgabewert gewandelt in Gleitkommazahl
+$R1..$Rn  Rueckgabewert ungewandelt (Text)
 $C1..$Cn  aufgerufenes Kommando
 $E1..$En  Fehlermeldung pro Kommando
 
