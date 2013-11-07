@@ -36,56 +36,107 @@
 //static void sig_alrm(int);
 //static jmp_buf  env_alrm;
 
-
+const int LISTEN_QUEUE=128;
 
 int openSocket(int tcpport) {
 	int listenfd;
-	struct sockaddr_in servaddr;
+	int n;
+	char *port;
+	struct addrinfo hints, *res, *ressave;
+	//struct sockaddr_storage addr;
+	//socklen_t               addrlen=sizeof(addr);
+	
+	memset(&hints, 0, sizeof(struct addrinfo));
+	
+	hints.ai_family   = PF_INET6;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_flags    = AI_PASSIVE;
 
-	listenfd=socket(PF_INET,SOCK_STREAM,0);
+	asprintf(&port, "%d", tcpport);
 	
-	bzero(&servaddr,sizeof(servaddr));
-	servaddr.sin_family =PF_INET;
-	servaddr.sin_addr.s_addr=htonl(INADDR_ANY);
-	servaddr.sin_port=htons(tcpport);
+	n = getaddrinfo(NULL, port, &hints, &res);
+
+	free(port);
+
+	if (n <0) {
+        logIT(LOG_ERR, "getaddrinfo error:: [%s]\n",
+			  gai_strerror(n));
+        return -1;
+    }
+
+	ressave=res;
 	
-	// this will configure the socket to reuse the address if it was in use and is not free allready.
-	int optval =1;
-	if(listenfd < 0 || setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
-		logIT(LOG_ERR,"setsockopt gescheitert!");
-		exit(1);
-	}
-	
-	if (bind(listenfd, (struct sockaddr *) &servaddr, sizeof(servaddr))) {
-			logIT(LOG_ERR,"bind auf port %d gescheitert (in use / closewait)",tcpport);
+    /*
+	 Try open socket with each address getaddrinfo returned,
+	 until getting a valid listening socket.
+	 */
+
+	listenfd = -1;
+	while (res) {
+		listenfd = socket(res->ai_family,
+                        res->ai_socktype,
+                        res->ai_protocol);
+		
+		// this will configure the socket to reuse the address if it was in use and is not free allready.
+		int optval =1;
+		if(listenfd > 0 && setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
+			logIT(LOG_ERR,"setsockopt gescheitert!");
 			exit(1);
-	}
+		}
+        if (!(listenfd < 0)) {
+            if (bind(listenfd, res->ai_addr, res->ai_addrlen) == 0)
+                break;
+			
+            close(listenfd);
+            listenfd=-1;
+        }
+        res = res->ai_next;
+    }
+	
+    if (listenfd < 0) {
+        freeaddrinfo(ressave);
+        fprintf(stderr,
+                "socket error:: could not open socket\n");
+        exit(1);
+    }
+	
+    listen(listenfd, LISTEN_QUEUE);
 	logIT(LOG_NOTICE,"TCP socket %d geoeffnet",tcpport);
-	listen(listenfd, LISTENQ);
-	return(listenfd);
+	
+    freeaddrinfo(ressave);
+	
+    return listenfd;
+
 }
+
 
 int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 	int connfd;
 	pid_t	childpid;
-	socklen_t clilen;
-	struct sockaddr_in cliaddr;
-	char buf[1000];
-	int cliport;
+	struct sockaddr_storage cliaddr;
+	socklen_t               cliaddrlen = sizeof(cliaddr);
+	char clienthost   [NI_MAXHOST];
+	char clientservice[NI_MAXSERV];
 
 	signal(SIGCHLD,SIG_IGN);
 
 	for( ;;) {
-		clilen=sizeof(cliaddr);
-		connfd=accept(listenfd, (struct sockaddr *) &cliaddr, &clilen);	
-		inet_ntop(AF_INET,&cliaddr.sin_addr, buf, sizeof(buf));
-		cliport=ntohs(cliaddr.sin_port);
-		if(checkP && !(*checkP)(buf)) {
-			logIT(LOG_NOTICE,"Access denied %s:%d",buf,cliport);
+		connfd = accept(listenfd,
+						(struct sockaddr *) &cliaddr,
+						&cliaddrlen);
+
+		getnameinfo((struct sockaddr *) &cliaddr, cliaddrlen,
+					clienthost, sizeof(clienthost),
+					clientservice, sizeof(clientservice),
+					NI_NUMERICHOST);
+		
+		if(connfd < 0) {
+			logIT(LOG_NOTICE,"accept auf host %s: port %s", clienthost, clientservice);
 			close(connfd);
 			continue;
 		}
-		logIT(LOG_NOTICE,"Client verbunden %s:%d (FD:%d)",buf,cliport,connfd);
+		logIT(LOG_NOTICE,"Client verbunden %s:%s (FD:%d)", clienthost, clientservice, connfd);
 		if (!makeChild) {
 			return(connfd);
 		}
@@ -116,7 +167,7 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 	
     hints.ai_family   = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags    = AI_ALL | AI_V4MAPPED | AI_DEFAULT;
+	hints.ai_flags    = AI_ALL | AI_V4MAPPED;
 	
 	snprintf(port_string, sizeof(port_string), "%d", port);
     n = getaddrinfo(host, port_string, &hints, &res);
