@@ -130,7 +130,7 @@ size_t sendServer(int fd,char *s_buf, size_t len) {
 	return(Writen(fd,s_buf,len));
 }
 
-trPtr sendCmdFile(int sockfd,char *filename) {
+trPtr sendCmdFile(int sockfd,const char *filename) {
 	FILE *filePtr;
 	char line[MAXBUF];
 	trPtr	ptr;

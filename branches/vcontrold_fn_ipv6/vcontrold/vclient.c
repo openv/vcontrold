@@ -40,7 +40,7 @@ usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--c
 \t-p|--port\t<Port> des vcontrold bei IPv6\n\
 \t-c|--command\tListe von auszufuehrenden Kommandos, durch Komma getrennt\n\
 \t-f|--commandfile\tOptional Datei mit Kommandos, pro Zeile ein Kommando\n\
-\t-s|--cvsfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
+\t-s|--csvfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
 \t-t|--template\tTemplate, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
 \t-o|--output\tOutput, der stdout Output wird in die angegebene Datei geschrieben\n\
 \t-x|--execute\tDas umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
@@ -61,10 +61,10 @@ main(int argc,char* argv[])  {
 	char *host;
 	int port = 0;
 	char commands[512] = "";
-	char cmdfile[MAXPATHLEN] = "";
-	char csvfile[MAXPATHLEN] = "";
-	char tmplfile[MAXPATHLEN] = "";
-	char outfile[MAXPATHLEN] = "";
+	const char *cmdfile = NULL;
+	const char *csvfile = NULL;
+	const char *tmplfile = NULL;
+	const char *outfile = NULL;
 	char string[1024] = "";
 	char result[1024] = "";
 	int sockfd;
@@ -138,11 +138,17 @@ main(int argc,char* argv[])  {
 					printf ("option -h with value `%s'\n", optarg);
 				host = optarg;
 				break;
+
 			case 'p':
 				if (verbose)
 					printf ("option -p with value `%s'\n", optarg);
 				port = atoi(optarg);
+				if (port == 0) {
+					fprintf(stderr, "Ungültiger Wert für option --port: %s\n", optarg);
+					usage();	/* und damit exit */
+				}
 				break;
+
 			case 'c':
 				if (verbose) {
 					printf ("option -c with value `%s'\n", optarg);
@@ -159,29 +165,30 @@ main(int argc,char* argv[])  {
 					strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
 				}
 				break;
-				
+
 			case 'f':
 				if (verbose)
 					printf ("option -f with value `%s'\n", optarg);
-				strncpy(cmdfile, optarg, sizeof(cmdfile));
+				cmdfile = optarg;
 				break;
-				
+
 			case 's':
 				if (verbose)
 					printf ("option -s with value `%s'\n", optarg);
+				csvfile = optarg;
 				break;
-				
+
 			case 't':
 				if (verbose)
 					printf ("option -t with value `%s'\n", optarg);
-				strncpy(tmplfile, optarg, sizeof(tmplfile));
+				tmplfile = optarg;
 				break;
-				
+
 			case 'o':
 			case 'x':
 				if (verbose)
 					printf ("option -%c with value `%s'\n", opt, optarg);
-				strncpy(outfile, optarg, sizeof(outfile));
+				outfile = optarg;
 				if (opt == 'x')
 					execMe = 1;
 				break;
@@ -223,7 +230,7 @@ main(int argc,char* argv[])  {
     }
 	
 	initLog(0,dummylog,verbose);
-	if (!*commands && (cmdfile[0] == 0))
+	if (!*commands && !*cmdfile)
 		usage();
 	/* Check for :<port> if port==0
 	 * then separate the port number from the host name
@@ -264,7 +271,7 @@ main(int argc,char* argv[])  {
 	}
 	disconnectServer(sockfd);
 
-	if(*outfile) {
+	if(outfile) {
 		if (!(ofilePtr=fopen(outfile,"w"))) {
 			sprintf(string,"Kann Datei %s nicht anlegen",outfile);
 			logIT(LOG_ERR,string);
@@ -279,7 +286,7 @@ main(int argc,char* argv[])  {
 	}
 	
 	/* das Ergebnis ist in der Liste resPtr, nun unterscheiden wir die Ausgabe */
-	if (*csvfile) {
+	if (csvfile) {
 		/* Kompakt Format mit Semikolon getrennt */
 		if (!(filePtr=fopen(csvfile,"a"))) {
 			sprintf(string,"Kann Datei %s nicht anlegen",csvfile);
@@ -308,7 +315,7 @@ main(int argc,char* argv[])  {
 		}
 		fclose(filePtr);
 	}
-	else if (*tmplfile) { /* Template angegeben*/
+	else if (tmplfile) { /* Template angegeben*/
 		char line[1000];
 		char *lptr;
 		char *lSptr;
