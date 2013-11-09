@@ -12,6 +12,7 @@
 #include <termios.h>
 #include <string.h>
 #include <time.h>
+#include <getopt.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,9 +44,10 @@
 
 
 /* Globale Variablen */
-char xmlfile[200]=XMLFILE;
+char *xmlfile = XMLFILE;
 FILE *iniFD=NULL;
 int makeDaemon=1;
+int inetversion=0;
 
 /* in xmlconfig.c definiert */
 extern protocolPtr protoPtr; 
@@ -70,8 +72,8 @@ int reloadConfig();
 
 
 void usage() {
-  printf("usage: vcontrold [-x xml-file] [-d <device>] [-l <logfile>] [-p port] [-s] [-n] [-i] [-g]\n");
-  exit(1);
+	printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>] [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog] [-n|--nodaemon] [-i|--vsim] [-g|--debug] [-4|--inet4] [-6|--inet6]\n");
+	exit(1);
 }
 
 short checkIP(char *ip) {
@@ -668,73 +670,123 @@ static void sigHupHandler(int signo) {
 
 /* hier gehts los */
 
-int main(int argc,char* argv[])  {
+int main(int argc, char* argv[]) {
 
 	/* Auswertung der Kommandozeilenschalter */
-	int c;
-	char device[200]="\0";
-	char cmdfile[200]="\0";
-	char logfile[200]="\0";
-	int useSyslog=0;	
-	int debug=0;	
-	int cmdOK=0;
+	char *device = NULL;
+	char *cmdfile = NULL;
+	char *logfile = NULL;
+	static int useSyslog=0;
+	static int debug=0;
+	static int verbose = 0;
 	int tcpport=0;
-	int simuOut=0;
+	static int simuOut=0;
 	char string[256];
+	int opt;
 
-	/* wir loggen aus stdout, bis die log Optinen richtig gesetzt sind */
-	while (--argc > 0 && (*++argv)[0] == '-') {
-			c=*++argv[0];
-			switch (c) {
-			case 'd':
-				/* Option -d, serielles Device */
-				if (!--argc) 
+	while (1)
+	{
+
+		static struct option long_options[] =
+		{
+			{"commandfile",	required_argument,	0, 'c'},
+			{"device",		required_argument,	0, 'd'},
+			{"debug",		no_argument,		&debug, 1},
+			{"vsim",		no_argument,		&simuOut, 1},
+			{"logfile",		required_argument,	0, 'l'},
+			{"nodaemon",	no_argument,		&makeDaemon, 0},
+			{"port",		required_argument,	0, 'p'},
+			{"syslog",		no_argument,		&useSyslog, 1},
+			{"xmlfile",		required_argument,	0, 'x'},
+			{"verbose",		no_argument,		&verbose, 1},
+			{"inet4",		no_argument,		&inetversion, 4},
+			{"inet6",		no_argument,		&inetversion, 6},
+			{"help",		no_argument,		0,	0},
+			{0,0,0,0}
+		};
+		/* getopt_long stores the option index here. */
+		int option_index = 0;
+		opt = getopt_long (argc, argv, "c:d:gil:np:svx:46",
+						   long_options, &option_index);
+		
+		/* Detect the end of the options. */
+		if (opt == -1)
+			break;
+		
+		switch (opt) {
+			case 0:
+				/* If this option sets a flag, we do nothing for now */
+				if (long_options[option_index].flag != 0)
+					break;
+				if (verbose) {
+					printf("option %s", long_options[option_index].name);
+					if (optarg)
+						printf(" with arg %s", optarg);
+					printf("\n");
+				}
+				if (strcmp("help", long_options[option_index].name) == 0) {
 					usage();
-				++argv;
-				strncpy(device,argv[0],sizeof(device));
+				}
 				break;
+
+			case '4':
+				inetversion = 4;
+				break;
+			case '6':
+				inetversion = 6;
+				break;
+
 			case 'c':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(cmdfile,argv[0],sizeof(cmdfile));
+				cmdfile = optarg;
 				break;
-			case 'x':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(xmlfile,argv[0],sizeof(xmlfile));
-				cmdOK=1;
+
+			case 'd':
+				device = optarg;
 				break;
-			case 'l':
-				if (!--argc) 
-					usage();
-				++argv;
-				strncpy(logfile,argv[0],sizeof(logfile));
-				break;
-			case 's':
-				useSyslog=1;
-				break;
-			case 'p':
-				if (!--argc)
-                                        usage();
-                                ++argv;
-                                strncpy(string,argv[0],sizeof(device));
-				tcpport=atoi(string);
-				break;
-			case 'n':
-				makeDaemon=0;
-				break;
-			case 'i':
-				simuOut=1;
-				break;
+
 			case 'g':
-				debug=1;
+				debug = 1;
 				break;
-			default:
+
+			case 'i':
+				simuOut = 1;
+				break;
+
+			case 'l':
+				logfile = optarg;
+				break;
+
+			case 'n':
+				makeDaemon = 0;
+				break;
+
+			case 'p':
+				tcpport = atoi(optarg);
+				break;
+
+			case 's':
+				useSyslog = 1;
+				break;
+
+			case 'v':
+				puts ("option -v\n");
+				verbose = 1;
+				break;
+
+			case 'x':
+				xmlfile = optarg;
+				break;
+
+			case '?':
+				/* getopt_long already printed an error message. */
 				usage();
-			}
-	}	
+				break;
+ 				
+			default:
+				abort();
+		}
+	}
+
 	initLog(useSyslog,logfile,debug);
 
 	if (!parseXMLFile(xmlfile)){
@@ -747,9 +799,9 @@ int main(int argc,char* argv[])  {
 	if (cfgPtr) { 
 		if (!tcpport)
 			tcpport=cfgPtr->port;
-		if (*device == '\0')
+		if (device)
 			strcpy(device,cfgPtr->tty);
-		if (*logfile=='\0')
+		if (logfile)
 			strcpy(logfile,cfgPtr->logfile);
 		if (!useSyslog)
 			useSyslog=cfgPtr->syslog;
@@ -757,10 +809,6 @@ int main(int argc,char* argv[])  {
 			debug=cfgPtr->debug;
 	}
 
-/*	if (!cmdOK) {
-		usage();
-	}
-*/
 	if (!initLog(useSyslog,logfile,debug)) 
 		exit(1);
 

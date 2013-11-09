@@ -31,10 +31,8 @@
 
 #include "socket.h"
 #include "common.h"
+#include "vclient.h"
 
-
-//static void sig_alrm(int);
-//static jmp_buf  env_alrm;
 
 const int LISTEN_QUEUE=128;
 
@@ -43,18 +41,25 @@ int openSocket(int tcpport) {
 	int n;
 	char *port;
 	struct addrinfo hints, *res, *ressave;
-	//struct sockaddr_storage addr;
-	//socklen_t               addrlen=sizeof(addr);
-	
+
 	memset(&hints, 0, sizeof(struct addrinfo));
-	
-	hints.ai_family   = PF_INET6;
+
+	switch (inetversion) {
+		case 6:
+			hints.ai_family = PF_INET6;
+			break;
+		case 4:		/* this is for backward compatibility. We can explictly
+					 activate IPv6 with the -6 switch. Later we can use 
+					 PF_UNSPEC as default and let the OS decide */
+		default:
+			hints.ai_family = PF_INET;
+	}
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 	hints.ai_flags    = AI_PASSIVE;
 
 	asprintf(&port, "%d", tcpport);
-	
+
 	n = getaddrinfo(NULL, port, &hints, &res);
 
 	free(port);
@@ -66,7 +71,7 @@ int openSocket(int tcpport) {
     }
 
 	ressave=res;
-	
+
     /*
 	 Try open socket with each address getaddrinfo returned,
 	 until getting a valid listening socket.
@@ -75,17 +80,18 @@ int openSocket(int tcpport) {
 	listenfd = -1;
 	while (res) {
 		listenfd = socket(res->ai_family,
-                        res->ai_socktype,
-                        res->ai_protocol);
-		
-		// this will configure the socket to reuse the address if it was in use and is not free allready.
+						  res->ai_socktype,
+						  res->ai_protocol);
 		int optval =1;
-		if(listenfd > 0 && setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval) <0 ) {
+		if(listenfd > 0 && setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,
+									  &optval,sizeof optval) <0 ) {
 			logIT(LOG_ERR,"setsockopt gescheitert!");
 			exit(1);
 		}
         if (!(listenfd < 0)) {
-            if (bind(listenfd, res->ai_addr, res->ai_addrlen) == 0)
+            if (bind(listenfd,
+					 res->ai_addr,
+					 res->ai_addrlen) == 0)
                 break;
 			
             close(listenfd);
@@ -93,21 +99,20 @@ int openSocket(int tcpport) {
         }
         res = res->ai_next;
     }
-	
+
     if (listenfd < 0) {
         freeaddrinfo(ressave);
         fprintf(stderr,
                 "socket error:: could not open socket\n");
         exit(1);
     }
-	
+
     listen(listenfd, LISTEN_QUEUE);
 	logIT(LOG_NOTICE,"TCP socket %d geoeffnet",tcpport);
-	
-    freeaddrinfo(ressave);
-	
-    return listenfd;
 
+    freeaddrinfo(ressave);
+
+    return listenfd;
 }
 
 
@@ -130,7 +135,7 @@ int listenToSocket(int listenfd,int makeChild,short (*checkP)(char *)) {
 					clienthost, sizeof(clienthost),
 					clientservice, sizeof(clientservice),
 					NI_NUMERICHOST);
-		
+
 		if(connfd < 0) {
 			logIT(LOG_NOTICE,"accept auf host %s: port %s", clienthost, clientservice);
 			close(connfd);
@@ -162,29 +167,29 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 	*ressave;
 	int n, sockfd;
 	char port_string[16];			//< the IPv6 world use a char* instead of an int in getaddrinfo
-	
+
 	memset(&hints, 0, sizeof(struct addrinfo));
-	
+
     hints.ai_family   = PF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags    = AI_ALL | AI_V4MAPPED;
-	
+
 	snprintf(port_string, sizeof(port_string), "%d", port);
     n = getaddrinfo(host, port_string, &hints, &res);
-	
+
 	if (n <0) {
 		logIT(LOG_ERR,"Fehler getaddrinfo: %s:%s",host,gai_strerror(n));
 		exit(1);
     }
-	
+
     ressave = res;
-	
+
     sockfd=-1;
     while (res) {
         sockfd = socket(res->ai_family,
                         res->ai_socktype,
                         res->ai_protocol);
-		
+
         if (!(sockfd < 0)) {
             if (connect(sockfd, res->ai_addr, res->ai_addrlen) == 0)
                 break; // we have a succesfull connection
@@ -193,7 +198,7 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
         }
 		res=res->ai_next;
     }
-	
+
     freeaddrinfo(ressave);
 
 	if (sockfd < 0) {
@@ -208,12 +213,6 @@ int openCliSocket(char *host,int port, int noTCPdelay) {
 
 	return sockfd;
 }
-
-#if 0
-static void sig_alrm(int signo) {
-	longjmp(env_alrm,1);
-}
-#endif
 
 /* Stuff aus Unix Network Programming Vol 1*/
 
@@ -309,9 +308,9 @@ my_read(int fd, char *ptr)
 	static ssize_t read_cnt = 0;
 	static char	*read_ptr;
 	static char	read_buf[MAXLINE];
-
+	
 	if (read_cnt <= 0) {
-again:
+	again:
 		if ( (read_cnt = read(fd, read_buf, sizeof(read_buf))) < 0) {
 			if (errno == EINTR)
 				goto again;
@@ -320,7 +319,7 @@ again:
 			return(0);
 		read_ptr = read_buf;
 	}
-
+	
 	read_cnt--;
 	*ptr = *read_ptr++;
 	return(1);

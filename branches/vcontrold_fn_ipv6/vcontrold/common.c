@@ -33,7 +33,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 		openlog("vito",LOG_PID,LOG_LOCAL0);
 		syslog(LOG_LOCAL0,"vito gestartet");
 	}
-	if (*logfile) {
+	if (logfile) {
 		logFD=fopen(logfile,"a");
 		if (!logFD) {
 			printf("Konnte %s nicht oeffnen %s",logfile, strerror (errno));

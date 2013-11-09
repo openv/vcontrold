@@ -26,6 +26,7 @@
 #include "socket.h"
 #include "io.h"
 #include "client.h"
+#include "vclient.h"
 
 
 #ifndef VERSION
@@ -46,13 +47,18 @@ usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--c
 \t-x|--execute\tDas umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
 \t-m|--munin\tMunin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
 \t-k|--cacti\tCacti Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
-\t-v|--verbose\tVerbose Modus zum testen\n");
+\t-v|--verbose\tVerbose Modus zum testen\n\
+\t-4|--inet4\tIPv4 wird bevorzugt\n\
+\t-6|--inet6\tIPv6 wird bevorzugt. Wird keine dieser Optionen angegben werden die OS default Einstellungen verwendet\n\
+\t--help\tGibst diese Butzugshinweise aus.\n");
 	printf("\tVERSION %s\n", VERSION);
 	
 	exit(1);
 }
 
 /* hier gehts los */
+
+int inetversion=0;
 
 int
 main(int argc,char* argv[])  {
@@ -94,11 +100,14 @@ main(int argc,char* argv[])  {
 			{"verbose",		no_argument,		&verbose, 1},
 			{"munin",		no_argument,		&munin, 1},
 			{"cacti",		no_argument,		&cacti, 1},
+			{"inet4",		no_argument,		&inetversion, 4},
+			{"inet6",		no_argument,		&inetversion, 6},
+			{"help",		no_argument,		0,	0},
 			{0,0,0,0}
 		};
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
-		opt = getopt_long (argc, argv, "c:f:h:kmo:s:t:vx:",
+		opt = getopt_long (argc, argv, "c:f:h:kmo:p:s:t:vx:46",
 						   long_options, &option_index);
 		
 		/* Detect the end of the options. */
@@ -110,10 +119,15 @@ main(int argc,char* argv[])  {
 				/* If this option sets a flag, we do nothing for now */
 				if (long_options[option_index].flag != 0)
 					break;
-				printf("option %s", long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
+				if (verbose) {
+					printf("option %s", long_options[option_index].name);
+					if (optarg)
+						printf(" with arg %s", optarg);
+					printf("\n");
+				}
+				if (strcmp("help", long_options[option_index].name) == 0) {
+					usage();
+				}
 				break;
 
 			case 'v':
@@ -193,6 +207,18 @@ main(int argc,char* argv[])  {
 					execMe = 1;
 				break;
 				
+			case '4':
+				if (verbose)
+					printf ("option -%c with value `%s'\n", opt, optarg);
+				inetversion = 4;
+				break;
+
+			case '6':
+				if (verbose)
+					printf ("option -%c with value `%s'\n", opt, optarg);
+				inetversion = 6;
+				break;
+				
 			case '?':
 				/* getopt_long already printed an error message. */
 				usage();
@@ -230,7 +256,7 @@ main(int argc,char* argv[])  {
     }
 	
 	initLog(0,dummylog,verbose);
-	if (!*commands && !*cmdfile)
+	if (!*commands && !cmdfile)
 		usage();
 	/* Check for :<port> if port==0
 	 * then separate the port number from the host name
@@ -262,7 +288,7 @@ main(int argc,char* argv[])  {
 	if (*commands) { 
 		resPtr=sendCmds(sockfd,commands);
 	}
-	else if (*cmdfile) {
+	else if (cmdfile) {
 		resPtr=sendCmdFile(sockfd,cmdfile);
 	}
 	if (!resPtr) {

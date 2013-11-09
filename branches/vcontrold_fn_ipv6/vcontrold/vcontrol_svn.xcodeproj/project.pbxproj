@@ -120,6 +120,7 @@
 		A4B6C257182AEEDB007D2033 /* AUTHORS */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AUTHORS; sourceTree = "<group>"; };
 		A4B6C258182AEEDC007D2033 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		A4B6C259182AEEDC007D2033 /* INSTALL */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = INSTALL; sourceTree = "<group>"; };
+		A4B6C26F182D7567007D2033 /* vclient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vclient.h; sourceTree = "<group>"; };
 		A4F2D4AD1623827500ED5798 /* vcontrold */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vcontrold; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -178,10 +179,10 @@
 				A494AE2814896FB8003A7995 /* unit.c */,
 				A494AE2914896FB8003A7995 /* unit.h */,
 				A494AE2B14896FB8003A7995 /* vcontrold.c */,
+				A477FD6F16273E0000EBB2DF /* vcontrold.1 */,
 				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
 				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
 				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
-				A477FD6F16273E0000EBB2DF /* vcontrold.1 */,
 				A494AE0914896FB8003A7995 /* readme.txt */,
 				A494AE0A14896FB8003A7995 /* rrd.min.cmds */,
 				A494AE0B14896FB8003A7995 /* rrd.tmpl */,
@@ -189,6 +190,7 @@
 				A494AE0314896FB8003A7995 /* client.c */,
 				A494AE0414896FB8003A7995 /* client.h */,
 				A494AE2A14896FB8003A7995 /* vclient.c */,
+				A4B6C26F182D7567007D2033 /* vclient.h */,
 				A4336BDC181055E000A39E11 /* vclient.1 */,
 				A4336BEA1812BEA400A39E11 /* vsim.c */,
 				A4336BE51812BE4C00A39E11 /* vsim.1 */,
@@ -390,7 +392,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.8;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -406,8 +408,8 @@
 				GCC_WARN_UNUSED_PARAMETER = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				ONLY_ACTIVE_ARCH = NO;
-				SDKROOT = macosx;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx10.8;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
@@ -522,12 +524,12 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -547,13 +549,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
