@@ -17,10 +17,11 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 #include "socket.h"
-
+#include "vclient.h"
 
 #define SERVERPORT 6578
 int makeDaemon=0;
+int inetversion=0;
 short (*checkP)(char *) = NULL;
 int readCmdFile(char *filename,char *result,int *resultLen,char *device );
 int interactive(int socketfd,char *device);
