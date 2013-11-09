@@ -799,10 +799,10 @@ int main(int argc, char* argv[]) {
 	if (cfgPtr) { 
 		if (!tcpport)
 			tcpport=cfgPtr->port;
-		if (device)
-			strcpy(device,cfgPtr->tty);
-		if (logfile)
-			strcpy(logfile,cfgPtr->logfile);
+		if (!device)
+			device = cfgPtr->tty;
+		if (!logfile)
+			logfile = cfgPtr->logfile;
 		if (!useSyslog)
 			useSyslog=cfgPtr->syslog;
 		if (!debug)
