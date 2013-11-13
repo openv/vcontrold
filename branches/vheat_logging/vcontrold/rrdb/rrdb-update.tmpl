@@ -1,0 +1,98 @@
+if  [ "x$E1" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C1:$E1" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E2" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C2:$E2" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E3" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C3:$E3" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E4" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C4:$E4" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E5" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C5:$E5" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E6" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C6:$E6" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E7" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C7:$E7" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E8" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C8:$E8" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E9" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C9:$E9" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E10" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C10:$E10" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E11" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C11:$E11" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E12" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C12:$E12" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E13" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C13:$E13" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E14" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C14:$E14" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E15" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C15:$E15" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E16" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C16:$E16" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E17" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C17:$E17" >>/tmp/vc-err.txt
+	exit 1;
+fi
+if  [ "x$E18" != x ]; then
+	echo -n `date`  >>/tmp/vc-err.txt
+	echo "es ist ein Fehler aufgetreten: $C18:$E18" >>/tmp/vc-err.txt
+	exit 1;
+fi
+BA=`echo $R8|cut -d ' ' -f 1` 
+ST=`echo $R13|cut -d '.' -f 1` 
+
+LD_LIBRARY_PATH=':/opt/lib:/opt/usr/lib:/opt/usr/lib:/opt/usr/lib'
+export LD_LIBRARY_PATH
+
+
+/opt/usr/bin/rrdtool update /extern/rrdb/vito.rrd N:$2:$3:$4:$5:$6:$BA:$10:$R11:$R12:$ST:$14:$15:$R16:$R17:$R18

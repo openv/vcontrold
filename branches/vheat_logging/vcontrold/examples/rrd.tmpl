@@ -1,0 +1,13 @@
+#/bin/sh
+# Script Template
+# solarix@pingos.de
+#
+db="/root/vitotools/vitodb.rrd"
+BrennerStatus=`expr \( $R8 \* 10 \)`
+PumpeStatusA1M1=`expr \( $R9 \* 20 \)`
+PumpeStatusM2=`expr \( $R10 \* 30 \)`
+PumpeStatusSp=`expr \( $R11 \* 40 \)`
+PumpeStatusZirku=`expr \( $R12 \* 50 \)`
+PumpeStatusSolar=`expr \( $R13 \* 60 \)`
+SolarStatusWW=`expr \( $R14 \* 70 \)`
+/opt/bin/rrdtool update \$db N:$1:$2:$3:$4:$5:$6:$7:$BrennerStatus:$PumpeStatusA1M1:$PumpeStatusM2:$PumpeStatusSp:$PumpeStatusZirku:$PumpeStatusSolar:$SolarStatusWW
