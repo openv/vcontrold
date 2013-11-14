@@ -36,8 +36,7 @@ void *getUnit(char *str) {
 
 int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 	int token=0;
-	char string[1000];
-	if(strstr(line,"WAIT")==line) 
+	if(strstr(line,"WAIT")==line)
 		token=WAIT;
 	else if(strstr(line,"SEND BYTES")==line) {
 		token=BYTES;
@@ -54,8 +53,7 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 		char *ptr;
 		ptr=strchr(line,' ');
 		if (!ptr) {
-			snprintf(string, sizeof(string), "Parse error, kein Leerzeichen gefunden: %s",line);
-			logIT(LOG_ERR,string);
+			logIT(LOG_ERR,"Parse error, kein Leerzeichen gefunden: %s",line);
 		}
 		else {
 			/* wir nudeln den Rest der Zeile durch */
@@ -117,10 +115,13 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 	return(token);
 }
 
-int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *sendBuf,short sendLen,short supressUnit, char bitpos, int retry, char *pRecvPtr,unsigned short recvTimeout) {
+int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
+				 char *sendBuf,short sendLen,short supressUnit,
+				 char bitpos, int retry,
+				 char *pRecvPtr,unsigned short recvTimeout) {
 
-	char string[1000];
-        char result[MAXBUF];
+	char string[256];
+	char result[MAXBUF];
 	char simIn[500];
 	char simOut[500];
 	short len;
@@ -141,8 +142,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 			}
 			if (cPtr->uPtr) {
 				if(procSetUnit(cPtr->uPtr,sendBuf,&len,bitpos,pRecvPtr)<=0) {
-					snprintf(string, sizeof(string), "Fehler Unit Wandlung:%s",sendBuf);
-					logIT(LOG_ERR,string);
+					logIT(LOG_ERR,"Fehler Unit Wandlung:%s",sendBuf);
 					return(-1);
 				}
 				if (cPtr->send) { /* wir haben das schon mal gesendet, der Speicher war noch alloziert */
@@ -187,8 +187,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				break;
 			case RECV:
 				if (cmpPtr->len > recvLen) {
-					snprintf(string, sizeof(string),"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,cmpPtr->len);
-					logIT(LOG_ERR,string);
+					logIT(LOG_ERR,"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,cmpPtr->len);
 					cmpPtr->len=recvLen; /* hoffentlich kommen wir hier nicht hin */
 				}	
 				etime=0;
@@ -200,11 +199,9 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				/* falls wir beim empfangen laenger als der Timeout gebraucht haben gehts in die 
 				naechste Rune */
 				if (recvTimeout && (etime > recvTimeout)) {
-				  snprintf(string, sizeof(string),"Recv Timeout: %ld ms  > %d ms (Retry: %d)",etime,recvTimeout,(int)(retry-1));
-					logIT(LOG_NOTICE,string);
+					logIT(LOG_NOTICE,"Recv Timeout: %ld ms  > %d ms (Retry: %d)",etime,recvTimeout,(int)(retry-1));
 					if (retry <=1) {
-						snprintf(string, sizeof(string),"Recv Timeout, Abbruch");
-						logIT(LOG_ERR,string);
+						logIT(LOG_ERR,"Recv Timeout, Abbruch");
 						return(-1);
 					}
 					goto RETRY;
@@ -213,11 +210,9 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				/*  falls ein errStr definiert ist, schauen wir mal ob das Ergebnis richtig ist */
 				if (cmpPtr->errStr && *cmpPtr->errStr) {
 					if (memcmp(recvBuf,cmpPtr->errStr,cmpPtr->len)==0) { /* falsche Antwort */
-						snprintf(string, sizeof(string),"Errstr matched, Ergebnis falsch (Retry:%d)",retry-1);
-						logIT(LOG_NOTICE,string);
+						logIT(LOG_NOTICE,"Errstr matched, Ergebnis falsch (Retry:%d)",retry-1);
 						if (retry <=1) {
-							snprintf(string, sizeof(string),"Ergebnis falsch, Abbruch");
-							logIT(LOG_ERR,string);
+							logIT(LOG_ERR,"Ergebnis falsch, Abbruch");
 							return(-1);
 						}
 						goto RETRY;
@@ -228,7 +223,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 				strcat(simIn,string);
 				strcat(simIn," ");
 				/* falls wir eine Unit haben (==uPtr) rechnen wir den 
-	 * 			empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck */
+				 * empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck */
 				bzero(result,sizeof(result));
 				if (!supressUnit && cmpPtr->uPtr) {
 					if (procGetUnit(cmpPtr->uPtr,recvBuf,cmpPtr->len,result,bitpos,pRecvPtr)<=0) {
@@ -302,11 +297,10 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,char *send
 }
 
 int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
-	char string[1000];
+	//char string[256];
 	char uString[100];
 	/*char *uSPtr=uString;*/
-	snprintf(string, sizeof(string),"Execute %s",cmd);
-	logIT(LOG_INFO,string);
+	logIT(LOG_INFO,"Execute %s",cmd);
 	/* wir parsen die einzelnen Zeilen */
 	char hex[MAXBUF];
 	int token;
@@ -330,8 +324,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 			break;
 		case RECV:
 			if (hexlen > recvLen) {
-				snprintf(string, sizeof(string),"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,hexlen);
-				logIT(LOG_ERR,string);
+				logIT(LOG_ERR,"Recv Buffer zu klein. Ist: %d Soll %d",recvLen,hexlen);
 				hexlen=recvLen;
 			}	
 			etime=0;
@@ -339,22 +332,19 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 				logIT(LOG_ERR,"Fehler recv, Abbruch");
 				exit(1);
 			}
-			snprintf(string, sizeof(string),"Recv: %ld ms",etime);
-			logIT(LOG_INFO,string);
+			logIT(LOG_INFO,"Recv: %ld ms",etime);
 			/* falls wir eine Unit haben (==uPtr) rechnen wir den 
  * 			empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck */
 			return(hexlen);
 			break;
 		case PAUSE:
 			t=(int) hexlen/1000;
-			snprintf(string, sizeof(string),"Warte %i s",t);
-			logIT(LOG_INFO,string);
+			logIT(LOG_INFO,"Warte %i s",t);
 			sleep(t);
 			break;
 
 		default:
-			snprintf(string, sizeof(string),"unbekannter Befehl: %s",cmd);
-				logIT(LOG_INFO,string);
+			logIT(LOG_INFO,"unbekannter Befehl: %s",cmd);
 	}
 	return(0);
 }
@@ -408,7 +398,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	char name[100];
 	char *ptr,*bptr;
 	macroPtr mFPtr;
-	char string[1000];
+	char string[256];
 	char *sendPtr,*sendStartPtr;
 	char *tmpPtr;
 
@@ -417,8 +407,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	/* send des Kommand Pointers muss gebaut werden 
 	1. Suche Kommando pcmd bei den Kommandos des Protokolls */
 	if (!(iPtr= (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
-		snprintf(string, sizeof(string),"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
-		logIT(LOG_ERR,string);
+		logIT(LOG_ERR,"Protokoll Kommando %s (bei %s) nicht definiert",cPtr->pcmd,cPtr->name);
 		exit(3);
 	}
 /*	2. Parse die zeile und ersetze die Variablen durch Werte in cPtr */
@@ -426,8 +415,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 	sendStartPtr=iPtr->send;
 	if (!sendPtr) 
 		return(0);
-	snprintf(string, sizeof(string),"protocmd Zeile: %s",sendPtr);
-	logIT(LOG_INFO,string);
+	logIT(LOG_INFO,"protocmd Zeile: %s",sendPtr);
 	bzero(eString,sizeof(eString));
 	cPtr->retry=iPtr->retry; /* wir uebernehmen den Retry Wert aus des Protokoll Kommandos */	
 	cPtr->recvTimeout=iPtr->recvTimeout; /* dito fuer den Receive Timeout */ 
@@ -478,8 +466,7 @@ int expand(commandPtr cPtr,protocolPtr pPtr) {
 				}
 			}
 			else {
-				snprintf(string, sizeof(string),"Variable %s unbekannt",var);
-				logIT(LOG_ERR,string);
+				logIT(LOG_ERR,"Variable %s unbekannt",var);
 				exit(3);
 			}
 		}
@@ -549,7 +536,7 @@ compilePtr buildByteCode(commandPtr cPtr,unitPtr uPtr) {
 	int token;
 	char uString[100];
 	char *uSPtr=uString;
-	char string[1000];
+	char string[256];
 
 	compilePtr cmpPtr,cmpStartPtr;
 
@@ -605,7 +592,7 @@ void compileCommand(devicePtr dPtr,unitPtr uPtr) {
 	if (dPtr->next)
 		compileCommand(dPtr->next,uPtr);
 	
-	char string[1000];
+	char string[256];
 
 	
 	snprintf(string, sizeof(string),"Expandiere Kommandos fuer Device %s", dPtr->id);

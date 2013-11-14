@@ -63,7 +63,7 @@ int setSysTime(char *input,char *sendBuf,short bufsize);
 int getCycleTime(char *recv,int len,char *result) {
 
 	int i;
-	char string[300];
+	char string[80];
 
 	/* if ((len/2)*2 !=len) { */
 	if (len%2) {
@@ -89,7 +89,6 @@ int getCycleTime(char *recv,int len,char *result) {
 int setCycleTime(char *input,char *sendBuf) {
 	char *sptr,*cptr;
 	char *bptr=sendBuf;
-	char string[200];      
 	int hour,min;
 	int count=0;
 	
@@ -111,8 +110,7 @@ int setCycleTime(char *input,char *sendBuf) {
 		  bptr++;
 		  count++;
 		  sptr=strtok(NULL," ");
-		  snprintf(string, sizeof(string),"Cycle Time: -- -- -> [%02X%02X]",0xff, 0xff);
-		  logIT(LOG_INFO,string);
+		  logIT(LOG_INFO,"Cycle Time: -- -- -> [%02X%02X]",0xff, 0xff);
 		}
 		else {
 		  /* haben wir einen Doppelpunkt im String? */
@@ -122,8 +120,7 @@ int setCycleTime(char *input,char *sendBuf) {
 		  }
 		  sscanf(sptr,"%i:%i",&hour,&min);
 		  *bptr=((hour <<3) + (min/10)) & 0xff;	
-		  snprintf(string, sizeof(string),"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
-		  logIT(LOG_INFO,string);
+		  logIT(LOG_INFO,"Cycle Time: %02d:%02d -> [%02X]",hour,min,(unsigned char) *bptr);
 		}
 		bptr++;
 		cptr=sptr;
@@ -131,8 +128,7 @@ int setCycleTime(char *input,char *sendBuf) {
 	
 	} while((sptr=strtok(NULL," ")) != NULL);
 	if ((count/2)*2 !=count) {
-		snprintf(string, sizeof(string),"Anzahl Zeiten ungerade, ignoriere %s",cptr);
-		logIT(LOG_WARNING,string);
+		logIT(LOG_WARNING,"Anzahl Zeiten ungerade, ignoriere %s",cptr);
 		*(bptr-1)=0xff;
 	}
 	return(8);
@@ -173,11 +169,7 @@ int getSysTime(char *recv,int len,char *result) {
 }
 
 int setSysTime(char *input,char *sendBuf,short bufsize) {
-/* 	char *bptr=sendBuf; */
-	char string[200];      
-	char systime[200];      
-/* 	int hour,min; */
-/* 	int count=0; */
+	char systime[80];
 	time_t tt;
 	struct tm *t;
 
@@ -185,15 +177,13 @@ int setSysTime(char *input,char *sendBuf,short bufsize) {
 	if (!*input) {
 		time(&tt);
 		t=localtime(&tt);
-		bzero(string,sizeof(string));
 		bzero(systime,sizeof(systime));
 		sprintf(systime,"%04d  %02d %02d %02d %02d %02d %02d",t->tm_year+1900,t->tm_mon+1,t->tm_mday,t->tm_wday,t->tm_hour,t->tm_min,t->tm_sec);
 		/* wir fummeln uns nun ein Blank zwischen die Jahreszahl */
 		systime[4]=systime[3];
 		systime[3]=systime[2];
 		systime[2]=' ';
-		snprintf(string, sizeof(string),"aktuelle Sys.Zeit %s",systime);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,"aktuelle Sys.Zeit %s",systime);
 		return(string2chr(systime,sendBuf,bufsize));
 	}
 	else {
@@ -282,9 +272,9 @@ short text2Enum(enumPtr ptr,char *text,char **bytes,short *len){
 
 
 int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,char *pRecvPtr) {
-	char string[1000];
+	char string[256];
 	char error[1000];
-        char buffer[MAXBUF];
+	char buffer[MAXBUF];
 	char *errPtr=error;
 /* 	short t; */
 	float erg;
@@ -454,10 +444,10 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 
 
 int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRecvPtr) {
-	char string[1000];
+	char string[256];
 	char error[1000];
-        char buffer[MAXBUF];
-        char input[MAXBUF];
+	char buffer[MAXBUF];
+	char input[MAXBUF];
 	char *errPtr=error;
 /* 	short t; */
 	float erg=0.0;
@@ -526,8 +516,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 	if (uPtr->sCalc && *uPtr->sCalc) { /* <calc im XML und set darin definiert */
 		floatV=atof(input);
 		inPtr=uPtr->sCalc;
-		snprintf(string, sizeof(string),"Send Exp:%s [V=%f]",inPtr,floatV);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,"Send Exp:%s [V=%f]",inPtr,floatV);
 		erg=execExpression(&inPtr,dumBuf,floatV,errPtr);
 		if (*errPtr) {
 			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->sCalc,error);
@@ -551,8 +540,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 			else {
 				bzero(dumBuf,sizeof(dumBuf));
 				memcpy(dumBuf,ptr,count);
-				snprintf(string, sizeof(string),"(INT) Exp:%s [BP:%d]",inPtr,bitpos);
-				logIT(LOG_INFO,string);
+				logIT(LOG_INFO,"(INT) Exp:%s [BP:%d]",inPtr,bitpos);
 				ergI=execIExpression(&inPtr,dumBuf,bitpos,pRecvPtr,errPtr);
 				if (*errPtr) {
 					snprintf(string, sizeof(string),"Exec %s: %s",uPtr->sICalc,error);
