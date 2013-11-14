@@ -667,6 +667,11 @@ static void sigHupHandler(int signo) {
 	reloadConfig();
 }
 
+static void sigTermHandler (int signo) {
+	logIT(LOG_NOTICE, "SIGTERM empfangen");
+	vcontrol_semfree();
+	exit(1);
+}
 
 /* hier gehts los */
 
@@ -817,7 +822,10 @@ int main(int argc, char* argv[]) {
 		exit(1);
 	}
 		
-
+	if (signal(SIGQUIT, sigTermHandler) == SIG_ERR) {
+		logIT(LOG_ERR, "Fehler beim Signalhandling SIGTERM: %s", strerror(errno));
+		exit(1);
+	}
 	/* falls -i angegeben wurde, loggen wir die Befehle im Simulator INI Format */
 	if (simuOut) {
 		char file[100];
@@ -833,12 +841,8 @@ int main(int argc, char* argv[]) {
 	compileCommand(devPtr,uPtr);
 
 	int fd = 0;
-	//char s_buf[MAXBUF];
-	//char r_buf[MAXBUF];
 	char result[MAXBUF];
 	int resultLen=sizeof(result);
-	//int count;
-	//int n;
 	int sid;
 
 	if (tcpport) {
