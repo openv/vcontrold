@@ -42,7 +42,6 @@ trPtr newTrNode(trPtr ptr) {
 
 
 ssize_t recvSync(int fd,char *wait,char **recv) {
-	char *string;
 	char *rptr;
 	char *pptr;
 	char c;
@@ -51,10 +50,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
 		logIT(LOG_ERR,"SIGALRM error");
 	if(setjmp(env_alrm) !=0) {
-		string=calloc(1000,sizeof(char));
-		snprintf(string, 1000-10 ,"timeout wait:%s",wait);
-		logIT(LOG_ERR,string);
-		free(string);
+		logIT(LOG_ERR,"timeout wait:%s",wait);
 		return(-1);
 	}
 	alarm(CL_TIMEOUT);
@@ -76,10 +72,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		}
 		if ((pptr=strstr(*recv,wait))) {
 			*pptr='\0';
-			string=calloc(strlen(*recv)+100,sizeof(char));
-			snprintf(string, sizeof(string),"recv:%s",*recv);
-			logIT(LOG_INFO,string);
-			free(string);
+			logIT(LOG_INFO,"recv:%s",*recv);
 			break;
 		}
 		alarm(CL_TIMEOUT);
@@ -89,48 +82,36 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		exit(1);
 	}
 	if (count <=0) {
-		string=calloc(1000,sizeof(char));
-		snprintf(string, sizeof(string),"exit mit count=%ld",count);
-		logIT(LOG_ERR,string);;
-		free(string);
+		logIT(LOG_ERR,"exit mit count=%ld",count);;
 	}
 	return(count);
 }
 
-int connectServer(char *host) {
-	char *dptr;
+/*
+ * port is never 0, which is a bad number for a tcp port
+ */
+int connectServer(char *host, int port) {
 	int sockfd;
-	char string[1000];
-	if (host[0] != '/' && (dptr=strchr(host,':'))) {
-                char serv[MAXBUF];
-                int port;
-                port=atoi(dptr+1);
-                /* dptr-device liefert die Laenge des Hostes */
-                bzero(serv,sizeof(host));
-                strncpy(serv,host,dptr-host);
-                sockfd=openCliSocket(serv,port,0);
+	if (host[0] != '/' ) {
+		sockfd=openCliSocket(host,port,0);
 		if (sockfd) {
-			snprintf(string, sizeof(string),"Verbindung zu %s Port %d aufgebaut",host,port);
-			logIT(LOG_INFO,string);
+			logIT(LOG_INFO,"Verbindung zu %s Port %d aufgebaut",host,port);
 		}
 		else {
-			snprintf(string, sizeof(string),"Verbindung zu %s Port %d gescheitert",host,port);
-			logIT(LOG_INFO,string);
+			logIT(LOG_INFO,"Verbindung zu %s Port %d gescheitert",host,port);
 			return(-1);
 		}
         }
 	else {
-		snprintf(string, sizeof(string),"Host Format: IP|Name:Port");
-		logIT(LOG_ERR,string);
+		logIT(LOG_ERR,"Host Format: IP|Name:Port");
 		return(-1);
 	}
 	return(sockfd);
 }
 
 void disconnectServer(int sockfd) {
-	char string[1000];
+	char string[8];
 	char *ptr;
-	bzero(string,sizeof(string));
 	snprintf(string, sizeof(string),"quit\n");
 	sendServer(sockfd,string,strlen(string));
 	recvSync(sockfd,BYE,&ptr);
@@ -140,7 +121,7 @@ void disconnectServer(int sockfd) {
 
 size_t sendServer(int fd,char *s_buf, size_t len) {
 	
-	char string[1000];
+	char string[256];
 	/* Buffer leeren */
         /* da tcflush nicht richtig funktioniert, verwenden wir nonblocking read */
         fcntl(fd,F_SETFL,O_NONBLOCK);
@@ -149,9 +130,8 @@ size_t sendServer(int fd,char *s_buf, size_t len) {
 	return(Writen(fd,s_buf,len));
 }
 
-trPtr sendCmdFile(int sockfd,char *filename) {
+trPtr sendCmdFile(int sockfd,const char *filename) {
 	FILE *filePtr;
-	char string[1000];
 	char line[MAXBUF];
 	trPtr	ptr;
 	trPtr	startPtr=NULL;
@@ -160,8 +140,7 @@ trPtr sendCmdFile(int sockfd,char *filename) {
 		return NULL;
 	}
 	else {
-		snprintf(string, sizeof(string),"Kommando-Datei %s geoeffnet",filename);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,"Kommando-Datei %s geoeffnet",filename);
 	}
 	bzero(line,sizeof(line));
 	while(fgets(line,MAXBUF-1,filePtr)){
@@ -208,11 +187,11 @@ int sendTrList(int sockfd, trPtr ptr) {
 		return(0);
 	}
 	while(ptr){
-		bzero(string,sizeof(string));
+		//		bzero(string,sizeof(string));
 		snprintf(string, sizeof(string),"%s\n",ptr->cmd);
 		if (sendServer(sockfd,string,strlen(string))<=0)
 			return(0);
-		bzero(string,sizeof(string));
+		//bzero(string,sizeof(string));
 		snprintf(string, sizeof(string),"SEND:%s",ptr->cmd);
 		logIT(LOG_INFO,string);
 		if(recvSync(sockfd,prompt,&sptr)<=0) {
@@ -223,7 +202,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 		if (iscntrl(*(ptr->raw+strlen(ptr->raw)-1)))
 			*(ptr->raw+strlen(ptr->raw)-1)='\0';
 		dumPtr=calloc(strlen(sptr)+20,sizeof(char));
-		snprintf(dumPtr,strlen(sptr)+20,"RECV:%s",sptr);
+		snprintf(dumPtr,(strlen(sptr)+20)*sizeof(char),"RECV:%s",sptr);
 		logIT(LOG_INFO,dumPtr);
 		free(dumPtr);
 		/* wir fuellen Fehler und result */
