@@ -33,7 +33,10 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 		openlog("vito",LOG_PID,LOG_LOCAL0);
 		syslog(LOG_LOCAL0,"vito gestartet");
 	}
-	if (logfile) {
+	if (logfile) { /* Logfile ist nicht NULL und nicht leer */
+		if (strcmp(logfile, "") == 0) {
+			return (0);
+		}
 		logFD=fopen(logfile,"a");
 		if (!logFD) {
 			printf("Konnte %s nicht oeffnen %s",logfile, strerror (errno));
@@ -94,7 +97,7 @@ void logIT (int class,char *string, ...) {
 	pid=getpid();
 
 	if (syslogger)
-		syslog(class,"%s",string);
+		syslog(class,"%s",print_buffer);
 	if (logFD) {
 		fprintf(logFD,"[%d] %s: %s\n",pid,tPtr,print_buffer);
 		fflush(logFD);
