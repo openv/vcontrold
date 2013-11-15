@@ -26,40 +26,51 @@
 #include "socket.h"
 #include "io.h"
 #include "client.h"
+#include "vclient.h"
 
 
 #ifndef VERSION
-#define VERSION "0.3alpha"
+#define VERSION "0.98.2-IPv6(r73)"
 #endif
 
 void usage() {
-	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x exec-Datei>] [-k] [-m] [-v]\n\n\
-\t-h|--host\t<IP>:<Port> des vcontrold\n\
+	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x <exec-Datei>] [-k] [-m] [-v]\n\
+or\n\
+usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--commandfile <commandfile>] [--cvsfile <csv-Datei>] [--template <Template-Datei>] [--output <outpout Datei>] [--execute <exec-Datei>] [--cacti] [--munin] [--verbose] [command3 [command4] ...]\n\n\
+\t-h|--host\t<IPv4>:<Port> oder <IPv6> des vcontrold\n\
+\t-p|--port\t<Port> des vcontrold bei IPv6\n\
 \t-c|--command\tListe von auszufuehrenden Kommandos, durch Komma getrennt\n\
 \t-f|--commandfile\tOptional Datei mit Kommandos, pro Zeile ein Kommando\n\
-\t-s|--cvsfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
+\t-s|--csvfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
 \t-t|--template\tTemplate, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
 \t-o|--output\tOutput, der stdout Output wird in die angegebene Datei geschrieben\n\
 \t-x|--execute\tDas umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
 \t-m|--munin\tMunin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
-\t-k|--cacti\tCactI Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
-\t-v|--verbose\tVerbose Modus zum testen\n");
+\t-k|--cacti\tCacti Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
+\t-v|--verbose\tVerbose Modus zum testen\n\
+\t-4|--inet4\tIPv4 wird bevorzugt\n\
+\t-6|--inet6\tIPv6 wird bevorzugt. Wird keine dieser Optionen angegben werden die OS default Einstellungen verwendet\n\
+\t--help\tGibst diese Butzugshinweise aus.\n");
+	printf("\tVERSION %s\n", VERSION);
 	
 	exit(1);
 }
 
 /* hier gehts los */
 
+int inetversion=0;
+
 int
 main(int argc,char* argv[])  {
 
 	/* Auswertung der Kommandozeilenschalter */
-	char host[256] = "";
+	char *host;
+	int port = 0;
 	char commands[512] = "";
-	char cmdfile[MAXPATHLEN] = "";
-	char csvfile[MAXPATHLEN] = "";
-	char tmplfile[MAXPATHLEN] = "";
-	char outfile[MAXPATHLEN] = "";
+	const char *cmdfile = NULL;
+	const char *csvfile = NULL;
+	const char *tmplfile = NULL;
+	const char *outfile = NULL;
 	char string[1024] = "";
 	char result[1024] = "";
 	int sockfd;
@@ -73,20 +84,13 @@ main(int argc,char* argv[])  {
 	FILE *filePtr;
 	FILE *ofilePtr;
 	
-/* ToDo: vheat(2013-10-05):
- * derzeitige Implementierung crasht, wenn zwei Optionen ohne Parameter auf einander folgen
- * zB: "vclient -h 1..0 -c xyz -v -k"
- * Es wird ein String erwartet wie bei -h oder -c, der Bindestrich wird nicht erwartet.
- *
- * Fix sollte sein: Umbau auf getopt(), um die Parameter zu lesen.
- */
-
 	while (1)
 	{
 		static struct option long_options[] =
 		{
 			
 			{"host",		required_argument,	0, 'h'},
+			{"port",		required_argument,	0, 'p'},
 			{"command",		required_argument,	0, 'c'},
 			{"commandfile",	required_argument,	0, 'f'},
 			{"csvfile",		required_argument,	0, 's'},
@@ -96,11 +100,14 @@ main(int argc,char* argv[])  {
 			{"verbose",		no_argument,		&verbose, 1},
 			{"munin",		no_argument,		&munin, 1},
 			{"cacti",		no_argument,		&cacti, 1},
+			{"inet4",		no_argument,		&inetversion, 4},
+			{"inet6",		no_argument,		&inetversion, 6},
+			{"help",		no_argument,		0,	0},
 			{0,0,0,0}
 		};
 		/* getopt_long stores the option index here. */
 		int option_index = 0;
-		opt = getopt_long (argc, argv, "c:f:h:kmo:s:t:vx:",
+		opt = getopt_long (argc, argv, "c:f:h:kmo:p:s:t:vx:46",
 						   long_options, &option_index);
 		
 		/* Detect the end of the options. */
@@ -112,10 +119,15 @@ main(int argc,char* argv[])  {
 				/* If this option sets a flag, we do nothing for now */
 				if (long_options[option_index].flag != 0)
 					break;
-				printf("option %s", long_options[option_index].name);
-				if (optarg)
-					printf(" with arg %s", optarg);
-				printf("\n");
+				if (verbose) {
+					printf("option %s", long_options[option_index].name);
+					if (optarg)
+						printf(" with arg %s", optarg);
+					printf("\n");
+				}
+				if (strcmp("help", long_options[option_index].name) == 0) {
+					usage();
+				}
 				break;
 
 			case 'v':
@@ -138,9 +150,19 @@ main(int argc,char* argv[])  {
 			case 'h':
 				if (verbose)
 					printf ("option -h with value `%s'\n", optarg);
-				strncpy(host, optarg, sizeof(host));
+				host = optarg;
 				break;
-				
+
+			case 'p':
+				if (verbose)
+					printf ("option -p with value `%s'\n", optarg);
+				port = atoi(optarg);
+				if (port == 0) {
+					fprintf(stderr, "Ungültiger Wert für option --port: %s\n", optarg);
+					usage();	/* und damit exit */
+				}
+				break;
+
 			case 'c':
 				if (verbose) {
 					printf ("option -c with value `%s'\n", optarg);
@@ -157,31 +179,44 @@ main(int argc,char* argv[])  {
 					strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
 				}
 				break;
-				
+
 			case 'f':
 				if (verbose)
 					printf ("option -f with value `%s'\n", optarg);
-				strncpy(cmdfile, optarg, sizeof(cmdfile));
+				cmdfile = optarg;
 				break;
-				
+
 			case 's':
 				if (verbose)
 					printf ("option -s with value `%s'\n", optarg);
+				csvfile = optarg;
 				break;
-				
+
 			case 't':
 				if (verbose)
 					printf ("option -t with value `%s'\n", optarg);
-				strncpy(tmplfile, optarg, sizeof(tmplfile));
+				tmplfile = optarg;
 				break;
-				
+
 			case 'o':
 			case 'x':
 				if (verbose)
 					printf ("option -%c with value `%s'\n", opt, optarg);
-				strncpy(outfile, optarg, sizeof(outfile));
+				outfile = optarg;
 				if (opt == 'x')
 					execMe = 1;
+				break;
+				
+			case '4':
+				if (verbose)
+					printf ("option -%c with value `%s'\n", opt, optarg);
+				inetversion = 4;
+				break;
+
+			case '6':
+				if (verbose)
+					printf ("option -%c with value `%s'\n", opt, optarg);
+				inetversion = 6;
 				break;
 				
 			case '?':
@@ -221,9 +256,28 @@ main(int argc,char* argv[])  {
     }
 	
 	initLog(0,dummylog,verbose);
-	if (!*commands && (cmdfile[0] == 0))
+	if (!*commands && !cmdfile)
 		usage();
-	sockfd=connectServer(host);
+	/* Check for :<port> if port==0
+	 * then separate the port number from the host name
+	 * or the IP adsress. 
+	 * The IP address could be a plain old IPv4 or a IPv6 one,
+	 * which could contain more than one ':', so that makes a bad 
+	 * separator in the IPv6 case and you better use --port
+	 * -h 192.168.2.1:3002 vs --host 2003:abcd:ff::1 --port 3002
+	 * or --host 2003:abcd:ff::1:3002, assume the last :3002 be the port
+	 * This is just for backwards compatibility.
+	 */
+	if (port == 0) {
+		/* check for last ':' in host */
+		char *last_colon = NULL;
+		
+		last_colon = strrchr(host, ':');
+		port = atoi(last_colon+1);
+		printf(">>> port=%d\n", port);
+		*last_colon = '\0';
+	}
+	sockfd=connectServer(host,port);
 	if (sockfd < 0) {
 		sprintf(string,"Keine Verbindung zu %s",host);
 		logIT(LOG_ERR,string);
@@ -234,7 +288,7 @@ main(int argc,char* argv[])  {
 	if (*commands) { 
 		resPtr=sendCmds(sockfd,commands);
 	}
-	else if (*cmdfile) {
+	else if (cmdfile) {
 		resPtr=sendCmdFile(sockfd,cmdfile);
 	}
 	if (!resPtr) {
@@ -243,7 +297,7 @@ main(int argc,char* argv[])  {
 	}
 	disconnectServer(sockfd);
 
-	if(*outfile) {
+	if(outfile) {
 		if (!(ofilePtr=fopen(outfile,"w"))) {
 			sprintf(string,"Kann Datei %s nicht anlegen",outfile);
 			logIT(LOG_ERR,string);
@@ -258,7 +312,7 @@ main(int argc,char* argv[])  {
 	}
 	
 	/* das Ergebnis ist in der Liste resPtr, nun unterscheiden wir die Ausgabe */
-	if (*csvfile) {
+	if (csvfile) {
 		/* Kompakt Format mit Semikolon getrennt */
 		if (!(filePtr=fopen(csvfile,"a"))) {
 			sprintf(string,"Kann Datei %s nicht anlegen",csvfile);
@@ -287,7 +341,7 @@ main(int argc,char* argv[])  {
 		}
 		fclose(filePtr);
 	}
-	else if (*tmplfile) { /* Template angegeben*/
+	else if (tmplfile) { /* Template angegeben*/
 		char line[1000];
 		char *lptr;
 		char *lSptr;

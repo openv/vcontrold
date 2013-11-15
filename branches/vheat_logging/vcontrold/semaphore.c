@@ -133,37 +133,33 @@ int vcontrol_semfree()
 
 int vcontrol_semget()
 {
-  char string[1000];
-  snprintf(string, sizeof(string),"Process %d tries to aquire lock",getpid());
-  logIT(LOG_INFO,string);
-
-  struct sembuf sb;
-
-  sb.sem_num = 0;
-  sb.sem_op = -1;  /* set to allocate resource */
-  sb.sem_flg = SEM_UNDO;
-  if (semop(semid, &sb, 1) == -1) {
-    perror("semop");
-    exit(1);
-  }
-  snprintf(string, sizeof(string),"Process %d got lock",getpid());
-  logIT(LOG_INFO,string);
-  return 1;
+	logIT(LOG_INFO,"Process %d tries to aquire lock",getpid());
+	
+	struct sembuf sb;
+	
+	sb.sem_num = 0;
+	sb.sem_op = -1;  /* set to allocate resource */
+	sb.sem_flg = SEM_UNDO;
+	if (semop(semid, &sb, 1) == -1) {
+		perror("semop");
+		exit(1);
+	}
+	logIT(LOG_INFO,"Process %d got lock",getpid());
+	return 1;
 }
 
 int vcontrol_semrelease()
 {
-  struct sembuf sb;
-  char string[1000];
-  snprintf(string, sizeof(string),"Process %d released lock",getpid());
-  logIT(LOG_INFO,string);
-
-  sb.sem_num = 0;
-  sb.sem_op = 1; /* free resource */
-  sb.sem_flg = SEM_UNDO;
-  if (semop(semid, &sb, 1) == -1) {
-    perror("semop");
-    exit(1);
-  }
-  return 1;
+	struct sembuf sb;
+	
+	logIT(LOG_INFO,"Process %d released lock",getpid());
+	
+	sb.sem_num = 0;
+	sb.sem_op = 1; /* free resource */
+	sb.sem_flg = SEM_UNDO;
+	if (semop(semid, &sb, 1) == -1) {
+		perror("semop");
+		exit(1);
+	}
+	return 1;
 };
