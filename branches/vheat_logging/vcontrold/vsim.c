@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
+#include <stdarg.h>
 #include "socket.h"
 #include "vclient.h"
 
@@ -30,8 +31,15 @@ int rawModus (int socketfd,char *device);
 static void sigPipeHandler(int signo);
 short checkIP(char *ip);
 
-void logIT (int class,char *string) {
-	printf("%s\n",string);
+void logIT (int class,char *string, ...) {
+
+	va_list arguments;
+	char *print_buffer;
+
+	va_start(arguments, string);
+	vasprintf(&print_buffer, string, arguments);
+	va_end(arguments);
+	printf("%s\n",print_buffer);
 }
 
 static void sigPipeHandler(int signo) {

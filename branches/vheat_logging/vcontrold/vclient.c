@@ -274,7 +274,7 @@ main(int argc,char* argv[])  {
 		
 		last_colon = strrchr(host, ':');
 		port = atoi(last_colon+1);
-		printf(">>> port=%d\n", port);
+		/*printf(">>> port=%d\n", port);*/
 		*last_colon = '\0';
 	}
 	sockfd=connectServer(host,port);
@@ -489,7 +489,7 @@ main(int argc,char* argv[])  {
 			fprintf(ofilePtr,"%s",lSptr);
 		}
 		fclose(filePtr);
-		if (*outfile && execMe) { /* Datei ausfuerhbar machen und starten */
+		if (outfile && *outfile && execMe) { /* Datei ausfuerhbar machen und starten */
 			fclose(ofilePtr);
 			bzero(string,sizeof(string));
 			sprintf(string,"Fuehre Datei %s aus",outfile);
