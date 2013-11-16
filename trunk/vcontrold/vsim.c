@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
+#include <stdarg.h>
 #include "socket.h"
 #include "vclient.h"
 
@@ -30,8 +31,16 @@ int rawModus (int socketfd,char *device);
 static void sigPipeHandler(int signo);
 short checkIP(char *ip);
 
-void logIT (int class,char *string) {
-	printf("%s\n",string);
+void logIT (int class,char *string, ...) {
+
+	va_list arguments;
+	char *print_buffer;
+
+	va_start(arguments, string);
+	vasprintf(&print_buffer, string, arguments);
+	va_end(arguments);
+	printf("%s\n",print_buffer);
+	free(print_buffer);
 }
 
 static void sigPipeHandler(int signo) {
@@ -55,7 +64,7 @@ typedef struct  {
 	char rsp[20];
 } ctable;
 
-int cmdc = 7;
+int cmdc = 9;
 ctable cmds[] = {
 		{ 1, { 0x04 }, 1, { 0x05 } },
 		{ 3, { 0x16, 0x00, 0x00 }, 1, { 0x06 } },
@@ -67,8 +76,9 @@ ctable cmds[] = {
 		{ 8, { 0x41, 0x05, 0x00, 0x01, 0x21, 0x10, 0x08, 0x3F },
 				16, { 0x06, 0x41, 0x0D, 0x01, 0x01, 0x21, 0x10, 0x08, 0x28, 0xB0, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF } },
 		{ 5, { 0x01, 0xf7, 0x08, 0x00, 0x02 },
-				 2, { 0x07, 0x01 },
-		}
+				 2, { 0x07, 0x01 } },
+		{ 8, { 0x41, 0x05, 0x00, 0x01, 0x08, 0x04, 0x02, 0x14 },
+				11, { 0x06, 0x41, 0x07, 0x01, 0x01, 0x08, 0x04, 0x02, 0x00, 0x00, 0x17 } },
 };
 
 char input[100];
