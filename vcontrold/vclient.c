@@ -274,7 +274,7 @@ main(int argc,char* argv[])  {
 		
 		last_colon = strrchr(host, ':');
 		port = atoi(last_colon+1);
-		printf(">>> port=%d\n", port);
+		/*printf(">>> port=%d\n", port);*/
 		*last_colon = '\0';
 	}
 	sockfd=connectServer(host,port);
@@ -456,6 +456,9 @@ main(int argc,char* argv[])  {
 						logIT(LOG_INFO,string);
 						if (tPtr->err)
 							fprintf(ofilePtr,"%s",tPtr->err);
+						else
+							fprintf(ofilePtr,"OK");
+
 					}
 					else {
 						sprintf(string,"Index der Variable $%s > %d",varname,maxIdx-1);
@@ -468,7 +471,7 @@ main(int argc,char* argv[])  {
 						tPtr=idxPtr[idx-1];
 						sprintf(string,"%s:%f",tPtr->cmd,tPtr->result);
 						logIT(LOG_INFO,string);
-						if (tPtr->result)
+						//if (tPtr->result)
 							fprintf(ofilePtr,"%f",tPtr->result);
 					}
 					else {
@@ -486,7 +489,7 @@ main(int argc,char* argv[])  {
 			fprintf(ofilePtr,"%s",lSptr);
 		}
 		fclose(filePtr);
-		if (*outfile && execMe) { /* Datei ausfuerhbar machen und starten */
+		if (outfile && *outfile && execMe) { /* Datei ausfuerhbar machen und starten */
 			fclose(ofilePtr);
 			bzero(string,sizeof(string));
 			sprintf(string,"Fuehre Datei %s aus",outfile);
