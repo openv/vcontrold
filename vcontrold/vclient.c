@@ -238,7 +238,8 @@ main(int argc,char* argv[])  {
 			printf ("non-option ARGV-elements: ");
 		}
 		while (optind < argc) {
-			printf ("%s ", argv[optind]);
+			if (verbose)
+				printf ("%s ", argv[optind]);
 			if (strlen(commands)==0) {
 				strncpy(commands, argv[optind], sizeof(commands));
 			} else {
@@ -252,7 +253,8 @@ main(int argc,char* argv[])  {
 			}
 			optind++;
 		}
-		putchar ('\n');
+		if (verbose)
+			putchar ('\n');
     }
 	
 	initLog(0,dummylog,verbose);
