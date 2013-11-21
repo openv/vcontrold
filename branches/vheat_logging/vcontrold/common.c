@@ -61,9 +61,21 @@ void logIT (int class,char *string, ...) {
 	int pid;
 	long avail;
 
+	/* vheat todo: Dirty Hack um % am Ende zu überleben */
+	char *string1 = malloc(strlen(string)+10);
+	strcpy(string1, string);
+	if ( string1[strlen(string1)-1] == '%' ) {
+		string1[strlen(string1)+3] = '\0';
+		string1[strlen(string1)+2] = '%';
+		string1[strlen(string1)+1] = '%';
+		string1[strlen(string1)] = '%';
+	}
+
 	va_start(arguments, string);
-	vasprintf(&print_buffer, string, arguments);
+	vasprintf(&print_buffer, string1, arguments);
 	va_end(arguments);
+
+	free(string1);
 
 	if (class <= LOG_ERR)  {
 		avail = sizeof(errMsg)-strlen(errMsg)-2;
