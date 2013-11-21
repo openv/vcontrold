@@ -328,7 +328,7 @@ int execCmd(char *cmd,int fd,char *recvBuf, int recvLen) {
 				hexlen=recvLen;
 			}	
 			etime=0;
-			if (receive(fd,recvBuf,hexlen,&etime)<=0) {
+			if (receive_nb(fd,recvBuf,hexlen,&etime)<=0) {
 				logIT(LOG_ERR,"Fehler recv, Abbruch");
 				exit(1);
 			}

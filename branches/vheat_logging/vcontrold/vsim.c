@@ -23,6 +23,8 @@
 #define SERVERPORT 6578
 int makeDaemon=0;
 int inetversion=0;
+int tmo_after_bytes = -1;
+
 short (*checkP)(char *) = NULL;
 int readCmdFile(char *filename,char *result,int *resultLen,char *device );
 int interactive(int socketfd,char *device);
@@ -95,6 +97,7 @@ static void handle(int fd)
 			exit(-1);
 		} else if (len == 0) {
 			printf("eof read\n");
+			inpidx = 0;
 			return;
 		} else {
 			int i = 0;
@@ -102,6 +105,13 @@ static void handle(int fd)
 			while ( i < len ) {
 				input[inpidx] = buf[i];
 				dump(&input[inpidx],1,"received char:");
+                if (tmo_after_bytes == 0) {
+                	printf("timeout active - byte lost\n");
+                	i=len;
+                	continue; // just consume , simulates timeout
+                } else if (tmo_after_bytes > 0) {
+                	tmo_after_bytes--;
+                }
 				inpidx++;
 				for ( j = 0 ; j < cmdc; j++) {
 					if ( cmds[j].cmd[0] == input[0] ) {
@@ -126,6 +136,9 @@ int main(int argc, char *argv[])
 {
 	int sockfd=-1;
 	int listenfd=-1;
+
+	if (argc == 2) { tmo_after_bytes=atoi(argv[1]);}
+	printf("timeout after %d messages (-1 == no timeout)\n",tmo_after_bytes);
 
 	listenfd = openSocket(SERVERPORT);
 	while(1) {

@@ -318,8 +318,10 @@ int interactive(int socketfd,char *device ) {
 		}
 		else if(strstr(readBuf,"quit")==readBuf) {
 			Writen(socketfd,bye,strlen(bye));
-			framer_closeDevice(fd);
-			vcontrol_semrelease(); // todo semjfi
+			if (fd != -1) {
+			  framer_closeDevice(fd);
+			  vcontrol_semrelease(); // todo semjfi
+			}
 			return(1);
 		}
 		else if(strstr(readBuf,"debug on")==readBuf) {
@@ -460,6 +462,8 @@ int interactive(int socketfd,char *device ) {
 						vcontrol_semrelease();  //todo semjfi
 						return (0);
 					}
+					framer_closeDevice(fd);
+					vcontrol_semrelease();
 					continue;
 				}
 			}
@@ -486,6 +490,8 @@ int interactive(int socketfd,char *device ) {
 
 				if (execByteCode(pcPtr->cmpPtr,fd,pRecvBuf,sizeof(pRecvBuf),sendBuf,sendLen,1,pcPtr->bit,pcPtr->retry,pRecvBuf,pcPtr->recvTimeout)==-1) {	
 				  // todo semjfi vcontrol_semrelease();
+				  framer_closeDevice(fd);
+				  vcontrol_semrelease();
 				  snprintf(string, sizeof(string),"Fehler beim ausfuehren von %s",readBuf);
 				  logIT(LOG_ERR,string);
 				  sendErrMsg(socketfd);
@@ -509,7 +515,7 @@ int interactive(int socketfd,char *device ) {
 			count=execByteCode(cPtr->cmpPtr,fd,recvBuf,sizeof(recvBuf),sendBuf,sendLen,noUnit,cPtr->bit,cPtr->retry,pRecvBuf,cPtr->recvTimeout);
 			// todo semjfi vcontrol_semrelease();
 
-			if (count==-1) {	
+			if (count==-1) {
 				snprintf(string, sizeof(string),"Fehler beim ausfuehren von %s",readBuf);
 				logIT(LOG_ERR,string);
 				sendErrMsg(socketfd);

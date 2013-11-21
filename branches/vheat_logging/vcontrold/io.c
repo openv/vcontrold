@@ -135,6 +135,8 @@ int my_send(int fd,char *s_buf, int len) {
 	return(1);
 }
 
+#if 1 == 2
+vheat - unused now see receive_nb
 int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	int i;
 	char string[256];
@@ -170,6 +172,7 @@ int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	*etime=((float)(end-start)/clktck)*1000;
 	return i;
 }
+#endif
 
 static int setnonblock(int fd) {
 	int flags;
@@ -313,7 +316,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 	/* wir warten auf das erste Zeichen, danach muss es passen */
 	do {
 		etime=0;
-		if (receive(fd,r_buf,1,&etime)<0) 
+		if (receive_nb(fd,r_buf,1,&etime)<0)
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
 			logIT(LOG_WARNING,"Timeout wait");
@@ -322,7 +325,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 	} while (r_buf[0] != w_buf[0]);
 	for(i=1;i<w_len;i++) {
 		etime=0;
-		if (receive(fd,r_buf,1,&etime)<0) 
+		if (receive_nb(fd,r_buf,1,&etime)<0)
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
 			logIT(LOG_WARNING,"Timeout wait");

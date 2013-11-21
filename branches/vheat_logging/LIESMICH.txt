@@ -4,6 +4,22 @@ Disclaimer:
 Verwendung auf eigene Gefahr! Die Änderungen sind nicht geprüft für Set Commands! KW Protokoll sollte 
 immer noch gehen, wenn selektiert, ist im Detail aber nicht geprüft.
 
+21.11.2013 vheat
+----------------
+Es gab Meldungen zu Fehlern bei Template-Betrieb, Problem war, dass eine 0.000 nicht gedruckt wurde, sondern 
+die Zeile mit dem = endete, was einige Parser nicht mochten.
+
+Es gab Probleme bei einigen Usern,  die zu einer Vielzahl von abgesetzen vcontrold Instanzen führten. Hintergrund 
+ist ein Semaphore-Problem, das bei Verwendung von mehreren Kommandos auf der vclient Eingabezeile/cmdfile dazu
+führte das je nach Protokolltyp entweder/und ein read() nicht timeout-überwacht wurde und auch die Semaphoren nicht 
+korrekt freigegeben wurden. War dieser Zustand einmal erreicht, liess sich das System nur durch explizites Killen 
+der vcontrold Instanzen und Restart des vcontrold beheben. Zugrundeliegendes Problem ist eine evtl schlechte oder 
+gestörte Verbindung auf dem Optolink. In diesem Zusammenhang ist jetzt die Lesefunktion komplett auf 
+select(...timeout) umgestellt, zuvor war es ein Handling über ein explizites alarm() Signal mit entsprechendem 
+Handler. Dieser Mechanismus scheint aber Schwierigkeiten zu haben, bzw. ist die Protabilität der Implementierung
+fraglich. Der alte Mechanismus ist noch in der Source, aber ausgeblendet. receive() wurde vollständig durch 
+receive_nb() bei gleicher Signatur ersetzt.
+
 24.10.2013 vheat
 ----------------
 Bei Verwendung des KW kam es zu einem "framer chksum" error und damit zu einem am vclient gemeldeten Fehler.

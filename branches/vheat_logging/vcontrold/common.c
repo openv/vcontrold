@@ -40,7 +40,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 		logFD=fopen(logfile,"a");
 		if (!logFD) {
 			printf("Konnte %s nicht oeffnen %s",logfile, strerror (errno));
-			return(0) ;
+			return(0);
 		}
 	}
 	debug=debugSwitch;
