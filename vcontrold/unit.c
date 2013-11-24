@@ -187,8 +187,7 @@ int setSysTime(char *input,char *sendBuf,short bufsize) {
 		return(string2chr(systime,sendBuf,bufsize));
 	}
 	else {
-		sprintf(sendBuf,"Setzen von explizieten Zeit noch nicht unterstuetzt");
-		logIT(LOG_ERR,"Setzen von explizieten Zeit noch nicht unterstuetzt");
+		logIT1(LOG_ERR,"Setzen von explizieter Zeit noch nicht unterstuetzt");
 		return(0);
 	}
 }
@@ -244,7 +243,7 @@ short bytes2Enum(enumPtr ptr,char *bytes,char **text,short len) {
 		char2hex(string,bytes,len);
 		strcat(string," -> ");
 		strcat(string,ePtr->text);
-		logIT(LOG_INFO,string);
+		logIT1(LOG_INFO,string);
 		return(1);
 	}
 	else
@@ -266,7 +265,7 @@ short text2Enum(enumPtr ptr,char *text,char **bytes,short *len){
 	bzero(string2,sizeof(string2));
 	char2hex(string2,ePtr->bytes,ePtr->len);
 	strcat(string,string2);
-	logIT(LOG_INFO,string);
+	logIT1(LOG_INFO,string);
 	return(*len);
 }
 
@@ -377,9 +376,7 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 		sprintf(formatI,"%%08X %%s");
 	}
 	else if (uPtr->type) {
-		bzero(string,sizeof(string));
-		snprintf(string, sizeof(string),"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
-		logIT(LOG_ERR,string);
+		logIT(LOG_ERR, "Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
 		return(-1);
 	}
 		
@@ -399,15 +396,12 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 			break;
 	}
 	if (uPtr->gCalc && *uPtr->gCalc) { /* <calc im XML und get darin definiert */
-		snprintf(string, sizeof(string),"Typ: %s (in float: %f)",uPtr->type,floatV);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO, "Typ: %s (in float: %f)",uPtr->type,floatV);
 		inPtr=uPtr->gCalc;
-		snprintf(string, sizeof(string),"(FLOAT) Exp:%s [%s]",inPtr,buffer);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO, "(FLOAT) Exp:%s [%s]",inPtr,buffer);
 		erg=execExpression(&inPtr,recvBuf,floatV,errPtr);
 		if (*errPtr) {
-			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->gCalc,error);
-			logIT(LOG_ERR,string);
+			logIT(LOG_ERR,"Exec %s: %s",uPtr->gCalc,error);
 			strcpy(result,string);
 			return(-1);
 		}
@@ -415,17 +409,14 @@ int procGetUnit(unitPtr uPtr,char *recvBuf,int recvLen,char *result,char bitpos,
 	}
 	else if (uPtr->gICalc && *uPtr->gICalc) { /* <icalc im XML und get darin definiert */
 		inPtr=uPtr->gICalc;
-		snprintf(string, sizeof(string),"(INT) Exp:%s [BP:%d] [%s]",inPtr,bitpos,buffer);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,"(INT) Exp:%s [BP:%d] [%s]",inPtr,bitpos,buffer);
 		ergI=execIExpression(&inPtr,recvBuf,bitpos,pRecvPtr,errPtr);
 		if (*errPtr) {
-			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->gCalc,error);
-			logIT(LOG_ERR,string);
+			logIT(LOG_ERR,"Exec %s: %s",uPtr->gCalc,error);
 			strcpy(result,string);
 			return(-1);
 		}
-		snprintf(string, sizeof(string),"Erg: (Hex max. 4Byte) %08x",ergI);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,"Erg: (Hex max. 4Byte) %08x",ergI);
 		res=ergI;
 		if( uPtr->ePtr && bytes2Enum(uPtr->ePtr,&res,&tPtr,recvLen)) {
 			strcpy(result,tPtr);
@@ -519,8 +510,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 		logIT(LOG_INFO,"Send Exp:%s [V=%f]",inPtr,floatV);
 		erg=execExpression(&inPtr,dumBuf,floatV,errPtr);
 		if (*errPtr) {
-			snprintf(string, sizeof(string),"Exec %s: %s",uPtr->sCalc,error);
-			logIT(LOG_ERR,string);
+			logIT(LOG_ERR,"Exec %s: %s",uPtr->sCalc,error);
 			strcpy(sendBuf,string);
 			return(-1);
 		}
@@ -543,8 +533,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 				logIT(LOG_INFO,"(INT) Exp:%s [BP:%d]",inPtr,bitpos);
 				ergI=execIExpression(&inPtr,dumBuf,bitpos,pRecvPtr,errPtr);
 				if (*errPtr) {
-					snprintf(string, sizeof(string),"Exec %s: %s",uPtr->sICalc,error);
-					logIT(LOG_ERR,string);
+					logIT(LOG_ERR,"Exec %s: %s",uPtr->sICalc,error);
 					strcpy(sendBuf,string);
 					return(-1);
 				}
@@ -596,8 +585,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 		}
 		else if (uPtr->type) {
 			bzero(string,sizeof(string));
-			snprintf(string, sizeof(string),"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
-			logIT(LOG_ERR,string);
+			logIT(LOG_ERR,"Unbekannter Typ %s in Unit %s",uPtr->type,uPtr->name);
 			return(-1);
 		}
 		bzero(buffer,sizeof(buffer));
@@ -610,8 +598,7 @@ int procSetUnit(unitPtr uPtr,char *sendBuf,short *sendLen,char bitpos,char *pRec
 			if (n >= MAXBUF-3)	/* FN Wo wird 'n' eigentlich initialisiert */
 				break;
 		}
-		snprintf(string, sizeof(string),"Typ: %s (Bytes: %s)  ",uPtr->type,buffer);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,"Typ: %s (Bytes: %s)  ",uPtr->type,buffer);
 		return(1);
 	}
 	return (0);	/* Wenn ich das richtig verstehe, sollten wir hier nie landen FN, deshalb; keep compiler happy */

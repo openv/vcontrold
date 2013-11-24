@@ -48,7 +48,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 	return(1);
  
 }
-	
+
 void logIT (int class,char *string, ...) {
 
 	va_list arguments;
