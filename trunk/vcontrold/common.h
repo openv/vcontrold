@@ -18,6 +18,6 @@ ssize_t readn(int fd, void *vptr, size_t n);
         #define MAXBUF 4096 
 #endif
 
-#define logIT1(class, string)	logIT("%s", class, string)
+#define logIT1(class, string)	logIT(class, "%s", string)
 
 #endif
