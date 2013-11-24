@@ -1,6 +1,9 @@
 /* common.h */
 /* $Id: common.h 26 2008-03-20 20:56:09Z marcust $ */
 
+#ifndef _common_h
+#define _common_h
+
 /* Deklarationen */
 int initLog(int useSyslog, char *logfile,int debugSwitch);
 void logIT (int class,char *string, ...);
@@ -15,4 +18,6 @@ ssize_t readn(int fd, void *vptr, size_t n);
         #define MAXBUF 4096 
 #endif
 
+#define logIT1(class, string)	logIT("%s", class, string)
 
+#endif

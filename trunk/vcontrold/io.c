@@ -65,12 +65,10 @@ int openDevice(char *device) {
 
 int opentty(char *device) {
 	int fd;
-	char string[256];
-	snprintf(string, sizeof(string),"konfiguriere serielle Schnittstelle %s",device);
-	logIT(LOG_LOCAL0,string);
+
+	logIT(LOG_LOCAL0, "konfiguriere serielle Schnittstelle %s",device);
 	if ((fd=open(device,O_RDWR)) < 0) {
-		snprintf(string, sizeof(string),"cannot open %s:%m",device);
-		logIT(LOG_ERR,string);
+		logIT(LOG_ERR,"cannot open %s:%m",device);
 		exit(1);
 	}
 	int s;
@@ -78,8 +76,7 @@ int opentty(char *device) {
 	s=tcgetattr(fd,&oldsb);
 
 	if (s<0) {
-		snprintf(string, sizeof(string),"error tcgetattr %s:%m",device);
-		logIT(LOG_ERR,string);
+		logIT(LOG_ERR,"error tcgetattr %s:%m",device);
 		exit(1);
 	}
 	newsb=oldsb;
@@ -106,9 +103,8 @@ int opentty(char *device) {
 	modemctl |= TIOCM_DTR;
 	s=ioctl(fd,TIOCMSET,&modemctl);
 	if (s<0) {
-		snprintf(string, sizeof(string),"error ioctl TIOCMSET %s:%m",device);
-		logIT(LOG_ERR,string);
-		exit(1); 
+		logIT(LOG_ERR,"error ioctl TIOCMSET %s:%m",device);
+		exit(1);
 	}
 
 	return(fd);
@@ -129,15 +125,13 @@ int my_send(int fd,char *s_buf, int len) {
 		/* wir benutzen die Socket feste Vairante aus socket.c */
 		writen(fd,&s_buf[i],1);
 		unsigned char byte=s_buf[i] & 255;
-		snprintf(string, sizeof(string),">SEND: %02X",(int)byte);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO,">SEND: %02X",(int)byte);
 	}
 	return(1);
 }
 
 int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	int i;
-	char string[256];
 
 	struct tms tms_t;
 	clock_t start,end,mid,mid1;
@@ -147,23 +141,22 @@ int receive(int fd,char *r_buf,int r_len,unsigned long *etime) {
 	mid1=start;
 	for(i=0;i<r_len;i++) {
 		if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-			logIT(LOG_ERR,"SIGALRM error");
+			logIT1(LOG_ERR,"SIGALRM error");
 			if(setjmp(env_alrm) !=0) {
-				logIT(LOG_ERR,"read timeout");
+				logIT1(LOG_ERR,"read timeout");
 				return(-1);
 			}
 			alarm(TIMEOUT);
 			/* wir benutzen die Socket feste Vairante aus socket.c */
 			if (readn(fd,&r_buf[i],1) <= 0) {
-				logIT(LOG_ERR,"error read tty");;
+				logIT1(LOG_ERR,"error read tty");;
 				alarm(0);
 				return(-1);
 			}
 			alarm(0);
 			unsigned char byte=r_buf[i] & 255;
 			mid=times(&tms_t);
-			snprintf(string, sizeof(string),"<RECV: %02X (%0.1f ms)", byte,((float)(mid-mid1)/clktck)*1000);
-			logIT(LOG_INFO,string);
+			logIT(LOG_INFO,"<RECV: %02X (%0.1f ms)", byte,((float)(mid-mid1)/clktck)*1000);
 			mid1=mid;
 	}
 	end=times(&tms_t);
@@ -242,12 +235,10 @@ int receive_nb(int fd,char *r_buf,int r_len, unsigned long *etime) {
 			return(-1);
     	} else if (retval < 0) {
 			if (errno == EINTR) {
-				snprintf(string, sizeof(string), "<RECV: select interrupted - redo");
-				logIT(LOG_INFO, string);
+				logIT(LOG_INFO, "<RECV: select interrupted - redo");
 				continue;
 			} else {
-				snprintf(string, sizeof(string), "<RECV: select error %d", retval);
-				logIT(LOG_ERR, string);
+				logIT(LOG_ERR, "<RECV: select error %d", retval);
 				setblock(fd);
 				logIT(LOG_INFO,dump(string, "<RECV: received", r_buf, i));
 				return (-1);
@@ -255,19 +246,16 @@ int receive_nb(int fd,char *r_buf,int r_len, unsigned long *etime) {
 		} else if ( FD_ISSET(fd, &rfds)){
 			len = read(fd, &r_buf[i], r_len - i);
 			if (len == 0) {
-				snprintf(string, sizeof(string), "<RECV: read eof");
-				logIT(LOG_ERR, string);
+				logIT(LOG_ERR, "<RECV: read eof");
 				setblock(fd);
 				logIT(LOG_INFO,dump(string, "<RECV: received", r_buf, i));
 				return (-1);
 			} else if (len < 0) {
 				if (errno == EINTR) {
-					snprintf(string, sizeof(string), "<RECV: read interrupted - redo");
-					logIT(LOG_INFO, string);
+					logIT(LOG_INFO, "<RECV: read interrupted - redo");
 					continue;
 				} else {
-					snprintf(string, sizeof(string), "<RECV: read error %d", errno);
-					logIT(LOG_ERR, string);
+					logIT(LOG_ERR, "<RECV: read error %d", errno);
 					setblock(fd);
 					logIT(LOG_INFO,dump(string, "<RECV: received", r_buf, i));
 					return (-1);
@@ -275,8 +263,7 @@ int receive_nb(int fd,char *r_buf,int r_len, unsigned long *etime) {
 			} else {
 				unsigned char byte=r_buf[i] & 255;
 				mid=times(&tms_t);
-				snprintf(string, sizeof(string),"<RECV: len=%zd %02X (%0.1f ms)", len, byte, ((float)(mid-mid1)/clktck)*1000);
-				logIT(LOG_INFO,string);
+				logIT(LOG_INFO, "<RECV: len=%zd %02X (%0.1f ms)", len, byte, ((float)(mid-mid1)/clktck)*1000);
 				mid1=mid;
 				i += len;
 			}
@@ -299,7 +286,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 	int i;
 	time_t start;
 	char r_buf[MAXBUF];
-	char hexString[1000]="\0";
+	char hexString[128]="\0";
 	char dummy[3];
 	unsigned long etime;
 	for(i=0;i<w_len;i++) {
@@ -316,7 +303,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		if (receive(fd,r_buf,1,&etime)<0) 
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
-			logIT(LOG_WARNING,"Timeout wait");
+			logIT1(LOG_WARNING,"Timeout wait");
 			return(0);
 		}
 	} while (r_buf[0] != w_buf[0]);
@@ -325,14 +312,14 @@ int waitfor(int fd, char *w_buf,int w_len) {
 		if (receive(fd,r_buf,1,&etime)<0) 
 			return(0);
 		if (time(NULL)-start > TIMEOUT) {
-			logIT(LOG_WARNING,"Timeout wait");
+			logIT1(LOG_WARNING,"Timeout wait");
 			return(0);
 		}
 		if( r_buf[0] != w_buf[i]) {
-			logIT(LOG_ERR,"Synchronisation verloren");
+			logIT1(LOG_ERR,"Synchronisation verloren");
 			exit(1);
 		}
         }		
-/*	logIT(LOG_INFO,"Zeichenkette erkannt"); */
+/*	logIT1(LOG_INFO,"Zeichenkette erkannt"); */
 	return(1);
 }
