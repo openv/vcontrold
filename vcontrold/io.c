@@ -121,9 +121,11 @@ int my_send(int fd,char *s_buf, int len) {
 	fcntl(fd,F_SETFL,!O_NONBLOCK);
 	
 	tcflush(fd,TCIFLUSH);
+	
+	/* wir benutzen die Socket feste Vairante aus socket.c */
+	writen(fd,s_buf,len);
 	for (i=0;i<len;i++) {
-		/* wir benutzen die Socket feste Vairante aus socket.c */
-		writen(fd,&s_buf[i],1);
+		
 		unsigned char byte=s_buf[i] & 255;
 		logIT(LOG_INFO,">SEND: %02X",(int)byte);
 	}
