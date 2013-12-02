@@ -48,14 +48,14 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 	ssize_t count;
 	int rcount=1;
 	if (signal(SIGALRM, sig_alrm) == SIG_ERR)
-		logIT(LOG_ERR,"SIGALRM error");
+		logIT1(LOG_ERR,"SIGALRM error");
 	if(setjmp(env_alrm) !=0) {
 		logIT(LOG_ERR,"timeout wait:%s",wait);
 		return(-1);
 	}
 	alarm(CL_TIMEOUT);
 	if (!(*recv=calloc(ALLOCSIZE,sizeof(char)))) {
-			logIT(LOG_ERR,"Fehler calloc");
+			logIT1(LOG_ERR,"Fehler calloc");
 			exit(1);
 	}
 	rptr=*recv;
@@ -66,7 +66,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		*rptr++=c;
 		if(!((rptr-*recv+1)%ALLOCSIZE)) {
 			if (realloc(*recv,ALLOCSIZE * sizeof(char) *  ++rcount)==NULL) { 
-				logIT(LOG_ERR,"Fehler realloc");
+				logIT1(LOG_ERR,"Fehler realloc");
 				exit(1);
 			}
 		}
@@ -78,7 +78,7 @@ ssize_t recvSync(int fd,char *wait,char **recv) {
 		alarm(CL_TIMEOUT);
 	}
 	if (!realloc(*recv,strlen(*recv)+1)) {
-		logIT(LOG_ERR,"realloc Fehler!!");
+		logIT1(LOG_ERR,"realloc Fehler!!");
 		exit(1);
 	}
 	if (count <=0) {
@@ -192,8 +192,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 		if (sendServer(sockfd,string,strlen(string))<=0)
 			return(0);
 		//bzero(string,sizeof(string));
-		snprintf(string, sizeof(string),"SEND:%s",ptr->cmd);
-		logIT(LOG_INFO,string);
+		logIT(LOG_INFO, "SEND:%s",ptr->cmd);
 		if(recvSync(sockfd,prompt,&sptr)<=0) {
 			free(sptr);
 			return(0);
@@ -203,7 +202,7 @@ int sendTrList(int sockfd, trPtr ptr) {
 			*(ptr->raw+strlen(ptr->raw)-1)='\0';
 		dumPtr=calloc(strlen(sptr)+20,sizeof(char));
 		snprintf(dumPtr,(strlen(sptr)+20)*sizeof(char),"RECV:%s",sptr);
-		logIT(LOG_INFO,dumPtr);
+		logIT1(LOG_INFO,dumPtr);
 		free(dumPtr);
 		/* wir fuellen Fehler und result */
 		if (strstr(ptr->raw,errTXT)==ptr->raw) {

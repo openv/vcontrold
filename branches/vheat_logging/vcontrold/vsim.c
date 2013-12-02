@@ -42,6 +42,7 @@ void logIT (int class,char *string, ...) {
 	vasprintf(&print_buffer, string, arguments);
 	va_end(arguments);
 	printf("%s\n",print_buffer);
+	free(print_buffer);
 }
 
 static void sigPipeHandler(int signo) {

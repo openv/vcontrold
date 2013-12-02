@@ -85,7 +85,7 @@ int openSocket(int tcpport) {
 		int optval =1;
 		if(listenfd > 0 && setsockopt(listenfd,SOL_SOCKET,SO_REUSEADDR,
 									  &optval,sizeof optval) <0 ) {
-			logIT(LOG_ERR,"setsockopt gescheitert!");
+			logIT1(LOG_ERR,"setsockopt gescheitert!");
 			exit(1);
 		}
         if (!(listenfd < 0)) {
@@ -246,7 +246,7 @@ ssize_t
 Writen(int fd, void *ptr, size_t nbytes)
 {
 	if (writen(fd, ptr, nbytes) != nbytes) {
-		logIT(LOG_ERR,"Fehler beim schreiben auf socket");
+		logIT1(LOG_ERR,"Fehler beim schreiben auf socket");
 		return(0);
 	}
 	return(nbytes);
@@ -293,7 +293,7 @@ Readn(int fd, void *ptr, size_t nbytes)
 	ssize_t		n;
 
 	if ( (n = readn(fd, ptr, nbytes)) < 0) {
-		logIT(LOG_ERR,"Fehler beim lesen von socket");
+		logIT1(LOG_ERR,"Fehler beim lesen von socket");
 		return(0);
 	}
 	return(n);
@@ -358,7 +358,7 @@ Readline(int fd, void *ptr, size_t maxlen)
 	ssize_t		n;
 
 	if ( (n = readline(fd, ptr, maxlen)) < 0) {
-		logIT(LOG_ERR,"Fehler beim lesen von socket");
+		logIT1(LOG_ERR,"Fehler beim lesen von socket");
 		return(0);
 	}
 	return(n);

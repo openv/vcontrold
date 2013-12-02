@@ -40,7 +40,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 		logFD=fopen(logfile,"a");
 		if (!logFD) {
 			printf("Konnte %s nicht oeffnen %s",logfile, strerror (errno));
-			return(0);
+			return(0) ;
 		}
 	}
 	debug=debugSwitch;
@@ -48,7 +48,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 	return(1);
  
 }
-	
+
 void logIT (int class,char *string, ...) {
 
 	va_list arguments;
@@ -61,21 +61,9 @@ void logIT (int class,char *string, ...) {
 	int pid;
 	long avail;
 
-	/* vheat todo: Dirty Hack um % am Ende zu überleben */
-	char *string1 = malloc(strlen(string)+10);
-	strcpy(string1, string);
-	if ( string1[strlen(string1)-1] == '%' ) {
-		string1[strlen(string1)+3] = '\0';
-		string1[strlen(string1)+2] = '%';
-		string1[strlen(string1)+1] = '%';
-		string1[strlen(string1)] = '%';
-	}
-
 	va_start(arguments, string);
-	vasprintf(&print_buffer, string1, arguments);
+	vasprintf(&print_buffer, string, arguments);
 	va_end(arguments);
-
-	free(string1);
 
 	if (class <= LOG_ERR)  {
 		avail = sizeof(errMsg)-strlen(errMsg)-2;
