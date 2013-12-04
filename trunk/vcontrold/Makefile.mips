@@ -2,21 +2,22 @@
 # $Id: Makefile.mips 16 2008-03-07 20:43:26Z marcust $
 
 ARCH = mips
-STAGINGDIR = /opt/openwrt/trunk/staging_dir
-BINDIR = $(STAGINGDIR)/toolchain-mipsel_gcc3.4.6/bin
-CC = $(BINDIR)/mipsel-linux-uclibc-gcc
-STRIP = $(BINDIR)/mipsel-linux-uclibc-strip
-LDFLAGS =  -L $(STAGINGDIR)/mipsel/usr/lib -lxml2 -lz 
+STAGINGDIR = /shares/Sysadmin/openwrt/staging_dir
+BINDIR= $(STAGINGDIR)/toolchain-mips_r2_gcc-4.6-linaro_uClibc-0.9.33.2/bin
+CC = $(BINDIR)/mips-openwrt-linux-gcc
+STRIP = $(BINDIR)/mips-openwrt-linux-uclibc-strip
+LDFLAGS =  -L $(STAGINGDIR)/target-mips_r2_uClibc-0.9.33.2/usr/lib -lxml2 -lz
+
 CFLAGS =
-IFLAGS = -I $(STAGINGDIR)/mipsel/include -I $(STAGINGDIR)/mipsel/usr/include -I $(STAGINGDIR)/mipsel/usr/include/libxml2
+IFLAGS = -I $(STAGINGDIR)/mipsel/include -I $(STAGINGDIR)/mipsel/usr/include -I $(STAGINGDIR)/mipsel/usr/include/libxml2  -I $(STAGINGDIR)/target-mips_r2_uClibc-0.9.33.2/usr/include/libxml2
 MAKE = make
 SHELL = /bin/sh
 MAKEFLAGS = b
 
-SRCS = vcontrold.c parser.c io.c common.c socket.c xmlconfig.c arithmetic.c client.c unit.c
-OBJS = vcontrold.o parser.o io.o common.o socket.o xmlconfig.o arithmetic.o unit.o
-HDRS =                       parser.h io.h common.h socket.h xmlconfig.h arithmetic.h unit.h
-BIN = vcontrold
+SRCS = vcontrold.c parser.c io.c common.c socket.c xmlconfig.c arithmetic.c client.c unit.c semaphore.c client.c framer.c
+OBJS = vcontrold.o parser.o io.o common.o socket.o xmlconfig.o arithmetic.o unit.o semaphore.o  client.o framer.o
+HDRS =                       parser.h io.h common.h socket.h xmlconfig.h arithmetic.h unit.h 
+BIN = vcontrold 
 VERSION=0.96
 PACKAGE = vcontrold-$(VERSION).tgz
 FILES = $(SRCS) $(HDRS) Makefile Makefile.mips Makefile.arm $(BIN).xml
