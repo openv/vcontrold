@@ -816,6 +816,9 @@ int main(int argc, char* argv[]) {
 	char result[MAXBUF];
 	int resultLen=sizeof(result);
 	int sid;
+	int pidFD = 0;
+	char str[10];
+	char *pidFile = "/var/run/vcontrold.pid";
 
 	if (tcpport) {
 		if (makeDaemon) { 
@@ -850,7 +853,19 @@ int main(int argc, char* argv[]) {
 				logIT1(LOG_ERR, "chdir / fehlgeschlagen");
 				exit(1);
 			}	
+			pidFD = open(pidFile, O_RDWR|O_CREAT, 0600);
+			if (pidFD == -1) {
+				logIT(LOG_ERR, "Could not open PID lock file %s, exiting", pidFile);
+				exit(1);
+			}
 
+			if (lockf(pidFD, F_TLOCK, 0) == -1) {
+				logIT(LOG_ERR, "Could not lock PID lock file %s, exiting", pidFile);
+				exit(1);
+			}
+
+			sprintf(str, "%d\n", getpid());
+			write(pidFD, str, strlen(str));
 		}
 
 		vcontrol_seminit();
@@ -897,6 +912,7 @@ int main(int argc, char* argv[]) {
 	vcontrol_semfree();
 
 	close(fd);
+	close(pidFD);
 	logIT1(LOG_LOCAL0,"vcontrold beendet");
 	
 	return 0;
