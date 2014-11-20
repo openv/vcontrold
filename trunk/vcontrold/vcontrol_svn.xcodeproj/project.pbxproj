@@ -121,6 +121,7 @@
 		A4B6C258182AEEDC007D2033 /* COPYING */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = COPYING; sourceTree = "<group>"; };
 		A4B6C259182AEEDC007D2033 /* INSTALL */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = INSTALL; sourceTree = "<group>"; };
 		A4B6C26F182D7567007D2033 /* vclient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vclient.h; sourceTree = "<group>"; };
+		A4E7D2E418718CE0000EA05B /* vcontrold.initd.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = vcontrold.initd.sh; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.csh; };
 		A4F2D4AD1623827500ED5798 /* vcontrold */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = vcontrold; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -181,6 +182,7 @@
 				A494AE2B14896FB8003A7995 /* vcontrold.c */,
 				A477FD6F16273E0000EBB2DF /* vcontrold.1 */,
 				A494AE2C14896FB8003A7995 /* vcontrold.xml */,
+				A4E7D2E418718CE0000EA05B /* vcontrold.initd.sh */,
 				A494AE2D14896FB8003A7995 /* xmlconfig.c */,
 				A494AE2E14896FB8003A7995 /* xmlconfig.h */,
 				A494AE0914896FB8003A7995 /* readme.txt */,
