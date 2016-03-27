@@ -293,7 +293,7 @@ int waitfor(int fd, char *w_buf,int w_len) {
 	unsigned long etime;
 	for(i=0;i<w_len;i++) {
 		sprintf(dummy,"%02X",w_buf[i]);	
-		strncat(hexString,dummy,999);
+		strncat(hexString,dummy,strlen(dummy));
 	}
 	
 	logIT(LOG_INFO,"Warte auf %s",hexString);

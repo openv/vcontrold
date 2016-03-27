@@ -127,7 +127,8 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 	short len;
 	compilePtr cPtr=cmpPtr;
 	unsigned long etime;
-
+	char out_buff[1024];
+	int _len  = 0;
 /* 	struct timespec t_sLeep; */
 /* 	struct timespec t_sleep_rem; */
 
@@ -171,7 +172,17 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 				strcat(simIn," ");
 				break;
 			case SEND:
-				if (!framer_send(fd,cmpPtr->send,cmpPtr->len)) {
+				_len  = 0;
+				while(1) {
+					memcpy(out_buff + _len ,cmpPtr->send,cmpPtr->len);
+					_len += cmpPtr->len;
+					if (!(cmpPtr->next && cmpPtr->next->token == BYTES)) {
+						break;
+					}
+					cmpPtr =  cmpPtr->next;
+				}
+
+				if (!framer_send(fd,out_buff,_len)) {
 					logIT1(LOG_ERR,"Fehler send, Abbruch");
 					return(-1);
 				}
@@ -181,7 +192,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 					bzero(simIn,sizeof(simIn));
 				}
 				bzero(string,sizeof(string));
-				char2hex(string,cmpPtr->send,cmpPtr->len);
+				char2hex(string,out_buff,_len);
 				strcat(simOut,string);
 				strcat(simOut," ");
 				break;
