@@ -455,9 +455,20 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime) {
 		logIT(LOG_ERR, string);
 		return FRAMER_READ_ERROR;
 	}
-	for (rtmp = 0; rtmp < r_len; rtmp++) {
-		r_buf[rtmp] = l_buf[P300_BUFFER_OFFSET + rtmp];
-	}
+	if ((l_buf[P300_FCT_OFFSET] == P300_WRITE_DATA) && (r_len == 1)) {
+	    // if we have a P300 setaddr we do not get data back ...
+	    if (l_buf[P300_TYPE_OFFSET] == P300_RESPONSE) {
+	    	// OK
+	        r_buf[rtmp] = 0x00;
+	    } else {
+	    	// NOT OK
+	        r_buf[rtmp] = 0x01;
+	    }
+	} else {
+	    for (rtmp = 0; rtmp < r_len; rtmp++) {
+		    r_buf[rtmp] = l_buf[P300_BUFFER_OFFSET + rtmp];
+	    }
+ 	}
 	framer_reset_actaddr();
 	return r_len;
 }
