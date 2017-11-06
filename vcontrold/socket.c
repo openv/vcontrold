@@ -1,6 +1,8 @@
 /* socket.c */
 /* $Id: socket.c 13 2008-03-02 13:13:41Z marcust $ */
 
+#define _GNU_SOURCE
+
 #include <sys/time.h>
 #include <time.h>
 #include <errno.h>
@@ -49,7 +51,7 @@ int openSocket(int tcpport) {
 			hints.ai_family = PF_INET6;
 			break;
 		case 4:		/* this is for backward compatibility. We can explictly
-					 activate IPv6 with the -6 switch. Later we can use 
+					 activate IPv6 with the -6 switch. Later we can use
 					 PF_UNSPEC as default and let the OS decide */
 		default:
 			hints.ai_family = PF_INET;
@@ -93,7 +95,7 @@ int openSocket(int tcpport) {
 					 res->ai_addr,
 					 res->ai_addrlen) == 0)
                 break;
-			
+
             close(listenfd);
             listenfd=-1;
         }
@@ -242,7 +244,7 @@ writen(int fd, const void *vptr, size_t n)
 }
 /* end writen */
 
-ssize_t 
+ssize_t
 Writen(int fd, void *ptr, size_t nbytes)
 {
 	if (writen(fd, ptr, nbytes) != nbytes) {
@@ -274,7 +276,7 @@ readn(int fd, void *vptr, size_t n)
 			break;				/* EOF */
 
 		#ifdef __CYGWIN__
-		if(nread > nleft) 				// This is a workaround for Cygwin.    
+		if(nread > nleft) 				// This is a workaround for Cygwin.
 			nleft=0;					// Here cygwins read(fd,buff,count) is
 		else							// reading more than count chars! this is bad!
 			nleft -= nread;
@@ -308,7 +310,7 @@ my_read(int fd, char *ptr)
 	static ssize_t read_cnt = 0;
 	static char	*read_ptr;
 	static char	read_buf[MAXLINE];
-	
+
 	if (read_cnt <= 0) {
 	again:
 		if ( (read_cnt = read(fd, read_buf, sizeof(read_buf))) < 0) {
@@ -319,7 +321,7 @@ my_read(int fd, char *ptr)
 			return(0);
 		read_ptr = read_buf;
 	}
-	
+
 	read_cnt--;
 	*ptr = *read_ptr++;
 	return(1);

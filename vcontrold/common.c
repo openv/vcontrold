@@ -2,6 +2,9 @@
  * Testprogramm fuer Vito- Abfrage
  *  */
 /* $Id: common.c 26 2008-03-20 20:56:09Z marcust $ */
+
+#define _GNU_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -12,7 +15,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#include"common.h" 
+#include"common.h"
 /* #include"parser.h" */
 
 
@@ -46,7 +49,7 @@ int initLog(int useSyslog, char *logfile,int debugSwitch) {
 	debug=debugSwitch;
 	bzero(errMsg,sizeof(errMsg));
 	return(1);
- 
+
 }
 
 void logIT (int class,char *string, ...) {
@@ -105,7 +108,7 @@ void logIT (int class,char *string, ...) {
 	/* Ausgabe nur, wenn 2 als STDERR geoeffnet ist */
 	if(isatty(2))
 		fprintf(stderr,"[%d] %s: %s\n",pid,tPtr,print_buffer);
-	
+
 	free(print_buffer);
 }
 
@@ -129,11 +132,11 @@ void setDebugFD(int fd) {
 	dbgFD=fd;
 }
 
-		
+
 char hex2chr(char *hex) {
 	char buffer[16];
 	int hex_value=-1;
-	
+
 	snprintf(buffer, sizeof(buffer), "0x%s", hex);
 	if (sscanf(hex, "%x", &hex_value) != 1) {
 		logIT(LOG_WARNING, "Ungültige Hex Zeichen in %s", hex);
@@ -158,7 +161,7 @@ int char2hex(char *outString, const char *charPtr, int len) {
 short string2chr(char *line,char *buf,short bufsize) {
 	char *sptr;
 	short count;
-	
+
 	count=0;
 
 	sptr=strtok(line," ");
