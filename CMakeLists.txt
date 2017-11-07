@@ -13,29 +13,29 @@ include_directories(
 )
 
 set(vcontrold_SRCS
-    src/io.c
-    src/common.c
-    src/xmlconfig.c
-    src/parser.c
-    src/socket.c
-    src/semaphore.c
-    src/framer.c
-    src/unit.c
-    src/arithmetic.c
-    src/vcontrold.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/semaphore.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/framer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/unit.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vcontrold.c
 )
 
 set(vclient_SRCS
-    src/common.c
-    src/socket.c
-    src/io.c
-    src/client.c
-    src/vclient.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vclient.c
 )
 
 set(vsim_SRCS
-    src/socket.c
-    src/vsim.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/vsim.c
 )
 
 add_executable(vcontrold ${vcontrold_SRCS})
@@ -48,3 +48,6 @@ add_executable(vsim ${vsim_SRCS})
 install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+file(GLOB MANPAGES ${CMAKE_CURRENT_SOURCE_DIR}/doc/man/*.1)
+install(FILES ${MANPAGES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/man1)
