@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if [ -n "`pidof vcontrold`" ]; then 
-    killall vcontrold 2>/dev/null
-fi
-
-/opt/sbin/vcontrold -x /opt/etc/vcontrold/vcontrold.xml
