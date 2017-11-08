@@ -1,30 +1,28 @@
 ***********************************************************
 Aktuelle Informationen und Dokus finden sich im Wiki:
-http://openv.wikispaces.com/
+https://github.com/openv/vcontrold
 ***********************************************************
 Die Software wird unter der GPL veroeffentlicht.
-***********************************************************
-Kontakt: M.Thielmann@t-online.de
 ***********************************************************
 
 
 vcontrold ist ein in C geschriebener Daemon, der die Kommunikation mit 
-der Vito-Steuerung übernimmt.
+der Vito-Steuerung √ºbernimmt.
 
-Die Konfiguration erfolgt über XML-Dateien.
+Die Konfiguration erfolgt √ºber XML-Dateien.
 Der Daemon bietet eine ASCII-Socketschnittstelle, die mit telnet oder 
 dem vclient Programm angespochen werden kann.
 
 Der Quelltext kann im SVN heruntergeladen werden.
 
-	svn checkout svn://svn.code.sf.net/p/vcontrold/code/ vcontrold-code
-	cd vcontrold-code
+	git clone https://github.com/openv/vcontrold.git vcontrold-code
+    cd vcontrold-code
 	sh ./auto-build.sh
 	sh ./configure
 	make && make install
 
-Es exisitiert ein Makefile für x86 und den NSLU2 unter openwrt (Cross Compiling).
-Benötigt wird die libxml2.
+Es exisitiert ein Makefile f√ºr x86 und den NSLU2 unter openwrt (Cross Compiling).
+Ben√∂tigt wird die libxml2.
 
 Die Konfiguration des Programms wird in zwei XML-Dateien vorgenommen:
 vcontrold.xml : Programmspezifische Definitionen
@@ -38,22 +36,22 @@ vcontrold	[-x|--xmlfile xml-file] [-d|--device <device>]
 			[-4|--inet4] [-6|--inet6]
 
 	-x Pfad zur XML Konfigurationsdatei
-	-d Device, entweder serielles Device oder IP-Adresse:Port bei Zugriff über ser2net
+	-d Device, entweder serielles Device oder IP-Adresse:Port bei Zugriff √ºber ser2net
 	-l Log-Datei
 	-p TCP-Port, auf dem das CLI-Interface lauscht
 	-s Logging in syslog
-	-n kein fork, für Testzwecke
+	-n kein fork, f√ºr Testzwecke
 	-g erzeugt mehr debug Ausgaben
-	-4 Nutze IPv4 (Voreingestellt für Rückwärtskompatibilität)
+	-4 Nutze IPv4 (Voreingestellt f√ºr R√ºckw√§rtskompatibilit√§t)
 	-6 Nutze IPv6
 
 CLI-Kommandos:
 device: Name und ID des konfigurierten Devices
 protocol: Name des Protokolls
-commands: Für das device in der XML-Datei definierte Kommandos
+commands: F√ºr das device in der XML-Datei definierte Kommandos
 detail <command>: detailinformationen zum Kommando
-<command>: Führe Kommando aus
-close: schlieﬂe Kommunikationskanal zur Analage (wird nach <comman> offen gehalten)
+<command>: F√ºhre Kommando aus
+close: schlie√üe Kommunikationskanal zur Analage (wird nach <comman> offen gehalten)
 debug on|off:Zeigt Debug Meldungen (Kommunikation mit der Anlage) an und wieder ab.
 unit on|off: Schaltet implizite Umrechnung in die definierte Einheit aus und wieder an.
 
@@ -87,7 +85,7 @@ usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--c
 Template Modus
 Im Template Modus (-t) wird ein Template eingelesen und die dort enthaltenen 
 Variablen ersetzt. Die Ausgabe erfolgt dann auf stdout.
-Damt ist es einfach möglich, die Messwerte der Heizung auszulesen und direkt 
+Damt ist es einfach m√∂glich, die Messwerte der Heizung auszulesen und direkt 
 in eine Datenbank zu schreiben.
 
 Variable Funktion
@@ -108,8 +106,8 @@ Aufruf:
 INSERT INTO messwerte values (CURRENT_DATE,-2.600000,54.299999);
 
 
-Diese Werte können nun direkt über ein DB-cli in die Datenbank geschrieben werden.
-Die Ausgabe von stderr sollte dafür umgeleitet werden:
+Diese Werte k√∂nnen nun direkt √ºber ein DB-cli in die Datenbank geschrieben werden.
+Die Ausgabe von stderr sollte daf√ºr umgeleitet werden:
 
 ./vclient -h 127.0.0.1:1234 -t sql.tmpl -c gettempA,gettempWW 2>/dev/null  |mysql -D vito
 
@@ -146,38 +144,38 @@ Die Datei gliedert sich in drei Hauptabschnitte:
 <unix>: Maschinennahe Konfigurationen
 <units>: Einheiten zur implizierten Umrechnung, hierauf wird in der vito.xml mit 
 dem <unit> Tag des Kommandos verwiesen.
-<protocols>: Protokoll-spezifische Definition der protocmd-Kommados (in vito.xml). Hier werden die verschiedenen Definitionen für die Kommandos getaddr (und sp‰ter setaddr) definiert).
+<protocols>: Protokoll-spezifische Definition der protocmd-Kommados (in vito.xml). Hier werden die verschiedenen Definitionen f√ºr die Kommandos getaddr (und sp√§ter setaddr) definiert).
 Abschnitt units:
-abbrev: Abkürzung der unit, auf dieses Abkürzung wird mit dem <unit> Tag in <comand> der vito.xml referenziert.
-calc: Hier können arithmetische Ausdrücke zur Umrechnung angegeben werden. Zur Zeit sind + - * / ( ) in beliebiger Schachtelung möglich. Als Variablen stehen zur Verfügung:
+abbrev: Abk√ºrzung der unit, auf dieses Abk√ºrzung wird mit dem <unit> Tag in <comand> der vito.xml referenziert.
+calc: Hier k√∂nnen arithmetische Ausdr√ºcke zur Umrechnung angegeben werden. Zur Zeit sind + - * / ( ) in beliebiger Schachtelung m√∂glich. Als Variablen stehen zur Verf√ºgung:
 
-    * B0...B9 -> zurückgelieferte Bytes der Abfrage
-    * V -> Value unter Berücksichtigung des Types <type>
+    * B0...B9 -> zur√ºckgelieferte Bytes der Abfrage
+    * V -> Value unter Ber√ºcksichtigung des Types <type>
 
-type: Typ der zurückgelieferten Bytes. Zur zeit sind implementiert:
+type: Typ der zur√ºckgelieferten Bytes. Zur zeit sind implementiert:
 
     * char -> 1 Byte (hier ist V und B0 gleich)
     * short -> 2 Bytes, intern signed short
     * int -> 4 Bytes, intern signed int
-    * später: date für 8 byte Datum
+    * sp√§ter: date f√ºr 8 byte Datum
     * ...
 
 entity:
 Zusatztext, der hinter dem Ergebnis ausgegeben wird
-Es können beliebige Units definiert werden.
+Es k√∂nnen beliebige Units definiert werden.
 Abschnitt protocols:
 
-macro: Definition von zu sendenden Befehlen, die unter dem Makro Name in <send> des Kommandos in diesem Abschnitt angegeben werden können.
+macro: Definition von zu sendenden Befehlen, die unter dem Makro Name in <send> des Kommandos in diesem Abschnitt angegeben werden k√∂nnen.
 commands: Defintion von Protokoll-Kommandos, die zur direkten Kommunikation mit der Anlage genutzt werden
-send: Zu sendende Byte-Kommandos. Hier können die Makro Defintionen des Protokolls genutzt werden.
-Folgende Kommandos stehen zur Verfügung:
+send: Zu sendende Byte-Kommandos. Hier k√∂nnen die Makro Defintionen des Protokolls genutzt werden.
+Folgende Kommandos stehen zur Verf√ºgung:
 
     * SEND <BYTES in Hex>
     * WAIT <BYTES in Hex>
     * RECV <Anzahl Bytes> <optional Unit aus <unit><abbrev>>
     * PAUSE <ms>>
 
-Als Variablen aus dem command Abschnitt der vito.xml stehen zur Verfügung:
+Als Variablen aus dem command Abschnitt der vito.xml stehen zur Verf√ºgung:
 
     * $addr -> vito.xml-><command><addr>
     * $len ->vito.xml-><command><len>
