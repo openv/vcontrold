@@ -115,6 +115,12 @@ int parseLine(char *line,char *hex,int *hexlen,char *uSPtr, ssize_t uSPtrLen) {
 	return(token);
 }
 
+/**
+ * Wir fuehren den Bytecode aus.
+ * @return -1 -> Fehler
+ *          0 -> Formaterierter String
+ *          n -> Bytes in Rohform
+ */
 int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 				 char *sendBuf,short sendLen,short supressUnit,
 				 char bitpos, int retry,
@@ -134,7 +140,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 
 	bzero(simIn,sizeof(simIn));
 	bzero(simOut,sizeof(simOut));
-	/* wir wandeln zuerst die zu sendenen Bytes, nicht daas wir mittendrin abbrechen muessen */
+	/* wir wandeln zuerst die zu sendenen Bytes, nicht das wir mittendrin abbrechen muessen */
 	if (!supressUnit) 
 		while (cPtr) {
 			if (cPtr->token != BYTES) {
@@ -172,6 +178,9 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 				strcat(simIn," ");
 				break;
 			case SEND:
+				/* 
+				// TODO hmueller: fnobis changed this on sf from r106 to r107
+				// But this breaks my patch sending P300 data. Need discussion with fnobis
 				_len  = 0;
 				while(1) {
 					memcpy(out_buff + _len ,cmpPtr->send,cmpPtr->len);
@@ -183,6 +192,8 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 				}
 
 				if (!framer_send(fd,out_buff,_len)) {
+				*/
+				if (!framer_send(fd,cmpPtr->send,cmpPtr->len)) {
 					logIT1(LOG_ERR,"Fehler send, Abbruch");
 					return(-1);
 				}
@@ -192,7 +203,12 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 					bzero(simIn,sizeof(simIn));
 				}
 				bzero(string,sizeof(string));
+				/*
+				// TODO hmueller: fnobis changed this on sf from r106 to r107
+				// see above
 				char2hex(string,out_buff,_len);
+				*/
+-				char2hex(string,cmpPtr->send,cmpPtr->len);
 				strcat(simOut,string);
 				strcat(simOut," ");
 				break;
@@ -245,7 +261,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 					if (iniFD && *simIn && *simOut) /* wir haben gesendet und empfangen, das geben wir nun aus */
 						/* fprintf(iniFD,"%s= %s ;%s\n",simOut,simIn,result); */
 						fprintf(iniFD,"%s= %s \n",simOut,simIn);
-					return(0); /* 0==geawandelt nach unit */
+					return(0); /* 0==gewandelt nach unit */
 				}
 				if (iniFD && *simIn && *simOut)  /* wir haben gesendet und empfangen, das geben wir nun aus */
 					fprintf(iniFD,"%s= %s \n",simOut,simIn);
@@ -264,7 +280,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 				/* wir senden den sendBuffer, der uebergeben wurde */
 				/* es fand keine Wandlung statt */
 				if (sendLen) {
-					if (!my_send(fd,sendBuf,sendLen)) {
+					if (!framer_send(fd, sendBuf, sendLen)) {
 						logIT1(LOG_ERR,"Fehler send, Abbruch");
 						return(-1);
 					}
@@ -274,7 +290,7 @@ int execByteCode(compilePtr cmpPtr,int fd,char *recvBuf,short recvLen,
 				}
 				/* es ist eine Einheit definiert soll benutzt werden und wir haben das oben schon gewandelt */
 				else if (cmpPtr->len) {
-					if (!my_send(fd,cmpPtr->send,cmpPtr->len)) {
+					if (!framer_send(fd, cmpPtr->send, cmpPtr->len)) {
 						logIT1(LOG_ERR,"Fehler send unit Bytes, Abbruch");
 						free(cmpPtr->send);
 						cmpPtr->send=NULL;

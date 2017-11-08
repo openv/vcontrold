@@ -45,6 +45,6 @@ add_executable(vclient ${vclient_SRCS})
 
 add_executable(vsim ${vsim_SRCS})
 
-install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin)
 install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
