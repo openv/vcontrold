@@ -15,9 +15,9 @@ void setDebugFD(int fd);
 ssize_t readn(int fd, void *vptr, size_t n);
 
 #ifndef MAXBUF
-        #define MAXBUF 4096 
+        #define MAXBUF 4096
 #endif
 
-#define logIT1(class, string)	logIT(class, "%s", string)
+#define logIT1(class, string)    logIT(class, "%s", string)
 
 #endif
