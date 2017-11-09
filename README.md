@@ -2,10 +2,14 @@
 
 _vcontrold_ is software daemon written in C for communication with the "Optolink" interface of Viessmann Vito heating controllers.
 
-For further setup and usage instructions, please visit the OpenV wiki at https://github.com/openv/openv/wiki .
+For building and installation instructions see doc/INSTALL.md .
+
+Please visit the OpenV wiki at https://github.com/openv/openv/wiki for in-depth info and examples.
 
 ~~~
 
 _vcontrold_ ist ein in C geschriebener Software-Daemon zur Kommunikation mit der "Optolink" Schnittstelle von Viessmann Vito Heizungssteuerungen.
+
+Der Build-Prozess und die Installation sind kurz unter doc/INSTALL.md beschrieben.
 
 Infos zur Einrichtung und Benutzung sind im OpenV Wiki auf https://github.com/openv/openv/wiki beschrieben.
