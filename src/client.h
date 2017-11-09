@@ -4,7 +4,7 @@
 #define CL_TIMEOUT 25
 
 #ifndef MAXBUF
-        #define MAXBUF 4096
+#define MAXBUF 4096
 #endif
 
 #define ALLOCSIZE 256
@@ -12,12 +12,12 @@
 
 typedef struct txRx *trPtr;
 
-ssize_t recvSync(int fd,char *wait,char **recv);
+ssize_t recvSync(int fd, char *wait, char **recv);
 int connectServer(char *host, int port);
 void disconnectServer(int sockfd);
-size_t sendServer(int fd,char *s_buf, size_t len);
-trPtr sendCmdFile(int sockfd,const char *tmpfile);
-trPtr sendCmds(int sockfd,char *commands);
+size_t sendServer(int fd, char *s_buf, size_t len);
+trPtr sendCmdFile(int sockfd, const char *tmpfile);
+trPtr sendCmds(int sockfd, char *commands);
 
 
 struct txRx {

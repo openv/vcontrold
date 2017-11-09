@@ -17,12 +17,12 @@ typedef struct enumerate *enumPtr;
 
 
 int parseXMLFile(char *filename);
-macroPtr getMacroNode(macroPtr ptr,const char *name);
-unitPtr getUnitNode(unitPtr ptr,const char *name);
-commandPtr getCommandNode(commandPtr ptr,const char *name);
-allowPtr getAllowNode(allowPtr ptr,in_addr_t testIP);
-enumPtr getEnumNode(enumPtr prt,char *search,int len);
-icmdPtr getIcmdNode(icmdPtr ptr,const char *name);
+macroPtr getMacroNode(macroPtr ptr, const char *name);
+unitPtr getUnitNode(unitPtr ptr, const char *name);
+commandPtr getCommandNode(commandPtr ptr, const char *name);
+allowPtr getAllowNode(allowPtr ptr, in_addr_t testIP);
+enumPtr getEnumNode(enumPtr prt, char *search, int len);
+icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
 
 
 struct allow {
@@ -33,12 +33,12 @@ struct allow {
 } Allow;
 
 struct compile {
-        int token;
-        char *send;
-        int len;
-        unitPtr uPtr;
+    int token;
+    char *send;
+    int len;
+    unitPtr uPtr;
     char *errStr;
-        compilePtr next;
+    compilePtr next;
 } Compile;
 
 
