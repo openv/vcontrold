@@ -17,7 +17,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-/* Deklarationen */
 int initLog(int useSyslog, char *logfile, int debugSwitch);
 void logIT (int class, char *string, ...);
 char hex2chr(char *hex);
@@ -31,6 +30,6 @@ ssize_t readn(int fd, void *vptr, size_t n);
 #define MAXBUF 4096
 #endif
 
-#define logIT1(class, string)    logIT(class, "%s", string)
+#define logIT1(class, string) logIT(class, "%s", string)
 
 #endif // COMMON_H
