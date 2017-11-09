@@ -1,6 +1,6 @@
 # :fire: vcontrold
 
-_vcontrold_ is software daemon written in C for communication with the "Optolink" interface of Viessmann Vito heating controllers.
+_vcontrold_ is a software daemon written in C for communication with the "Optolink" interface of Viessmann Vito heating controllers.
 
 For building and installation instructions see doc/INSTALL.md .
 
