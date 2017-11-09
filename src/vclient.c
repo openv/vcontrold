@@ -361,8 +361,6 @@ main(int argc, char *argv[])
             tPtr = tPtr->next;
         }
 
-
-
         if (!(filePtr = fopen(tmplfile, "r"))) {
             logIT(LOG_ERR, "Kann Template-Datei %s nicht oeffnen", tmplfile);
             exit(1);

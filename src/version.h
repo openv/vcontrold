@@ -14,5 +14,3 @@
 #endif /* GIT_CODE_VERSION */
 
 #endif /* VERSION */
-
-

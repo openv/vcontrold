@@ -31,17 +31,12 @@ void removeAllowList(allowPtr ptr);
 void removeEnumList(enumPtr ptr);
 void freeAllLists();
 
-
-
-
 /* globale Variablen */
 protocolPtr protoPtr = NULL;
 unitPtr uPtr = NULL;
 devicePtr devPtr = NULL;
 configPtr cfgPtr = NULL;
 commandPtr cmdPtr = NULL;
-
-
 
 protocolPtr newProtocolNode(protocolPtr ptr)
 {
@@ -82,8 +77,6 @@ void removeProtocolList(protocolPtr ptr)
         free(ptr);
     }
 }
-
-
 
 unitPtr newUnitNode(unitPtr ptr)
 {
@@ -273,8 +266,6 @@ void removeDeviceList(devicePtr ptr)
     }
 }
 
-
-
 icmdPtr newIcmdNode(icmdPtr ptr)
 {
     icmdPtr nptr;
@@ -301,7 +292,6 @@ icmdPtr getIcmdNode(icmdPtr ptr, const char *name)
     return (ptr);
 }
 
-
 void removeIcmdList(icmdPtr ptr)
 {
     if (ptr && ptr->next)
@@ -312,7 +302,6 @@ void removeIcmdList(icmdPtr ptr)
         free(ptr);
     }
 }
-
 
 allowPtr getAllowNode(allowPtr ptr, const in_addr_t testIP)
 {
@@ -349,8 +338,6 @@ void removeAllowList(allowPtr ptr)
     }
 }
 
-
-
 enumPtr newEnumNode(enumPtr ptr)
 {
     enumPtr nptr;
@@ -366,7 +353,6 @@ enumPtr newEnumNode(enumPtr ptr)
     { ptr->next = nptr; }
     return (nptr);
 }
-
 
 enumPtr getEnumNode(enumPtr ptr, char *search, int len)
 {
@@ -395,8 +381,6 @@ void removeEnumList(enumPtr ptr)
         free(ptr);
     }
 }
-
-
 
 void printNode(xmlNodePtr ptr)
 {
@@ -1155,7 +1139,6 @@ protocolPtr parseProtocol(xmlNodePtr cur)
 
 }
 
-
 void removeComments(xmlNodePtr node)
 {
     while (node) {
@@ -1189,8 +1172,6 @@ int parseXMLFile(char *filename)
     devicePtr TdevPtr = NULL;
     commandPtr TcmdPtr = NULL;
     configPtr TcfgPtr = NULL;
-
-
 
     xmlKeepBlanksDefault(0);
     doc = xmlParseFile(filename);
@@ -1336,9 +1317,7 @@ int parseXMLFile(char *filename)
     xmlFreeDoc(doc);
     return (1);
 
-
 }
-
 
 void freeAllLists()
 {
@@ -1359,4 +1338,3 @@ void freeAllLists()
         cfgPtr = NULL;
     }
 }
-

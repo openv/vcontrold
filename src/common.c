@@ -18,9 +18,6 @@
 #include"common.h"
 /* #include"parser.h" */
 
-
-
-
 /* globale Variablen */
 int syslogger = 0;
 int debug = 0;
@@ -135,7 +132,6 @@ void setDebugFD(int fd)
 {
     dbgFD = fd;
 }
-
 
 char hex2chr(char *hex)
 {

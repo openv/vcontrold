@@ -3,7 +3,6 @@
 
 #include <arpa/inet.h>
 
-
 typedef struct config *configPtr;
 typedef struct protocol *protocolPtr;
 typedef struct unit *unitPtr;
@@ -15,7 +14,6 @@ typedef struct icmd *icmdPtr;
 typedef struct allow *allowPtr;
 typedef struct enumerate *enumPtr;
 
-
 int parseXMLFile(char *filename);
 macroPtr getMacroNode(macroPtr ptr, const char *name);
 unitPtr getUnitNode(unitPtr ptr, const char *name);
@@ -23,7 +21,6 @@ commandPtr getCommandNode(commandPtr ptr, const char *name);
 allowPtr getAllowNode(allowPtr ptr, in_addr_t testIP);
 enumPtr getEnumNode(enumPtr prt, char *search, int len);
 icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
-
 
 struct allow {
     char *text;
@@ -40,8 +37,6 @@ struct compile {
     char *errStr;
     compilePtr next;
 } Compile;
-
-
 
 struct config {
     char *tty;
@@ -121,6 +116,3 @@ struct enumerate {
     char *text;
     enumPtr next;
 } Enumerate;
-
-
-

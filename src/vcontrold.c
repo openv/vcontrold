@@ -22,7 +22,6 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
-
 #include"io.h"
 #include "common.h"
 #include "xmlconfig.h"
@@ -54,8 +53,6 @@ extern unitPtr uPtr;
 extern devicePtr devPtr;
 extern configPtr cfgPtr;
 
-
-
 /* Deklarationen */
 
 int readCmdFile(char *filename, char *result, int *resultLen, char *device );
@@ -66,9 +63,6 @@ static void sigPipeHandler(int signo);
 static void sigHupHandler(int signo);
 short checkIP(char *ip);
 int reloadConfig();
-
-
-
 
 void usage()
 {
@@ -99,7 +93,6 @@ int reloadConfig()
         return (0);
     }
 }
-
 
 int readCmdFile(char *filename, char *result, int *resultLen, char *device )
 {
@@ -277,7 +270,6 @@ int interactive(int socketfd, char *device )
     Writen(socketfd, prompt, strlen(prompt));
     bzero(readBuf, sizeof(readBuf));
 
-
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
 
         sendErrMsg(socketfd);
@@ -380,7 +372,6 @@ int interactive(int socketfd, char *device )
             bzero(sendBuf, sizeof(sendBuf));
             bzero(pRecvBuf, sizeof(pRecvBuf));
 
-
             /* Falls Unit Off wandeln wir die uebergebenen Parameter in Hex */
             /* oder keine Unit definiert ist */
             bzero(sendBuf, sizeof(sendBuf));
@@ -407,7 +398,6 @@ int interactive(int socketfd, char *device )
             }
             if (iniFD)
             { fprintf(iniFD, ";%s\n", readBuf); }
-
 
             /* das Device wird erst geoeffnet, wenn wir was zu tun haben */
             /* aber nur, falls es nicht schon offen ist */
@@ -461,7 +451,6 @@ int interactive(int socketfd, char *device )
                     char2hex(buffer, pRecvBuf, pcPtr->len);
                     logIT(LOG_INFO, "Ergebnis Pre-Kommand: %s", buffer);
                 }
-
 
             }
 
@@ -757,7 +746,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-
     /* es wurden die beiden globalen Variablen cfgPtr und protoPtr gefuellt */
     if (cfgPtr) {
         if (!tcpport)
@@ -900,7 +888,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
-
-

@@ -63,7 +63,6 @@ int openDevice(char *device)
     return (fd);
 }
 
-
 int opentty(char *device)
 {
     int fd;

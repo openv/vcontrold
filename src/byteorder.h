@@ -42,7 +42,6 @@
             (u_int64_t)(((u_int64_t)(x) & (u_int64_t)0x00ff000000000000ULL) >> 40) | \
             (u_int64_t)(((u_int64_t)(x) & (u_int64_t)0xff00000000000000ULL) >> 56) ))
 
-
 /*
  * Linux
  */
@@ -193,7 +192,6 @@ typedef uint8_t  u_int8_t;
 #define __cpu_to_be32(x) = OSSwapHostToBigInt32(x)
 #endif
 
-
 // FreeBSD
 #ifdef __FreeBSD__
 #include <machine/endian.h>
@@ -229,11 +227,9 @@ typedef uint8_t  u_int8_t;
 #endif
 #endif
 
-
 // Mac: Check http://www.opensource.apple.com/source/CF/CF-476.18/CFByteOrder.h
 //      http://developer.apple.com/DOCUMENTATION/CoreFoundation/Reference/CFByteOrderUtils/Reference/reference.html
 // Write to apple to ask what should be used.
-
 
 // Common defines
 #define cpu_to_le64 __cpu_to_le64
@@ -248,7 +244,6 @@ typedef uint8_t  u_int8_t;
 #define be32_to_cpu __be32_to_cpu
 #define cpu_to_be16 __cpu_to_be16
 #define be16_to_cpu __be16_to_cpu
-
 
 #if (BYTE_ORDER == LITTLE_ENDIAN || __BYTE_ORDER == LITTLE_ENDIAN || __BYTE_ORDER == __LITTLE_ENDIAN)
 
@@ -310,7 +305,6 @@ typedef uint8_t  u_int8_t;
 
 #endif
 
-
 #ifndef le16toh
 #define le16toh le16_to_cpu
 #endif
@@ -323,7 +317,6 @@ typedef uint8_t  u_int8_t;
 #ifndef be32toh
 #define be32toh be32_to_cpu
 #endif
-
 
 #ifndef htons
 #define htons be16_to_cpu

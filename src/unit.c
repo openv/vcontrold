@@ -203,9 +203,6 @@ int setSysTime(char *input, char *sendBuf, short bufsize)
     }
 }
 
-
-
-
 int getErrState(enumPtr ePtr, char *recv, int len, char *result)
 {
     int i;
@@ -213,7 +210,6 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
     char systime[35];
     char string[300];
     char *ptr;
-
 
     if (len % 9) {
         sprintf(result, "Anzahl Bytes nicht mod 9");
@@ -239,7 +235,6 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
     result[strlen(result) - 1] = '\0'; /* \n verdampfen */
     return (1);
 }
-
 
 short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
 {
@@ -282,7 +277,6 @@ short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
     return (*len);
 }
 
-
 int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bitpos, char *pRecvPtr)
 {
     char string[256];
@@ -307,7 +301,6 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     int32_t tmpI;
     uint32_t tmpUI;
     uint32_t uintV;
-
 
     bzero(errPtr, sizeof(error));
 
@@ -338,14 +331,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         }
     }
 
-
-
-
-
-
-
     /* hier kommen die ganzen numerischen Typen */
-
 
     if (strstr(uPtr->type, "char") == uPtr->type) { /* Umrechnung in Char 1Byte */
         memcpy(&charV, recvBuf, 1);
@@ -383,7 +369,6 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         logIT(LOG_ERR, "Unbekannter Typ %s in Unit %s", uPtr->type, uPtr->name);
         return (-1);
     }
-
 
     /* etwas logging */
     int n;
@@ -429,12 +414,10 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
             return (1);
         }
 
-
         /* hier noch das durchsuchen der enums ggf durchfuehren */
     }
     return (1);
 }
-
 
 int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *pRecvPtr)
 {
@@ -462,7 +445,6 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     uint32_t tmpUI;
     uint32_t uintV;
 
-
     bzero(errPtr, sizeof(error));
     /* etwas logging */
     int n = 0;
@@ -473,7 +455,6 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     /* wir kopieren uns den sendBuf, da dieser auch als return genutzt wird */
     strncpy(input, sendBuf, sizeof(input));
     bzero(sendBuf, sizeof(sendBuf));
-
 
     if (strstr(uPtr->type, "cycletime") == uPtr->type) { /* Schaltzeit */
         if (! *input)
@@ -597,5 +578,3 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     }
     return (0);    /* Wenn ich das richtig verstehe, sollten wir hier nie landen FN, deshalb; keep compiler happy */
 }
-
-

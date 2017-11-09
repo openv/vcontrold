@@ -9,7 +9,6 @@
 
 #define ALLOCSIZE 256
 
-
 typedef struct txRx *trPtr;
 
 ssize_t recvSync(int fd, char *wait, char **recv);
@@ -19,7 +18,6 @@ size_t sendServer(int fd, char *s_buf, size_t len);
 trPtr sendCmdFile(int sockfd, const char *tmpfile);
 trPtr sendCmds(int sockfd, char *commands);
 
-
 struct txRx {
     char *cmd;
     float result;
@@ -28,4 +26,3 @@ struct txRx {
     time_t timestamp;
     trPtr next;
 } TxRx;
-

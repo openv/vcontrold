@@ -18,4 +18,3 @@ void compileCommand(devicePtr dPtr, unitPtr uPtr);
 #ifndef MAXBUF
 #define MAXBUF 4096
 #endif
-

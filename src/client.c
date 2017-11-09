@@ -23,7 +23,6 @@ static jmp_buf  env_alrm;
 /* Deklarationen */
 int sendTrList(int sockfd, trPtr ptr);
 
-
 trPtr newTrNode(trPtr ptr)
 {
 
@@ -40,7 +39,6 @@ trPtr newTrNode(trPtr ptr)
     { ptr->next = nptr; }
     return (nptr);
 }
-
 
 ssize_t recvSync(int fd, char *wait, char **recv)
 {
@@ -232,4 +230,3 @@ static void sig_alrm(int signo)
 {
     longjmp(env_alrm, 1);
 }
-

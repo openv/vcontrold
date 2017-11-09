@@ -35,7 +35,6 @@
 #include "common.h"
 #include "vclient.h"
 
-
 const int LISTEN_QUEUE = 128;
 
 int openSocket(int tcpport)
@@ -117,7 +116,6 @@ int openSocket(int tcpport)
 
     return listenfd;
 }
-
 
 int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
 {
@@ -256,7 +254,6 @@ Writen(int fd, void *ptr, size_t nbytes)
     return (nbytes);
 }
 
-
 /* include readn */
 
 ssize_t                        /* Read "n" bytes from a descriptor. */
@@ -302,7 +299,6 @@ Readn(int fd, void *ptr, size_t nbytes)
     }
     return (n);
 }
-
 
 /* include readline */
 

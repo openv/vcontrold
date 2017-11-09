@@ -48,7 +48,6 @@
 #define SHL 404
 #define SHR 405
 
-
 int nextToken(char **str, char **c, int *count);
 void  pushBack(char **str, int n);
 float execExpression(char **str, unsigned char *bPtr, float floatV, char *err);
@@ -57,7 +56,6 @@ float execFactor(char **str, unsigned  char *bPtr, float floatV, char *err);
 int execIExpression(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
-
 
 float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
 {
@@ -115,7 +113,6 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     /* printf(" Exp=%f\n",term1); */
     return (term1);
 }
-
 
 float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
 {
@@ -233,7 +230,6 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
     }
 }
 
-
 int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
 {
     /* printf("execExpression: %s\n",*str); */
@@ -304,7 +300,6 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     }
     return (term1);
 }
-
 
 int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
@@ -474,7 +469,6 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
 
     }
 }
-
 
 int nextToken(char **str, char **c, int *count)
 {

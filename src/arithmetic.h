@@ -4,4 +4,3 @@
 
 float execExpression(char **str, char *bPtr, float floatV, char *err);
 int execIExpression(char **str, char *bPtr, char bitpos, char *pPtr, char *err);
-

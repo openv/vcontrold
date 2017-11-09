@@ -85,7 +85,6 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
 #define TMPFILENAME "/tmp/vcontrol.lockXXXXXX"
 #endif
 
-
 char tmpfilename[MAXPATHLEN + 1];  /* account for the leading '\0' */
 int semid;
 

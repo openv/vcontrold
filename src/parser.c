@@ -21,10 +21,8 @@
 #include "io.h"
 #include "framer.h"
 
-
 /* externe Variablen */
 extern FILE *iniFD; /* fuer das Anlegen des Sim. INI Files */
-
 
 void *getUnit(char *str)
 {
@@ -32,8 +30,6 @@ void *getUnit(char *str)
     /* und geben einen Zeiger auf die Struktur zurueck */
     return (NULL);
 }
-
-
 
 int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
 {
@@ -106,8 +102,6 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
 
             }
         }
-
-
 
     }
     return (token);
@@ -387,7 +381,6 @@ void removeCompileList(compilePtr ptr)
     }
 }
 
-
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
 
@@ -397,11 +390,9 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     if (cPtr->next)
     { expand(cPtr->next, pPtr); }
 
-
     /* falls keine Adresse gesetzt ist machen wir nichts */
     if (!cPtr->addr)
     { return (0); }
-
 
     char eString[2000];
     char *ePtr = eString;;
@@ -546,7 +537,6 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 
     cmpStartPtr = NULL;
 
-
     char *sendPtr, *sendStartPtr;
     sendPtr = cPtr->send;
     sendStartPtr = cPtr->send;
@@ -598,4 +588,3 @@ void compileCommand(devicePtr dPtr, unitPtr uPtr)
     expand(dPtr->cmdPtr, dPtr->protoPtr);
     buildByteCode(dPtr->cmdPtr, uPtr);
 }
-

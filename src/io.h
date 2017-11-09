@@ -11,7 +11,6 @@ int opentty(char *device);
 int openDevice(char *device);
 void closeDevice(int fd);
 
-
 /* Schnittstellenparameter */
 
 #define TTY    "/dev/usb/tts/0"
@@ -20,5 +19,3 @@ void closeDevice(int fd);
 #define MAXBUF 4096
 #endif
 #define TIMEOUT 5
-
-
