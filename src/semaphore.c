@@ -31,7 +31,7 @@
 #define MAX_RETRIES 10
 
 #if !defined(__APPLE__)
-/* on my mac this is a redefinition */
+// on my mac this is a redefinition
 union semun {
     int val;
     struct semid_ds *buf;
@@ -43,8 +43,9 @@ union semun {
 ** initsem() -- more-than-inspired by W. Richard Stevens' UNIX Network
 ** Programming 2nd edition, volume 2, lockvsem.c, page 295.
 */
-int initsem(key_t key, int nsems)  /* key from ftok() */
+int initsem(key_t key, int nsems)
 {
+    //key from ftok()
     int i;
     union semun arg;
     struct semid_ds buf;
@@ -53,28 +54,32 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
 
     semid = semget(key, nsems, IPC_CREAT | IPC_EXCL | 0666);
 
-    if (semid >= 0) { /* we got it first */
+    if (semid >= 0) { // we got it first
         sb.sem_op = 1;
         sb.sem_flg = 0;
         arg.val = 1;
 
         for (sb.sem_num = 0; sb.sem_num < nsems; sb.sem_num++) {
-            /* do a semop() to "free" the semaphores. */
-            /* this sets the sem_otime field, as needed below. */
+            // do a semop() to "free" the semaphores.
+            // this sets the sem_otime field, as needed below.
             if (semop(semid, &sb, 1) == -1) {
                 int e = errno;
-                semctl(semid, 0, IPC_RMID); /* clean up */
+                semctl(semid, 0, IPC_RMID); // clean up
                 errno = e;
-                return -1; /* error, check errno */
+                return -1; // error, check errno
             }
         }
-    } else if (errno == EEXIST) { /* someone else got it first */
+    } else if (errno == EEXIST) {
+        // someone else got it first
         int ready = 0;
 
-        semid = semget(key, nsems, 0); /* get the id */
-        if (semid < 0) { return semid; } /* error, check errno */
+        semid = semget(key, nsems, 0); // get the id
+        if (semid < 0) {
+            return semid;
+            // error, check errno
+        }
 
-        /* wait for other process to initialize the semaphore: */
+        // wait for other process to initialize the semaphore:
         arg.buf = &buf;
         for (i = 0; i < MAX_RETRIES && !ready; i++) {
             semctl(semid, nsems - 1, IPC_STAT, arg);
@@ -84,13 +89,15 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
                 sleep(1);
             }
         }
-        if (!ready) {
+        if (! ready) {
             errno = ETIME;
             return -1;
         }
     } else {
-        return semid; /* error, check errno */
+        return semid;
+        // error, check errno
     }
+
     return semid;
 }
 
@@ -100,7 +107,7 @@ int initsem(key_t key, int nsems)  /* key from ftok() */
 #define TMPFILENAME "/tmp/vcontrol.lockXXXXXX"
 #endif
 
-char tmpfilename[MAXPATHLEN + 1];  /* account for the leading '\0' */
+char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 int semid;
 
 int vcontrol_seminit()
@@ -118,7 +125,7 @@ int vcontrol_seminit()
     close(tmpfile);
 
     sb.sem_num = 0;
-    sb.sem_op = -1;  /* set to allocate resource */
+    sb.sem_op = -1; // set to allocate resource
     sb.sem_flg = SEM_UNDO;
 
     if ((key = ftok(tmpfilename, 'V')) == -1) {
@@ -126,7 +133,7 @@ int vcontrol_seminit()
         exit(1);
     }
 
-    /* grab the semaphore set created by seminit.c: */
+    // grab the semaphore set created by seminit.c:
     if ((semid = initsem(key, 1)) == -1) {
         perror("initsem");
         exit(1);
@@ -136,13 +143,13 @@ int vcontrol_seminit()
 
 int vcontrol_semfree()
 {
-    /* remove it: */
+    // remove it:
     if (semctl(semid, 0, IPC_RMID) == -1) {
         perror("semctl");
         exit(1);
     }
     unlink(tmpfilename);
-    return 1;                    // what should we return?
+    return 1; // what should we return?
 }
 
 int vcontrol_semget()
@@ -152,7 +159,7 @@ int vcontrol_semget()
     struct sembuf sb;
 
     sb.sem_num = 0;
-    sb.sem_op = -1;  /* set to allocate resource */
+    sb.sem_op = -1; // set to allocate resource
     sb.sem_flg = SEM_UNDO;
     if (semop(semid, &sb, 1) == -1) {
         perror("semop");
@@ -169,11 +176,12 @@ int vcontrol_semrelease()
     logIT(LOG_INFO, "Process %d released lock", getpid());
 
     sb.sem_num = 0;
-    sb.sem_op = 1; /* free resource */
+    sb.sem_op = 1; // free resource
     sb.sem_flg = SEM_UNDO;
     if (semop(semid, &sb, 1) == -1) {
         perror("semop");
         exit(1);
     }
+
     return 1;
-};
+}
