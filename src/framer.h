@@ -32,7 +32,7 @@
 #define FRAMER_H
 
 #define FRAMER_ERROR    0
-#define FRAMER_SUCCESS    1
+#define FRAMER_SUCCESS  1
 
 int framer_send(int fd, char *s_buf, int len);
 int framer_waitfor(int fd, char *w_buf, int w_len);

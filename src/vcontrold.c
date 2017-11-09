@@ -70,7 +70,6 @@ extern devicePtr devPtr;
 extern configPtr cfgPtr;
 
 /* Deklarationen */
-
 int readCmdFile(char *filename, char *result, int *resultLen, char *device );
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
@@ -91,10 +90,10 @@ short checkIP(char *ip)
     allowPtr aPtr;
     if ((aPtr = getAllowNode(cfgPtr->aPtr, inet_addr(ip)))) {
         logIT(LOG_INFO, "%s in allowList (%s)", ip, aPtr->text);
-        return (1);
+        return 1;
     } else {
         logIT(LOG_INFO, "%s nicht in allowList", ip);
-        return (0);
+        return 0;
     }
 }
 
@@ -103,10 +102,10 @@ int reloadConfig()
     if (parseXMLFile(xmlfile)) {
         compileCommand(devPtr, uPtr);
         logIT(LOG_NOTICE, "XMLFile %s neu geladen", xmlfile);
-        return (1);
+        return 1;
     } else {
         logIT(LOG_ERR, "Laden von XMLFile %s gescheitert", xmlfile);
-        return (0);
+        return 0;
     }
 }
 
@@ -130,7 +129,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
         logIT(LOG_ERR, "Fehler beim oeffnen %s", device);
         result = "\0";
         *resultLen = 0;
-        return (0);
+        return 0;
     }
 
     cmdPtr = fopen(filename, "r");
@@ -140,7 +139,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
         *resultLen = 0;
         framer_closeDevice(fd);
         vcontrol_semrelease(); // todo semjfi
-        return (0);
+        return 0;
     }
     logIT(LOG_INFO, "Lese Cmd File %s", filename);
     /* Queue leeren */
@@ -180,8 +179,9 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
     framer_closeDevice(fd);
     vcontrol_semrelease(); // todo semjfi
     fclose(cmdPtr);
-    return (1);
+    return 1;
 }
+
 void printHelp(int socketfd)
 {
     char string[] = " \
@@ -220,13 +220,13 @@ int rawModus(int socketfd, char *device)
         /* noch ein Versuch */
         if (!mkstemp(tmpfile)) {
             logIT1(LOG_ERR, "Fehler Erzeugung mkstemp");
-            return (0);
+            return 0;
         }
     }
     filePtr = fopen(tmpfile, "w+");
     if (!filePtr) {
         logIT(LOG_ERR, "Kann Tmp File %s nicht anlegen", tmpfile);
-        return (0);
+        return 0;
     }
     logIT(LOG_INFO, "Raw Modus: Temp Datei: %s", tmpfile);
     while (Readline(socketfd, readBuf, sizeof(readBuf))) {
@@ -243,7 +243,7 @@ int rawModus(int socketfd, char *device)
                 Writen(socketfd, string, strlen(string));
             }
             remove(tmpfile);
-            return (1);
+            return 1;
         }
         logIT(LOG_INFO, "Raw: Gelesen: %s", readBuf);
         /*
@@ -255,14 +255,12 @@ int rawModus(int socketfd, char *device)
         } else {
             /* debug stuff */
         }
-
     }
     return 0;            // is this correct?
 }
 
 int interactive(int socketfd, char *device )
 {
-
     char readBuf[1000];
     char *readPtr;
     char prompt[] = PROMPT;
@@ -287,13 +285,13 @@ int interactive(int socketfd, char *device )
     bzero(readBuf, sizeof(readBuf));
 
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
-
         sendErrMsg(socketfd);
         /* Steuerzeichen verdampfen */
         /*readPtr=readBuf+strlen(readBuf); **/
         readPtr = readBuf + rcount;
-        while (iscntrl(*readPtr))
-        { *readPtr-- = '\0'; }
+        while (iscntrl(*readPtr)) {
+            *readPtr-- = '\0';
+        }
         logIT(LOG_INFO, "Befehl: %s", readBuf);
 
         /* wir trennen Kommando und evtl. Optionen am ersten Blank */
@@ -302,8 +300,9 @@ int interactive(int socketfd, char *device )
         if ((ptr = strchr(readBuf, ' '))) {
             strncpy(cmd, readBuf, ptr - readBuf);
             strcpy(para, ptr + 1);
-        } else
-        { strcpy(cmd, readBuf); }
+        } else {
+            strcpy(cmd, readBuf);
+        }
 
         /* hier werden die einzelnen Befehle geparst */
         if (strstr(readBuf, "help") == readBuf) {
@@ -312,7 +311,7 @@ int interactive(int socketfd, char *device )
             Writen(socketfd, bye, strlen(bye));
             framer_closeDevice(fd);
             vcontrol_semrelease(); // todo semjfi
-            return (1);
+            return 1;
         } else if (strstr(readBuf, "debug on") == readBuf) {
             setDebugFD(socketfd);
         } else if (strstr(readBuf, "debug off") == readBuf) {
@@ -335,7 +334,6 @@ int interactive(int socketfd, char *device )
                 snprintf(string, sizeof(string), "Laden von XMLFile %s gescheitert, nutze alte Konfig\n", xmlfile);
                 Writen(socketfd, string, strlen(string));
             }
-
         } else if (strstr(readBuf, "raw") == readBuf) {
             rawModus(socketfd, device);
         } else if (strstr(readBuf, "close") == readBuf) {
@@ -344,17 +342,16 @@ int interactive(int socketfd, char *device )
             snprintf(string, sizeof(string), "%s geschlossen\n", device);
             Writen(socketfd, string, strlen(string));
             fd = -1;
-        }
-        /*         else if(strstr(readBuf,"open")==readBuf) {
-                    if ((fd<0) && (fd=openDevice(device))== -1) {
-                        snprintf(string, sizeof(string),"Fehler beim oeffnen %s",device);
-                        logIT(LOG_ERR,string);
-                    }
-                    snprintf(string, sizeof(string),"%s geoeffnet\n",device);
-                    Writen(socketfd,string,strlen(string));
-                }
+        /*
+        } else if(strstr(readBuf,"open") == readBuf) {
+            if ((fd < 0) && (fd = openDevice(device)) == -1) {
+                snprintf(string, sizeof(string), "Fehler beim oeffnen %s", device);
+                logIT(LOG_ERR, string);
+            }
+            snprintf(string, sizeof(string), "%s geoeffnet\n", device);
+            Writen(socketfd, string, strlen(string));
         */
-        else if (strstr(readBuf, "commands") == readBuf) {
+        } else if (strstr(readBuf, "commands") == readBuf) {
             cPtr = cfgPtr->devPtr->cmdPtr;
             while (cPtr) {
                 if (cPtr->addr) {
@@ -364,7 +361,6 @@ int interactive(int socketfd, char *device )
                 }
                 cPtr = cPtr->next;
             }
-
         } else if (strstr(readBuf, "protocol") == readBuf) {
             bzero(string, sizeof(string));
             snprintf(string, sizeof(string), "%s\n", cfgPtr->devPtr->protoPtr->name);
@@ -399,7 +395,7 @@ int interactive(int socketfd, char *device )
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
                         vcontrol_semrelease(); // todo semjfi
-                        return (0);
+                        return 0;
                     }
                     continue;
                 }
@@ -412,12 +408,12 @@ int interactive(int socketfd, char *device )
                 strcpy(sendBuf, para);
                 sendLen = strlen(sendBuf);
             }
-            if (iniFD)
-            { fprintf(iniFD, ";%s\n", readBuf); }
+            if (iniFD) {
+                fprintf(iniFD, ";%s\n", readBuf);
+            }
 
             /* das Device wird erst geoeffnet, wenn wir was zu tun haben */
             /* aber nur, falls es nicht schon offen ist */
-
             if (fd < 0) {
                 /* As one vclient call opens the link once, all is seen a transaction
                  * This may cause trouble for telnet sessions, as the whole session is
@@ -426,18 +422,19 @@ int interactive(int socketfd, char *device )
                  */
                 vcontrol_semget(); // everything on link is a transaction - all commands //todo semjfi
 
-                if ((fd = framer_openDevice(device,    cfgPtr->devPtr->protoPtr->id)) == -1) {
+                if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                     logIT(LOG_ERR, "Fehler beim oeffnen %s", device);
                     sendErrMsg(socketfd);
                     if (!Writen(socketfd, prompt, strlen(prompt))) {
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
                         vcontrol_semrelease();  //todo semjfi
-                        return (0);
+                        return 0;
                     }
                     continue;
                 }
             }
+
 #if 1 == 2 // todo semjfi
             if ((fd < 0) && (fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                 logIT(LOG_ERR, "Fehler beim oeffnen %s", device);
@@ -445,11 +442,10 @@ int interactive(int socketfd, char *device )
                 if (!Writen(socketfd, prompt, strlen(prompt))) {
                     sendErrMsg(socketfd);
                     framer_closeDevice(fd);
-                    return (0);
+                    return 0;
                 }
                 continue;
             }
-
             vcontrol_semget();
 #endif
 
@@ -467,14 +463,12 @@ int interactive(int socketfd, char *device )
                     char2hex(buffer, pRecvBuf, pcPtr->len);
                     logIT(LOG_INFO, "Ergebnis Pre-Kommand: %s", buffer);
                 }
-
             }
 
             /* wir fuehren den Bytecode aus,
-                   -1 -> Fehler
+               -1 -> Fehler
                 0 -> Formaterierter String
                 n -> Bytes in Rohform */
-
             count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf), sendBuf, sendLen, noUnit, cPtr->bit, cPtr->retry, pRecvBuf, cPtr->recvTimeout);
             // todo semjfi vcontrol_semrelease();
 
@@ -482,7 +476,6 @@ int interactive(int socketfd, char *device )
                 logIT(LOG_ERR, "Fehler beim ausfuehren von %s", readBuf);
                 sendErrMsg(socketfd);
             } else if (*recvBuf && (count == 0)) { /* Unit gewandelt */
-
                 logIT1(LOG_INFO, recvBuf);
                 snprintf(string, sizeof(string), "%s\n", recvBuf);
                 Writen(socketfd, string, strlen(string));
@@ -497,8 +490,9 @@ int interactive(int socketfd, char *device )
                     unsigned char byte = *ptr++ & 255;
                     snprintf(string, sizeof(string), "%02X ", byte);
                     strcat(buffer, string);
-                    if (n >= MAXBUF - 3)
-                    { break; }
+                    if (n >= MAXBUF - 3) {
+                        break;
+                    }
                 }
                 if (count) {
                     snprintf(string, sizeof(string), "%s\n", buffer);
@@ -506,12 +500,14 @@ int interactive(int socketfd, char *device )
                     logIT(LOG_INFO, "Empfangen: %s", buffer);
                 }
             }
-            if (iniFD)
-            { fflush(iniFD); }
+            if (iniFD) {
+                fflush(iniFD);
+            }
         } else if (strstr(readBuf, "detail") == readBuf) {
             readPtr = readBuf + strlen("detail");
-            while (isspace(*readPtr))
-            { readPtr++; }
+            while (isspace(*readPtr)) {
+                readPtr++;
+            }
             /* Ist das Kommando in der XML definiert ? */
             if (readPtr && (cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
                 bzero(string, sizeof(string));
@@ -553,14 +549,16 @@ int interactive(int socketfd, char *device )
                         char *gcalc;
                         char *scalc;
                         /* wir unterscheiden die Rechnerei nach get und setaddr */
-                        if (cmpPtr->uPtr->gCalc && *cmpPtr->uPtr->gCalc)
-                        { gcalc = cmpPtr->uPtr->gCalc; }
-                        else
-                        { gcalc = cmpPtr->uPtr->gICalc; }
-                        if (cmpPtr->uPtr->sCalc && *cmpPtr->uPtr->sCalc)
-                        { scalc = cmpPtr->uPtr->sCalc; }
-                        else
-                        { scalc = cmpPtr->uPtr->sICalc; }
+                        if (cmpPtr->uPtr->gCalc && *cmpPtr->uPtr->gCalc) {
+                            gcalc = cmpPtr->uPtr->gCalc;
+                        } else {
+                            gcalc = cmpPtr->uPtr->gICalc;
+                        }
+                        if (cmpPtr->uPtr->sCalc && *cmpPtr->uPtr->sCalc) {
+                            scalc = cmpPtr->uPtr->sCalc;
+                        } else {
+                            scalc = cmpPtr->uPtr->sICalc;
+                        }
 
                         snprintf(string, sizeof(string), "\tUnit: %s (%s)\n\t  Type: %s\n\t  Get-Calc: %s\n\t  Set-Calc: %s\n\t Einheit: %s\n",
                                  cmpPtr->uPtr->name, cmpPtr->uPtr->abbrev,
@@ -577,10 +575,11 @@ int interactive(int socketfd, char *device )
                             char dummy[20];
                             while (ePtr) {
                                 bzero(dummy, sizeof(dummy));
-                                if (!ePtr->bytes)
-                                { strcpy(dummy, "<default>"); }
-                                else
-                                { char2hex(dummy, ePtr->bytes, ePtr->len); }
+                                if (!ePtr->bytes) {
+                                    strcpy(dummy, "<default>");
+                                } else {
+                                    char2hex(dummy, ePtr->bytes, ePtr->len);
+                                }
                                 snprintf(string, sizeof(string), "\t  Enum Bytes:%s Text:%s\n", dummy, ePtr->text);
                                 Writen(socketfd, string, strlen(string));
                                 ePtr = ePtr->next;
@@ -599,9 +598,8 @@ int interactive(int socketfd, char *device )
                 sendErrMsg(socketfd);
                 framer_closeDevice(fd);
                 vcontrol_semrelease(); // todo semjfi
-                return (0);
+                return 0;
             }
-
         }
         bzero(string, sizeof(string));
         sendErrMsg(socketfd);
@@ -610,14 +608,14 @@ int interactive(int socketfd, char *device )
             sendErrMsg(socketfd);
             framer_closeDevice(fd);
             vcontrol_semrelease(); // todo semjfi
-            return (0);
+            return 0;
         }
         bzero(readBuf, sizeof(readBuf));
     }
     sendErrMsg(socketfd);
     framer_closeDevice(fd);
     vcontrol_semrelease(); // todo semjfi
-    return (0);
+    return 0;
 }
 
 static void sigPipeHandler(int signo)
@@ -639,10 +637,8 @@ static void sigTermHandler (int signo)
 }
 
 /* hier gehts los */
-
 int main(int argc, char *argv[])
 {
-
     /* Auswertung der Kommandozeilenschalter */
     char *device = NULL;
     char *cmdfile = NULL;
@@ -655,21 +651,20 @@ int main(int argc, char *argv[])
     int opt;
 
     while (1) {
-
         static struct option long_options[] = {
-            {"commandfile",    required_argument,    0, 'c'},
-            {"device",        required_argument,    0, 'd'},
-            {"debug",        no_argument,        &debug, 1},
+            {"commandfile", required_argument,  0, 'c'},
+            {"device",      required_argument,  0, 'd'},
+            {"debug",       no_argument,        &debug, 1},
             {"vsim",        no_argument,        &simuOut, 1},
-            {"logfile",        required_argument,    0, 'l'},
+            {"logfile",     required_argument,  0, 'l'},
             {"nodaemon",    no_argument,        &makeDaemon, 0},
-            {"port",        required_argument,    0, 'p'},
-            {"syslog",        no_argument,        &useSyslog, 1},
-            {"xmlfile",        required_argument,    0, 'x'},
-            {"verbose",        no_argument,        &verbose, 1},
-            {"inet4",        no_argument,        &inetversion, 4},
-            {"inet6",        no_argument,        &inetversion, 6},
-            {"help",        no_argument,        0,    0},
+            {"port",        required_argument,  0, 'p'},
+            {"syslog",      no_argument,        &useSyslog, 1},
+            {"xmlfile",     required_argument,  0, 'x'},
+            {"verbose",     no_argument,        &verbose, 1},
+            {"inet4",       no_argument,        &inetversion, 4},
+            {"inet6",       no_argument,        &inetversion, 6},
+            {"help",        no_argument,        0, 0},
             {0, 0, 0, 0}
         };
         /* getopt_long stores the option index here. */
@@ -678,14 +673,16 @@ int main(int argc, char *argv[])
                            long_options, &option_index);
 
         /* Detect the end of the options. */
-        if (opt == -1)
-        { break; }
+        if (opt == -1) {
+            break;
+        }
 
         switch (opt) {
         case 0:
             /* If this option sets a flag, we do nothing for now */
-            if (long_options[option_index].flag != 0)
-            { break; }
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             if (verbose) {
                 printf("option %s", long_options[option_index].name);
                 if (optarg)
@@ -696,60 +693,47 @@ int main(int argc, char *argv[])
                 usage();
             }
             break;
-
         case '4':
             inetversion = 4;
             break;
         case '6':
             inetversion = 6;
             break;
-
         case 'c':
             cmdfile = optarg;
             break;
-
         case 'd':
             device = optarg;
             break;
-
         case 'g':
             debug = 1;
             break;
-
         case 'i':
             simuOut = 1;
             break;
-
         case 'l':
             logfile = optarg;
             break;
-
         case 'n':
             makeDaemon = 0;
             break;
-
         case 'p':
             tcpport = atoi(optarg);
             break;
-
         case 's':
             useSyslog = 1;
             break;
-
         case 'v':
             puts ("option -v\n");
             verbose = 1;
             break;
-
         case 'x':
             xmlfile = optarg;
             break;
-
         case '?':
             /* getopt_long already printed an error message. */
             usage();
             break;
-
         default:
             abort();
         }
@@ -764,20 +748,26 @@ int main(int argc, char *argv[])
 
     /* es wurden die beiden globalen Variablen cfgPtr und protoPtr gefuellt */
     if (cfgPtr) {
-        if (!tcpport)
-        { tcpport = cfgPtr->port; }
-        if (!device)
-        { device = cfgPtr->tty; }
-        if (!logfile)
-        { logfile = cfgPtr->logfile; }
-        if (!useSyslog)
-        { useSyslog = cfgPtr->syslog; }
-        if (!debug)
-        { debug = cfgPtr->debug; }
+        if (!tcpport) {
+            tcpport = cfgPtr->port;
+        }
+        if (!device) {
+            device = cfgPtr->tty;
+        }
+        if (!logfile) {
+            logfile = cfgPtr->logfile;
+        }
+        if (!useSyslog) {
+            useSyslog = cfgPtr->syslog;
+        }
+        if (!debug) {
+            debug = cfgPtr->debug;
+        }
     }
 
-    if (!initLog(useSyslog, logfile, debug))
-    { exit(1); }
+    if (!initLog(useSyslog, logfile, debug)) {
+        exit(1);
+    }
 
     if (signal(SIGHUP, sigHupHandler) == SIG_ERR) {
         logIT1(LOG_ERR, "Fehler beim Signalhandling SIGHUP");
@@ -788,6 +778,7 @@ int main(int argc, char *argv[])
         logIT(LOG_ERR, "Fehler beim Signalhandling SIGTERM: %s", strerror(errno));
         exit(1);
     }
+
     /* falls -i angegeben wurde, loggen wir die Befehle im Simulator INI Format */
     if (simuOut) {
         char file[100];
@@ -822,8 +813,9 @@ int main(int argc, char *argv[])
                 logIT(LOG_ERR, "fork fehlgeschlagen (%d)", pid);
                 exit(1);
             }
-            if (pid > 0)
-            { exit(0); } /* Vater wird beendet, Kind laueft weiter */
+            if (pid > 0) {
+                exit(0); /* Vater wird beendet, Kind laueft weiter */
+            }
 
             /* ab hier laueft nur noch das Kind */
 
@@ -847,7 +839,6 @@ int main(int argc, char *argv[])
                 logIT(LOG_ERR, "Could not open PID lock file %s, exiting", pidFile);
                 exit(1);
             }
-
             if (lockf(pidFD, F_TLOCK, 0) == -1) {
                 logIT(LOG_ERR, "Could not lock PID lock file %s, exiting", pidFile);
                 exit(1);
@@ -862,13 +853,14 @@ int main(int argc, char *argv[])
         int sockfd = -1;
         int listenfd = -1;
         /* Zeiger auf die Funktion checkIP */
-
         short (*checkP)(char *);
 
-        if (cfgPtr->aPtr)  /* wir haben eine allow Liste */
-        { checkP = checkIP; }
-        else
-        { checkP = NULL; }
+        if (cfgPtr->aPtr) {
+            /* wir haben eine allow Liste */
+            checkP = checkIP;
+        } else {
+            checkP = NULL;
+        }
 
         listenfd = openSocket(tcpport);
         while (1) {
@@ -890,11 +882,13 @@ int main(int argc, char *argv[])
                 logIT1(LOG_ERR, "Fehler bei Verbindungsaufbau");
             }
         }
-    } else
-    { vcontrol_seminit(); }
+    } else {
+        vcontrol_seminit();
+    }
 
-    if (*cmdfile)
-    { readCmdFile(cmdfile, result, &resultLen, device); }
+    if (*cmdfile) {
+        readCmdFile(cmdfile, result, &resultLen, device);
+    }
 
     vcontrol_semfree();
 

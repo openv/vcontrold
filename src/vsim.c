@@ -51,7 +51,6 @@ short checkIP(char *ip);
 
 void logIT (int class, char *string, ...)
 {
-
     va_list arguments;
     char *print_buffer;
 
@@ -77,7 +76,7 @@ static void dump(char *buf, int len, char *txt)
     printf("\n");
 }
 
-typedef struct  {
+typedef struct {
     int cmdlen;
     char cmd[20];
     int rsplen;
@@ -147,7 +146,6 @@ static void handle(int fd)
                     }
                 }
                 i++;
-
             }
         }
     }
