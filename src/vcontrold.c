@@ -40,8 +40,7 @@
 #define INIOUTFILE "/tmp/sim-%s.ini"
 #endif
 
-#define VERSION_DAEMON "0.98.2_IPv6"
-
+#include "version.h"
 
 /* Globale Variablen */
 char *xmlfile = XMLFILE;
@@ -379,7 +378,7 @@ int interactive(int socketfd,char *device ) {
 		}
 		else if(strstr(readBuf,"version")==readBuf) {
 			bzero(string,sizeof(string));
-			snprintf(string, sizeof(string),"Version: %s\n",VERSION_DAEMON);
+			snprintf(string, sizeof(string),"Version: %s\n",VERSION);
 			Writen(socketfd,string,strlen(string));
 		}
 		/* Ist das Kommando in der XML definiert ? */

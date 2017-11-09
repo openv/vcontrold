@@ -28,10 +28,7 @@
 #include "client.h"
 #include "vclient.h"
 
-
-#ifndef VERSION
-#define VERSION "0.98.2-IPv6(r73)"
-#endif
+#include "version.h"
 
 void usage() {
 	printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x <exec-Datei>] [-k] [-m] [-v]\n\
