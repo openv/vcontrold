@@ -10,11 +10,11 @@ make
 ```
 To install the package, execute
 ```
-make install
+sudo make install
 ```
 If you want to install the package with another prefix you can either use
 ```
-make DESTDIR=<PREFIX> install
+sudo make DESTDIR=<PREFIX> install
 ```
 or pass the desired prefix to the `cmake` command before via
 ```
