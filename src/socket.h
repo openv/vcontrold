@@ -14,6 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef SOCKET_H
+#define SOCKET_H
+
 #include<arpa/inet.h>
 
 int openSocket(int tcpport);
@@ -34,3 +37,5 @@ ssize_t Readline(int fd, void *ptr, size_t maxlen);
 #define MAXLINE 1000
 
 #define CONNECT_TIMEOUT 3
+
+#endif // SOCKET_H

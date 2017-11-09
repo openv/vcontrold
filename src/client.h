@@ -14,6 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef CLIENT_H
+#define CLIENT_H
+
 #define CL_TIMEOUT 25
 
 #ifndef MAXBUF
@@ -39,3 +42,5 @@ struct txRx {
     time_t timestamp;
     trPtr next;
 } TxRx;
+
+#endif // CLIENT_H

@@ -14,6 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef XMLCONFIG_H
+#define XMLCONFIG_H
+
 #include <arpa/inet.h>
 
 typedef struct config *configPtr;
@@ -129,3 +132,5 @@ struct enumerate {
     char *text;
     enumPtr next;
 } Enumerate;
+
+#endif // XMLCONFIG_H

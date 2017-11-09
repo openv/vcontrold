@@ -14,12 +14,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SEMAPHORE_H_
-#define _SEMAPHORE_H_
+#ifndef SEMAPHORE_H
+#define SEMAPHORE_H
 
 int vcontrol_seminit();
 int vcontrol_semfree();
 int vcontrol_semget();
 int vcontrol_semrelease();
 
-#endif
+#endif // SEMAPHORE_H

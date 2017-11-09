@@ -28,6 +28,9 @@
  * Main indentification of P300 Protocol is about leadin 0x41
  */
 
+#ifndef FRAMER_H
+#define FRAMER_H
+
 #define FRAMER_ERROR    0
 #define FRAMER_SUCCESS    1
 
@@ -40,3 +43,5 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime);
 int framer_openDevice(char *device, char pid);
 
 void framer_closeDevice(int fd);
+
+#endif // FRAMER_H

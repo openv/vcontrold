@@ -14,8 +14,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AIRCRACK_NG_BYTEORDER_H_
-#define _AIRCRACK_NG_BYTEORDER_H_
+#ifndef BYTEORDER_H
+#define BYTEORDER_H
 
 #define ___my_swab16(x) \
     ((u_int16_t)( \
@@ -327,4 +327,4 @@ typedef uint8_t  u_int8_t;
 #define ntohl cpu_to_be32
 #endif
 
-#endif
+#endif // BYTEORDER_H

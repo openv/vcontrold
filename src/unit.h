@@ -14,5 +14,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef UNIT_H
+#define UNIT_H
+
 int procGetUnit(unitPtr uPtr, char *recvBuf, int len, char *result, char bitpos, char *pRecvPtr);
 int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *pRecvPtr);
+
+#endif // UNIT_H

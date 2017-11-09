@@ -14,6 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef IO_H
+#define IO_H
+
 int my_send(int fd, char *s_buf, int len);
 int receive(int fd, char *r_buf, int r_len, unsigned long *etime);
 int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime);
@@ -30,3 +33,5 @@ void closeDevice(int fd);
 #define MAXBUF 4096
 #endif
 #define TIMEOUT 5
+
+#endif // IO_H

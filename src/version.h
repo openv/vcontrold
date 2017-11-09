@@ -14,7 +14,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef VERSION
+#ifndef VERSION_H
+#define VERSION_H
 
 /*
  * TODO: reliable versioning scheme
@@ -29,4 +30,4 @@
 #define VERSION "v0.99.3-legacy"
 #endif /* GIT_CODE_VERSION */
 
-#endif /* VERSION */
+#endif // VERSION_H

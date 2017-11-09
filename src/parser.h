@@ -14,6 +14,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef PARSER_H
+#define PARSER_H
+
 int parseLine(char *lineo, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen);
 int execCmd(char *cmd, int fd, char *result, int resultLen);
 void removeCompileList(compilePtr ptr);
@@ -31,3 +34,5 @@ void compileCommand(devicePtr dPtr, unitPtr uPtr);
 #ifndef MAXBUF
 #define MAXBUF 4096
 #endif
+
+#endif // PARSER_H

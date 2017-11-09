@@ -22,9 +22,9 @@
 //
 //
 
-#ifndef vcontrol_svn_vclient_h
-#define vcontrol_svn_vclient_h
+#ifndef VCLIENT_H
+#define VCLIENT_H
 
 extern int inetversion;
 
-#endif
+#endif // VCLIENT_H

@@ -14,8 +14,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _common_h
-#define _common_h
+#ifndef COMMON_H
+#define COMMON_H
 
 /* Deklarationen */
 int initLog(int useSyslog, char *logfile, int debugSwitch);
@@ -33,4 +33,4 @@ ssize_t readn(int fd, void *vptr, size_t n);
 
 #define logIT1(class, string)    logIT(class, "%s", string)
 
-#endif
+#endif // COMMON_H
