@@ -1,4 +1,4 @@
-/*  Copyright 2007-2017 the original vcontrold development team
+/*  Copyright 2017 Sönke J. Peters <...>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
