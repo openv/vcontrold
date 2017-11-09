@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
             exit(1);
         }
         if (sockfd >= 0) {
-            /* Socket hat fd zurueckgegeben, den Rest machen wir in interactive */
+            // Socket hat fd zurueckgegeben, den Rest machen wir in interactive
             logIT(LOG_INFO, "\nvcontrold connected");
             handle(sockfd);
             logIT(LOG_INFO, "\nvcontrold disconnected");

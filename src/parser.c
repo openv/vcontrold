@@ -160,13 +160,14 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     logIT(LOG_ERR, "Fehler Unit Wandlung:%s", sendBuf);
                     return (-1);
                 }
-                if (cPtr->send) { /* wir haben das schon mal gesendet, der Speicher war noch alloziert */
+                if (cPtr->send) {
+                    // wir haben das schon mal gesendet, der Speicher war noch alloziert
                     free(cPtr->send);
                     cPtr->send = NULL;
                 }
                 cPtr->send = calloc(len, sizeof(char));
                 cPtr->len = len;
-                sendLen = 0; /* wir senden nicht den ungewandelten sendBuf */
+                sendLen = 0; // wir senden nicht den ungewandelten sendBuf
                 memcpy(cPtr->send, sendBuf, len);
             }
             cPtr = cPtr->next;
@@ -174,7 +175,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     }
 
     do {
-        cPtr = cmpPtr; /* fuer die naechste Runde brauchen wir den Anfang */
+        cPtr = cmpPtr; // fuer die naechste Runde brauchen wir den Anfang
         while (cmpPtr) {
             switch (cmpPtr->token) {
             case WAIT:
@@ -232,7 +233,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 // falls wir beim empfangen laenger als der Timeout gebraucht haben
                 // gehts in die naechste Runde
                 if (recvTimeout && (etime > recvTimeout)) {
-                    logIT(LOG_NOTICE, "Recv Timeout: %ld ms  > %d ms (Retry: %d)", etime, recvTimeout, (int)(retry - 1));
+                    logIT(LOG_NOTICE, "Recv Timeout: %ld ms  > %d ms (Retry: %d)",
+                          etime, recvTimeout, (int)(retry - 1));
                     if (retry <= 1) {
                         logIT1(LOG_ERR, "Recv Timeout, Abbruch");
                         return (-1);
@@ -262,7 +264,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 // empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck
                 bzero(result, sizeof(result));
                 if (! supressUnit && cmpPtr->uPtr) {
-                    if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr) <= 0) {
+                    if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
+                        <= 0) {
                         logIT(LOG_ERR, "Fehler Unit Wandlung:%s", result);
                         return (-1);
                     }
@@ -274,7 +277,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         fprintf(iniFD, "%s= %s \n", simOut, simIn);
                     }
 
-                    return 0; // 0==geawandelt nach unit
+                    return 0; // 0==gewandelt nach unit
                 }
 
                 if (iniFD && *simIn && *simOut) {
@@ -287,7 +290,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             case PAUSE:
                 logIT(LOG_INFO, "Warte %i ms", cmpPtr->len);
                 usleep(cmpPtr->len * 1000L);
-                /* 
+                /*
                 t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
                 t_sleep.tv_nsec=(long) cmpPtr->len * 1000000;
                 if (nanosleep(&t_sleep,&t_sleep_rem)==-1)

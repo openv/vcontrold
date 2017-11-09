@@ -16,7 +16,7 @@
 
 /*
  * Vito-Control Daemon fuer Vito- Abfrage
-*/
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
-#include"io.h"
+#include "io.h"
 #include "common.h"
 #include "xmlconfig.h"
 #include "parser.h"
@@ -57,19 +57,19 @@
 
 #include "version.h"
 
-/* Globale Variablen */
+// Globale Variablen
 char *xmlfile = XMLFILE;
 FILE *iniFD = NULL;
 int makeDaemon = 1;
 int inetversion = 0;
 
-/* in xmlconfig.c definiert */
+// in xmlconfig.c definiert
 extern protocolPtr protoPtr;
 extern unitPtr uPtr;
 extern devicePtr devPtr;
 extern configPtr cfgPtr;
 
-/* Deklarationen */
+// Deklarationen
 int readCmdFile(char *filename, char *result, int *resultLen, char *device );
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
@@ -120,9 +120,9 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
     int count = 0;
     //void *uPtr;
     //int maxResLen=*resultLen;
-    *resultLen = 0; /* noch keine Zeichen empfangen :-) */
+    *resultLen = 0; // noch keine Zeichen empfangen :-)
 
-    /* das Device wird erst geoeffnet, wenn wir was zu tun haben */
+    // das Device wird erst geoeffnet, wenn wir was zu tun haben
     vcontrol_semget(); // todo semjfi
     if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
         vcontrol_semrelease(); // todo semjfi
@@ -142,12 +142,12 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
         return 0;
     }
     logIT(LOG_INFO, "Lese Cmd File %s", filename);
-    /* Queue leeren */
+    // Queue leeren
     // todo semjfi vcontrol_semget();
     tcflush(fd, TCIOFLUSH);
     // todo semjfi vcontrol_semrelease();
     while (fgets(line, MAXBUF - 1, cmdPtr)) {
-        /* \n verdampfen */
+        // \n verdampfen
         line[strlen(line) - 1] = '\0';
         bzero(recvBuf, sizeof(recvBuf));
         // todo semjfi vcontrol_semget();
@@ -158,7 +158,8 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
         ptr = recvBuf;
         char buffer[MAXBUF];
         bzero(buffer, sizeof(buffer));
-        for (n = 0; n < count; n++) { /* wir haben Zeichen empfangen */
+        for (n = 0; n < count; n++) {
+            // wir haben Zeichen empfangen
             *resultPtr++ = *ptr;
             (*resultLen)++;
             bzero(string, sizeof(string));
@@ -169,7 +170,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
             { break; }
         }
         if (count - 1) {
-            /* timeout */
+            // timeout
         }
         if (count) {
             logIT(LOG_INFO, "Empfangen: %s", buffer);
@@ -201,8 +202,8 @@ quit: beendet die Verbindung\n";
 
 int rawModus(int socketfd, char *device)
 {
-    /* hier schreiben wir alle ankommenden Befehle in eine temp. Datei */
-    /* diese Datei wird dann an readCmdFile uerbegeben */
+    // hier schreiben wir alle ankommenden Befehle in eine temp. Datei
+    // diese Datei wird dann an readCmdFile uerbegeben
     char readBuf[MAXBUF];
     char string[256];
 
@@ -216,26 +217,30 @@ int rawModus(int socketfd, char *device)
     char result[MAXBUF];
     int resultLen;
 
-    if (!mkstemp(tmpfile)) {
-        /* noch ein Versuch */
+    if (! mkstemp(tmpfile)) {
+        // noch ein Versuch
         if (!mkstemp(tmpfile)) {
             logIT1(LOG_ERR, "Fehler Erzeugung mkstemp");
             return 0;
         }
     }
+
     filePtr = fopen(tmpfile, "w+");
-    if (!filePtr) {
+    if (! filePtr) {
         logIT(LOG_ERR, "Kann Tmp File %s nicht anlegen", tmpfile);
         return 0;
     }
+
     logIT(LOG_INFO, "Raw Modus: Temp Datei: %s", tmpfile);
+
     while (Readline(socketfd, readBuf, sizeof(readBuf))) {
-        /* hier werden die einzelnen Befehle geparst */
+        // hier werden die einzelnen Befehle geparst
         if (strstr(readBuf, "END") == readBuf) {
             fclose(filePtr);
             resultLen = sizeof(result);
             readCmdFile(tmpfile, result, &resultLen, device);
-            if (resultLen) { /* es wurden Zeichen empfangen */
+            if (resultLen) {
+                // es wurden Zeichen empfangen
                 char buffer[MAXBUF];
                 bzero(buffer, sizeof(buffer));
                 char2hex(buffer, result, resultLen);
@@ -253,10 +258,10 @@ int rawModus(int socketfd, char *device)
         if (fputs(readBuf, filePtr) == EOF) {
             logIT1(LOG_ERR, "Fehler beim schreiben tmp Datei");
         } else {
-            /* debug stuff */
+            // debug stuff
         }
     }
-    return 0;            // is this correct?
+    return 0; // is this correct?
 }
 
 int interactive(int socketfd, char *device )
@@ -286,15 +291,15 @@ int interactive(int socketfd, char *device )
 
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
         sendErrMsg(socketfd);
-        /* Steuerzeichen verdampfen */
-        /*readPtr=readBuf+strlen(readBuf); **/
+        // Steuerzeichen verdampfen
+        //readPtr=readBuf+strlen(readBuf);
         readPtr = readBuf + rcount;
         while (iscntrl(*readPtr)) {
             *readPtr-- = '\0';
         }
         logIT(LOG_INFO, "Befehl: %s", readBuf);
 
-        /* wir trennen Kommando und evtl. Optionen am ersten Blank */
+        // wir trennen Kommando und evtl. Optionen am ersten Blank
         bzero(cmd, sizeof(cmd));
         bzero(para, sizeof(para));
         if ((ptr = strchr(readBuf, ' '))) {
@@ -304,7 +309,7 @@ int interactive(int socketfd, char *device )
             strcpy(cmd, readBuf);
         }
 
-        /* hier werden die einzelnen Befehle geparst */
+        // hier werden die einzelnen Befehle geparst
         if (strstr(readBuf, "help") == readBuf) {
             printHelp(socketfd);
         } else if (strstr(readBuf, "quit") == readBuf) {
@@ -325,7 +330,7 @@ int interactive(int socketfd, char *device )
                 bzero(string, sizeof(string));
                 snprintf(string, sizeof(string), "XMLFile %s neu geladen\n", xmlfile);
                 Writen(socketfd, string, strlen(string));
-                /* falls wir einen Vater haben (Daemon Mode) bekommt er ein sighup */
+                // falls wir einen Vater haben (Daemon Mode) bekommt er ein sighup
                 if (makeDaemon) {
                     kill(getppid(), SIGHUP);
                 }
@@ -376,7 +381,7 @@ int interactive(int socketfd, char *device )
             snprintf(string, sizeof(string), "Version: %s\n", VERSION);
             Writen(socketfd, string, strlen(string));
         }
-        /* Ist das Kommando in der XML definiert ? */
+        // Ist das Kommando in der XML definiert?
         //else if(readBuf && (cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cmd))&& (cPtr->addr)) {
         else if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
             bzero(string, sizeof(string));
@@ -384,8 +389,8 @@ int interactive(int socketfd, char *device )
             bzero(sendBuf, sizeof(sendBuf));
             bzero(pRecvBuf, sizeof(pRecvBuf));
 
-            /* Falls Unit Off wandeln wir die uebergebenen Parameter in Hex */
-            /* oder keine Unit definiert ist */
+            // Falls Unit Off wandeln wir die uebergebenen Parameter in Hex
+            // oder keine Unit definiert ist
             bzero(sendBuf, sizeof(sendBuf));
             if ((noUnit | !cPtr->unit) && *para) {
                 if ((sendLen = string2chr(para, sendBuf, sizeof(sendBuf))) == -1) {
@@ -399,12 +404,13 @@ int interactive(int socketfd, char *device )
                     }
                     continue;
                 }
-                /* falls sendLen > als len der Befehls, nehmen wir len */
+                // falls sendLen > als len der Befehls, nehmen wir len
                 if (sendLen > cPtr->len) {
                     logIT(LOG_WARNING, "Laenge des Hex Strings > Sendelaenge des Befehls, sende nur %d Byte", cPtr->len);
                     sendLen = cPtr->len;
                 }
-            } else if (*para) { /* wir kopieren die Parameter, darum kuemert sich execbyteCode selbst */
+            } else if (*para) {
+                //wir kopieren die Parameter, darum kuemert sich execbyteCode selbst
                 strcpy(sendBuf, para);
                 sendLen = strlen(sendBuf);
             }
@@ -412,8 +418,8 @@ int interactive(int socketfd, char *device )
                 fprintf(iniFD, ";%s\n", readBuf);
             }
 
-            /* das Device wird erst geoeffnet, wenn wir was zu tun haben */
-            /* aber nur, falls es nicht schon offen ist */
+            // das Device wird erst geoeffnet, wenn wir was zu tun haben
+            // aber nur, falls es nicht schon offen ist
             if (fd < 0) {
                 /* As one vclient call opens the link once, all is seen a transaction
                  * This may cause trouble for telnet sessions, as the whole session is
@@ -449,7 +455,7 @@ int interactive(int socketfd, char *device )
             vcontrol_semget();
 #endif
 
-            /* falls ein Pre-Kommando definiert wurde, fuehren wir dies zuerst aus */
+            // falls ein Pre-Kommando definiert wurde, fuehren wir dies zuerst aus
             if (cPtr->precmd && (pcPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cPtr->precmd))) {
                 logIT(LOG_INFO, "Fuehre Pre Kommando %s aus", cPtr->precmd);
 
@@ -475,7 +481,8 @@ int interactive(int socketfd, char *device )
             if (count == -1) {
                 logIT(LOG_ERR, "Fehler beim ausfuehren von %s", readBuf);
                 sendErrMsg(socketfd);
-            } else if (*recvBuf && (count == 0)) { /* Unit gewandelt */
+            } else if (*recvBuf && (count == 0)) {
+                // Unit gewandelt
                 logIT1(LOG_INFO, recvBuf);
                 snprintf(string, sizeof(string), "%s\n", recvBuf);
                 Writen(socketfd, string, strlen(string));
@@ -485,7 +492,8 @@ int interactive(int socketfd, char *device )
                 ptr = recvBuf;
                 char buffer[MAXBUF];
                 bzero(buffer, sizeof(buffer));
-                for (n = 0; n < count; n++) { /* wir haben Zeichen empfangen */
+                for (n = 0; n < count; n++) {
+                    // wir haben Zeichen empfangen
                     bzero(string, sizeof(string));
                     unsigned char byte = *ptr++ & 255;
                     snprintf(string, sizeof(string), "%02X ", byte);
@@ -508,47 +516,48 @@ int interactive(int socketfd, char *device )
             while (isspace(*readPtr)) {
                 readPtr++;
             }
-            /* Ist das Kommando in der XML definiert ? */
+            // Ist das Kommando in der XML definiert ?
             if (readPtr && (cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
                 bzero(string, sizeof(string));
                 snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->send);
                 Writen(socketfd, string, strlen(string));
-                /* Error String definiert */
+                // Error String definiert
                 char buf[MAXBUF];
                 bzero(buf, sizeof(buf));
                 if (cPtr->errStr && char2hex(buf, cPtr->errStr, cPtr->len)) {
                     snprintf(string, sizeof(string), "\tError bei (Hex): %s", buf);
                     Writen(socketfd, string, strlen(string));
                 }
-                /* recvTimeout ?*/
+                // recvTimeout?
                 if (cPtr->recvTimeout) {
                     snprintf(string, sizeof(string), "\tRECV Timeout: %d ms\n", cPtr->recvTimeout);
                     Writen(socketfd, string, strlen(string));
                 }
-                /* Retry definiert ? */
+                // Retry definiert?
                 if (cPtr->retry) {
                     snprintf(string, sizeof(string), "\tRetry: %d\n", cPtr->retry);
                     Writen(socketfd, string, strlen(string));
                 }
-                /* Ist Bit definiert ?*/
+                // Ist Bit definiert?
                 if (cPtr->bit > 0) {
                     snprintf(string, sizeof(string), "\tBit (BP): %d\n", cPtr->bit);
                     Writen(socketfd, string, strlen(string));
                 }
-                /* Pre-Command definiert ?*/
+                // Pre-Command definiert?
                 if (cPtr->precmd) {
                     snprintf(string, sizeof(string), "\tPre-Kommando (P0-P9): %s\n", cPtr->precmd);
                     Writen(socketfd, string, strlen(string));
                 }
 
-                /* Falls eine Unit verwendet wurde, geben wir das auch noch aus */
+                // Falls eine Unit verwendet wurde, geben wir das auch noch aus
                 compilePtr cmpPtr;
                 cmpPtr = cPtr->cmpPtr;
                 while (cmpPtr) {
-                    if (cmpPtr && cmpPtr->uPtr) { /* Unit gefunden */
+                    if (cmpPtr && cmpPtr->uPtr) {
+                        // Unit gefunden
                         char *gcalc;
                         char *scalc;
-                        /* wir unterscheiden die Rechnerei nach get und setaddr */
+                        // wir unterscheiden die Rechnerei nach get und setaddr
                         if (cmpPtr->uPtr->gCalc && *cmpPtr->uPtr->gCalc) {
                             gcalc = cmpPtr->uPtr->gCalc;
                         } else {
@@ -567,8 +576,8 @@ int interactive(int socketfd, char *device )
                                  scalc,
                                  cmpPtr->uPtr->entity);
                         Writen(socketfd, string, strlen(string));
-                        /* falls es sich um ein enum handelt, gibts noch mehr */
-                        /* oder sonstwo enums definiert sind */
+                        // falls es sich um ein enum handelt, gibts noch mehr
+                        // oder sonstwo enums definiert sind
                         if (cmpPtr->uPtr->ePtr) {
                             enumPtr ePtr;
                             ePtr = cmpPtr->uPtr->ePtr;
@@ -636,10 +645,10 @@ static void sigTermHandler (int signo)
     exit(1);
 }
 
-/* hier gehts los */
+// hier geht's los
 int main(int argc, char *argv[])
 {
-    /* Auswertung der Kommandozeilenschalter */
+    // Auswertung der Kommandozeilenschalter
     char *device = NULL;
     char *cmdfile = NULL;
     char *logfile = NULL;
@@ -652,34 +661,35 @@ int main(int argc, char *argv[])
 
     while (1) {
         static struct option long_options[] = {
-            {"commandfile", required_argument,  0, 'c'},
-            {"device",      required_argument,  0, 'd'},
-            {"debug",       no_argument,        &debug, 1},
-            {"vsim",        no_argument,        &simuOut, 1},
-            {"logfile",     required_argument,  0, 'l'},
-            {"nodaemon",    no_argument,        &makeDaemon, 0},
-            {"port",        required_argument,  0, 'p'},
-            {"syslog",      no_argument,        &useSyslog, 1},
-            {"xmlfile",     required_argument,  0, 'x'},
-            {"verbose",     no_argument,        &verbose, 1},
-            {"inet4",       no_argument,        &inetversion, 4},
-            {"inet6",       no_argument,        &inetversion, 6},
-            {"help",        no_argument,        0, 0},
-            {0, 0, 0, 0}
+            {"commandfile", required_argument, 0,            'c'},
+            {"device",      required_argument, 0,            'd'},
+            {"debug",       no_argument,       &debug,       1},
+            {"vsim",        no_argument,       &simuOut,     1},
+            {"logfile",     required_argument, 0,            'l'},
+            {"nodaemon",    no_argument,       &makeDaemon,  0},
+            {"port",        required_argument, 0,            'p'},
+            {"syslog",      no_argument,       &useSyslog,   1},
+            {"xmlfile",     required_argument, 0,            'x'},
+            {"verbose",     no_argument,       &verbose,     1},
+            {"inet4",       no_argument,       &inetversion, 4},
+            {"inet6",       no_argument,       &inetversion, 6},
+            {"help",        no_argument,       0,            0},
+            {0,             0,                 0,            0}
         };
-        /* getopt_long stores the option index here. */
+
+        // getopt_long stores the option index here.
         int option_index = 0;
         opt = getopt_long (argc, argv, "c:d:gil:np:svx:46",
                            long_options, &option_index);
 
-        /* Detect the end of the options. */
+        // Detect the end of the options.
         if (opt == -1) {
             break;
         }
 
         switch (opt) {
         case 0:
-            /* If this option sets a flag, we do nothing for now */
+            // If this option sets a flag, we do nothing for now
             if (long_options[option_index].flag != 0) {
                 break;
             }
@@ -731,7 +741,7 @@ int main(int argc, char *argv[])
             xmlfile = optarg;
             break;
         case '?':
-            /* getopt_long already printed an error message. */
+            // getopt_long already printed an error message.
             usage();
             break;
         default:
@@ -746,21 +756,21 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* es wurden die beiden globalen Variablen cfgPtr und protoPtr gefuellt */
+    // es wurden die beiden globalen Variablen cfgPtr und protoPtr gefuellt
     if (cfgPtr) {
-        if (!tcpport) {
+        if (! tcpport) {
             tcpport = cfgPtr->port;
         }
-        if (!device) {
+        if (! device) {
             device = cfgPtr->tty;
         }
-        if (!logfile) {
+        if (! logfile) {
             logfile = cfgPtr->logfile;
         }
-        if (!useSyslog) {
+        if (! useSyslog) {
             useSyslog = cfgPtr->syslog;
         }
-        if (!debug) {
+        if (! debug) {
             debug = cfgPtr->debug;
         }
     }
@@ -779,7 +789,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    /* falls -i angegeben wurde, loggen wir die Befehle im Simulator INI Format */
+    // falls -i angegeben wurde, loggen wir die Befehle im Simulator INI Format
     if (simuOut) {
         char file[100];
         snprintf(file, sizeof(file), INIOUTFILE, cfgPtr->devID);
@@ -789,7 +799,7 @@ int main(int argc, char *argv[])
         fprintf(iniFD, "[DATA]\n");
     }
 
-    /* die Macros werden ersetzt und die zu sendenden Strings in Bytecode gewandelt */
+    // die Macros werden ersetzt und die zu sendenden Strings in Bytecode gewandelt
     compileCommand(devPtr, uPtr);
 
     int fd = 0;
@@ -803,7 +813,7 @@ int main(int argc, char *argv[])
     if (tcpport) {
         if (makeDaemon) {
             int pid;
-            /* etwas Siganl Handling */
+            // etwas Siganl Handling
             if (signal(SIGCHLD, SIG_IGN) == SIG_ERR) {
                 logIT1(LOG_ERR, "Fehler beim Signalhandling SIGCHLD");
             }
@@ -814,12 +824,12 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             if (pid > 0) {
-                exit(0); /* Vater wird beendet, Kind laueft weiter */
+                exit(0); // Vater wird beendet, Kind laueft weiter
             }
 
-            /* ab hier laueft nur noch das Kind */
+            // ab hier laueft nur noch das Kind
 
-            /* FD schliessen */
+            // FD schließen
             close(STDIN_FILENO);
             close(STDOUT_FILENO);
             close(STDERR_FILENO);
@@ -852,11 +862,11 @@ int main(int argc, char *argv[])
 
         int sockfd = -1;
         int listenfd = -1;
-        /* Zeiger auf die Funktion checkIP */
+        // Zeiger auf die Funktion checkIP
         short (*checkP)(char *);
 
         if (cfgPtr->aPtr) {
-            /* wir haben eine allow Liste */
+            // wir haben eine allow Liste
             checkP = checkIP;
         } else {
             checkP = NULL;
@@ -870,13 +880,13 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             if (sockfd >= 0) {
-                /* Socket hat fd zurueckgegeben, den Rest machen wir in interactive */
+                // Socket hat fd zurueckgegeben, den Rest machen wir in interactive
                 interactive(sockfd, device);
                 closeSocket(sockfd);
                 setDebugFD(-1);
                 if (makeDaemon) {
                     logIT(LOG_INFO, "Child Prozess pid:%d beendet", getpid());
-                    exit(0); /* das Kind verabschiedet sich */
+                    exit(0); // das Kind verabschiedet sich
                 }
             } else {
                 logIT1(LOG_ERR, "Fehler bei Verbindungsaufbau");
