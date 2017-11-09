@@ -13,7 +13,7 @@ Die Konfiguration erfolgt über XML-Dateien.
 Der Daemon bietet eine ASCII-Socketschnittstelle, die mit telnet oder 
 dem vclient Programm angespochen werden kann.
 
-Der Quelltext kann im SVN heruntergeladen werden.
+Der Quelltext kann im git Repository heruntergeladen werden.
 
 	git clone https://github.com/openv/vcontrold.git vcontrold-code
     cd vcontrold-code
