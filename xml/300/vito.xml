@@ -1,10 +1,4 @@
 <?xml version="1.0"?>
-<!-- Getestet auf V200KW1 Oel Vitola 200 und VScotHO1 GAS Vitodens 200B2B 
-	September 2011 -->
-<!-- Ohne Gewaehr ceteris paribus 2012 -->
-<!-- Befehl 'setVentilStatus' sprechend analog Viessmann ergaenzt von ceteris 
-	paribus 04.10.2012 -->
-<!-- Befehle 'SetTempRaum...Soll... ergaenzt von ceteris paribus 13.10.2012 -->
 <vito>
   <devices>
     <device ID="2098" name="V200KW2" protocol="KW2"/>
@@ -30,16 +24,14 @@
       <addr>5525</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Aussentemperatur in Grad C (Tiefpass)
-			</description>
+      <description>Ermittle die Aussentemperatur in Grad C (Tiefpass)</description>
       <device ID="2053"/>
     </command>
     <command name="getTempAged" protocmd="getaddr">
       <addr>5527</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Aussentemperatur in Grad C (Gedaempft)
-			</description>
+      <description>Ermittle die Aussentemperatur in Grad C (Gedaempft)</description>
       <device ID="2053"/>
     </command>
     <!-- WARMWASSER -->
@@ -47,114 +39,90 @@
       <addr>0804</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Warmwassertemperatur in Grad C
-			</description>
+      <description>Ermittle die Warmwassertemperatur in Grad C</description>
     </command>
     <command name="getTempWWsoll" protocmd="getaddr">
       <addr>6300</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Warmwassersolltemperatur in Grad C
-			</description>
+      <description>Ermittle die Warmwassersolltemperatur in Grad C</description>
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="setTempWWsoll" protocmd="setaddr">
       <addr>6300</addr>
       <len>2</len>
       <unit>UTI</unit>
-      <description>Setze die Warmwassersolltemperatur in Grad C
-			</description>
+      <description>Setze die Warmwassersolltemperatur in Grad C</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 Was ist die WW-Auslauftemperatur -->
     <command name="getTempStp2" protocmd="getaddr">
       <addr>0814</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die WW Auslauftemperatur in Grad C (Tiefpass)
-			</description>
+      <description>Ermittle die WW Auslauftemperatur in Grad C (Tiefpass)</description>
       <device ID="2053"/>
       <device ID="2098"/>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 25.08.2011 -->
     <command name="getWWUWPNachlauf" protocmd="getaddr">
       <addr>6762</addr>
       <len>2</len>
       <unit>CO</unit>
       <description>Ermittle Warmwasserpumpennachlauf </description>
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 25.08.2011 -->
     <command name="setWWUWPNachlauf" protocmd="setaddr">
       <addr>6762</addr>
       <len>2</len>
       <unit>CO</unit>
       <description>Setze Warmwasserpumpennachlauf</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 19.09.2011 -->
     <command name="getSpeichervorrang" protocmd="getaddr">
       <addr>27A2</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Ermittle den Status Speichervorrang Heizkreis ohne
-				Mischer A1 bzw. mit Mischer M1</description>
+      <description>Ermittle den Status Speichervorrang Heizkreis ohne Mischer A1 bzw. mit Mischer M1</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 19.09.2011 -->
     <command name="setSpeichervorrang" protocmd="setaddr">
       <addr>27A2</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Setze den Status Speichervorrang Heizkreis ohne Mischer
-				A1 bzw. mit Mischer M1</description>
+      <description>Setze den Status Speichervorrang Heizkreis ohne Mischer A1 bzw. mit Mischer M1</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="getSpeichervorrangM2" protocmd="getaddr">
       <addr>37A2</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Ermittle den Status Speichervorrang Heizkreis mit
-				Mischer M2</description>
+      <description>Ermittle den Status Speichervorrang Heizkreis mit Mischer M2</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setSpeichervorrangM2" protocmd="setaddr">
       <addr>37A2</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Setze den Status Speichervorrang Heizkreis mit Mischer
-				M2</description>
+      <description>Setze den Status Speichervorrang Heizkreis mit Mischer M2</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="getSpeichervorrangM3" protocmd="getaddr">
       <addr>47A2</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Ermittle den Status Speichervorrang Heizkreis mit
-				Mischer M3</description>
+      <description>Ermittle den Status Speichervorrang Heizkreis mit Mischer M3</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setSpeichervorrangM3" protocmd="setaddr">
       <addr>47A2</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Setze den Status Speichervorrang Heizkreis mit Mischer
-				M3</description>
+      <description>Setze den Status Speichervorrang Heizkreis mit Mischer M3</description>
     </command>
     <!-- KESSEL -->
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 Differenztemperatur 
-			Kesselkreis zu HKM(2) -->
+    <!-- Differenztemperatur Kesselkreis zu HKM(2) -->
     <command name="getTempKOffset" protocmd="getaddr">
       <addr>6760</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle Kesseloffset KT ueber WWsoll in Grad C
-			</description>
+      <description>Ermittle Kesseloffset KT ueber WWsoll in Grad C</description>
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 2010 Differenztemperatur 
-			Kesselkreis zu HKM(2) -->
+    <!-- Differenztemperatur Kesselkreis zu HKM(2) -->
     <command name="setTempKOffset" protocmd="setaddr">
       <addr>6760</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Setze Kesseloffset KT ueber WWsoll in Grad C
-			</description>
+      <description>Setze Kesseloffset KT ueber WWsoll in Grad C</description>
     </command>
     <command name="getTempKist" protocmd="getaddr">
       <addr>0802</addr>
@@ -167,7 +135,6 @@
         <len>1</len>
       </device>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus -->
     <command name="getTempAbgas" protocmd="getaddr">
       <addr>0808</addr>
       <len>2</len>
@@ -183,36 +150,31 @@
       <addr>0810</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Kesseltemperatur in Grad C (Tiefpass)
-			</description>
+      <description>Ermittle die Kesseltemperatur in Grad C (Tiefpass)</description>
       <device ID="2053"/>
     </command>
     <command name="getTempKsoll" protocmd="getaddr">
       <addr>5502</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Kesselsolltemperatur in Grad C
-			</description>
+      <description>Ermittle die Kesselsolltemperatur in Grad C</description>
       <device ID="2053">
         <addr>71</addr>
         <unit>UT1</unit>
         <len>1</len>
       </device>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>555A</addr>
         <unit>UT</unit>
         <len>2</len>
       </device>
     </command>
-    <!-- get Befehl eingefuegt von vheat 2013 -->
     <command name="getVolStrom" protocmd="getaddr">
       <addr>0C24</addr>
       <len>2</len>
       <unit>VS</unit>
       <description>Ermittle den Volumenstrom l/h des Heizkreises</description>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="getBetriebszeitStandby" protocmd="getaddr">
       <addr>08B8</addr>
       <len>4</len>
@@ -236,14 +198,12 @@
         <bit>1</bit>
         <unit>BST</unit>
       </device>
-      <!-- device 2094 eingefuegt von ceteris paribus 2011 -->
       <device ID="2094">
         <addr>0842</addr>
         <len>1</len>
         <unit>ST</unit>
       </device>
     </command>
-    <!-- get Befehl BrennerStatus2 eingefuegt von ceteris paribus 2011 -->
     <command name="getBrennerStatus2" protocmd="getaddr">
       <addr>0849</addr>
       <len>1</len>
@@ -255,7 +215,6 @@
         <unit>ST</unit>
       </device>
     </command>
-    <!-- get Befehl BrennerStufe eingefuegt von ceteris paribus 2011 -->
     <command name="getBrennerStufe" protocmd="getaddr">
       <addr>551E</addr>
       <len>1</len>
@@ -275,7 +234,6 @@
       <description>Ermittle die Brennerstarts</description>
       <device ID="2053"/>
     </command>
-    <!-- Befehl setBrennerStarts eingefuegt von ceteris paribus 06.10.2012 -->
     <command name="setBrennerStarts" protocmd="setaddr">
       <addr>088A</addr>
       <len>2</len>
@@ -294,13 +252,10 @@
         <unit>BH</unit>
       </device>
     </command>
-    <!-- Befehl setBrennerStunden1 eingefuegt von ceteris paribus 06.10.2012 -->
     <command name="setBrennerStunden1" protocmd="setaddr">
       <addr>08A7</addr>
       <len>4</len>
       <unit>CO</unit>
-      <!-- Unit hier CO da CS mit V*3600 nicht funktioniert ceteris paribus 
-				07.10.2012 -->
       <description>Setze die Brennerstunden Stufe 1</description>
       <device ID="2053" protocmd="setaddr">
         <addr>17</addr>
@@ -315,7 +270,6 @@
       <description>Ermittle die Brennerstunden Stufe 2</description>
       <device ID="2053"/>
     </command>
-    <!-- Befehl getLeistungIst eingefuegt von ceteris paribus 2010 -->
     <command name="getLeistungIst" protocmd="getaddr">
       <addr>A38F</addr>
       <len>2</len>
@@ -323,23 +277,18 @@
       <description>Ermittle Anlagen Ist-Leistung</description>
       <device ID="2053"/>
     </command>
-    <!-- Befehl getOeldurchsatz eingefuegt von ceteris paribus 2011 -->
     <command name="getOeldurchsatz" protocmd="getaddr">
       <addr>5726</addr>
       <len>4</len>
       <unit>CO</unit>
-      <description>Eingestellter Oeldurchsatz Brenner in Dezi-Liter pro
-				Stunde</description>
+      <description>Eingestellter Oeldurchsatz Brenner in Dezi-Liter pro Stunde</description>
     </command>
-    <!-- Befehl setOeldurchsatz eingefuegt von ceteris paribus 2011 -->
     <command name="setOeldurchsatz" protocmd="setaddr">
       <addr>5726</addr>
       <len>4</len>
       <unit>CO</unit>
-      <description>Oeldurchsatz Brenner in Dezi-Liter pro Stunde einstellen
-			</description>
+      <description>Oeldurchsatz Brenner in Dezi-Liter pro Stunde einstellen</description>
     </command>
-    <!-- Befehl getOeldurchsatz eingefuegt von ceteris paribus 2011 -->
     <command name="getOelverbrauch" protocmd="getaddr">
       <addr>7574</addr>
       <len>4</len>
@@ -358,7 +307,6 @@
         <unit>UN</unit>
         <len>1</len>
       </device>
-      <!-- device 20CB eingefuegt von ceteris paribus 26.10.2011 -->
       <device ID="20CB">
         <addr>27D3</addr>
         <unit>UN</unit>
@@ -375,7 +323,6 @@
         <unit>UN</unit>
         <len>1</len>
       </device>
-      <!-- device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>37D3</addr>
         <unit>UN</unit>
@@ -392,7 +339,6 @@
         <unit>ST</unit>
         <len>1</len>
       </device>
-      <!-- device 20CB eingefuegt von ceteris paribus 26.10.2011 -->
       <device ID="20CB">
         <addr>27D4</addr>
         <unit>ST</unit>
@@ -409,7 +355,6 @@
         <unit>ST</unit>
         <len>1</len>
       </device>
-      <!-- device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>37D4</addr>
         <unit>ST</unit>
@@ -417,13 +362,12 @@
       </device>
     </command>
     <command name="setNeigungM1" protocmd="setaddr">
-      <!-- min zul.0.2 0.1 und 0.0 nicht erlaubt ceteris paribus 27.10.2011 -->
+      <!-- min zul.0.2 0.1 und 0.0 nicht erlaubt -->
       <addr>2305</addr>
       <len>1</len>
       <unit>UN</unit>
       <description>Setze Neigung Heizkennlinie M1</description>
       <device ID="2053"/>
-      <!-- device 20CB eingefuegt von ceteris paribus 26.10.2011 -->
       <device ID="20CB">
         <addr>27D3</addr>
         <unit>UN</unit>
@@ -431,13 +375,12 @@
       </device>
     </command>
     <command name="setNeigungM2" protocmd="setaddr">
-      <!-- min zul.0.2 0.1 und 0.0 nicht erlaubt ceteris paribus 27.10.2011 -->
+      <!-- min zul.0.2 0.1 und 0.0 nicht erlaubt -->
       <addr>3305</addr>
       <len>1</len>
       <unit>UN</unit>
       <description>Setze Neigung Heizkennlinie M2</description>
       <device ID="2053"/>
-      <!-- device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>37D3</addr>
         <unit>UN</unit>
@@ -450,7 +393,6 @@
       <unit>ST</unit>
       <description>Setze Niveau Heizkennlinie M1</description>
       <device ID="2053"/>
-      <!-- device 20CB eingefuegt von ceteris paribus 26.10.2011 -->
       <device ID="20CB">
         <addr>27D4</addr>
         <unit>ST</unit>
@@ -463,7 +405,6 @@
       <unit>ST</unit>
       <description>Setze Niveau Heizkennlinie M2</description>
       <device ID="2053"/>
-      <!-- device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>37D4</addr>
         <unit>ST</unit>
@@ -474,8 +415,7 @@
     <command name="getTempVListM1" protocmd="getaddr">
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Vorlauftemperatur M1 in Grad C
-			</description>
+      <description>Ermittle die Vorlauftemperatur M1 in Grad C</description>
       <device ID="2053"/>
       <device ID="20CB">
         <addr>2900</addr>
@@ -487,14 +427,12 @@
       <addr>080C</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Vorlauftemperatur M2 in Grad C
-			</description>
+      <description>Ermittle die Vorlauftemperatur M2 in Grad C</description>
       <device ID="2053">
         <addr>41</addr>
         <unit>UT1</unit>
         <len>1</len>
       </device>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>3900</addr>
         <unit>UT</unit>
@@ -505,8 +443,7 @@
       <addr>2544</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Vorlaufsolltemperatur M1 in Grad C
-			</description>
+      <description>Ermittle die Vorlaufsolltemperatur M1 in Grad C</description>
       <device ID="2053">
         <addr>69</addr>
         <unit>UT1</unit>
@@ -517,8 +454,7 @@
       <addr>3544</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Vorlaufsolltemperatur M2 in Grad C
-			</description>
+      <description>Ermittle die Vorlaufsolltemperatur M2 in Grad C</description>
       <device ID="2053">
         <addr>63</addr>
         <unit>UT1</unit>
@@ -529,18 +465,15 @@
       <addr>4544</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Vorlaufsolltemperatur M3 in Grad C
-			</description>
+      <description>Ermittle die Vorlaufsolltemperatur M3 in Grad C</description>
       <device ID="2053"/>
     </command>
     <command name="getTempRL17A" protocmd="getaddr">
       <addr>080A</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Ruecklauftemperatur 17A in Grad C
-			</description>
+      <description>Ermittle die Ruecklauftemperatur 17A in Grad C</description>
       <device ID="2053"/>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>0808</addr>
         <len>2</len>
@@ -559,8 +492,7 @@
       <addr>6551</addr>
       <len>1</len>
       <unit>RT</unit>
-      <description>Ermittle den Status der Nachladeunterdrueckung
-			</description>
+      <description>Ermittle den Status der Nachladeunterdrueckung</description>
       <device ID="2053"/>
     </command>
     <command name="getSolarStunden" protocmd="getaddr">
@@ -577,8 +509,6 @@
       <description>Solar Leistung Gesamt</description>
       <device ID="2053"/>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 GEHT NICHT Versuch 
-			ueber KM-Bus Befehl steht aus. Adresse geraten -->
     <command name="getTempS4" protocmd="getaddr">
       <addr>0124</addr>
       <len>1</len>
@@ -591,16 +521,14 @@
       <addr>6566</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Speichertemperatur unten in Grad C
-			</description>
+      <description>Ermittle die Speichertemperatur unten in Grad C</description>
       <device ID="2053"/>
     </command>
     <command name="getTempStp" protocmd="getaddr">
       <addr>0812</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Speichertemperatur in Grad C (Tiefpass)
-			</description>
+      <description>Ermittle die Speichertemperatur in Grad C (Tiefpass)</description>
       <device ID="2053"/>
       <device ID="2098"/>
     </command>
@@ -609,22 +537,19 @@
       <addr>2306</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Raumsolltemperatur normal M1 in Grad C
-			</description>
+      <description>Ermittle die Raumsolltemperatur normal M1 in Grad C</description>
       <device ID="2053">
         <addr>53</addr>
         <len>1</len>
         <unit>UTI</unit>
       </device>
     </command>
-    <!-- set Befehl setTempRaumNorSollM1 eingefuegt von ceteris paribus 13.10.2012 -->
     <!-- Aufruf in vclient ganzzahlig 'setTempRaumNorSollM1 21' -->
     <command name="setTempRaumNorSollM1" protocmd="setaddr">
       <addr>2306</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Setze die Raumsolltemperatur normal M1 in Grad C
-			</description>
+      <description>Setze die Raumsolltemperatur normal M1 in Grad C</description>
       <device ID="2053">
         <addr>53</addr>
         <len>1</len>
@@ -635,40 +560,33 @@
       <addr>3306</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Raumsolltemperatur normal M2 in Grad C
-			</description>
+      <description>Ermittle die Raumsolltemperatur normal M2 in Grad C</description>
       <device ID="2053"/>
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 20.12.2011 geht noch nicht -->
-    <!-- set Befehl Adressen korrigiert von ceteris paribus 13.10.2012 -->
     <!-- Aufruf in vclient ganzzahlig 'setTempRaumNorSollM2 21' -->
     <command name="setTempRaumNorSollM2" protocmd="setaddr">
       <addr>3306</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Setze die Raumsolltemperatur normal M2 in Grad C
-			</description>
+      <description>Setze die Raumsolltemperatur normal M2 in Grad C</description>
       <device ID="2053"/>
     </command>
     <command name="getTempRaumRedSollM1" protocmd="getaddr">
       <addr>2307</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Raumsolltemperatur reduziert M1 in Grad C
-			</description>
+      <description>Ermittle die Raumsolltemperatur reduziert M1 in Grad C</description>
       <device ID="2053">
         <addr>54</addr>
         <len>1</len>
         <unit>UTI</unit>
       </device>
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 13.10.2012 -->
     <command name="setTempRaumRedSollM1" protocmd="setaddr">
       <addr>2307</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Setze die Raumsolltemperatur reduziert M1 in Grad C
-			</description>
+      <description>Setze die Raumsolltemperatur reduziert M1 in Grad C</description>
       <device ID="2053">
         <addr>54</addr>
         <len>1</len>
@@ -679,17 +597,14 @@
       <addr>3307</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Raumsolltemperatur reduziert M2 in Grad C
-			</description>
+      <description>Ermittle die Raumsolltemperatur reduziert M2 in Grad C</description>
       <device ID="2053"/>
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="setTempRaumRedSollM2" protocmd="setaddr">
       <addr>3307</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Setze die Raumsolltemperatur reduziert M2 in Grad C
-			</description>
+      <description>Setze die Raumsolltemperatur reduziert M2 in Grad C</description>
       <device ID="2053"/>
     </command>
     <!-- PUMPEN -->
@@ -704,7 +619,6 @@
         <bit>0</bit>
         <unit>BST</unit>
       </device>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>7663</addr>
         <len>2</len>
@@ -717,28 +631,24 @@
       <unit>RT</unit>
       <description>Ermittle den Status der Pumpe M2</description>
       <device ID="2053"/>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>7665</addr>
         <len>1</len>
         <unit>RT</unit>
       </device>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="getPumpeDrehzahlM2" protocmd="getaddr">
       <addr>3906</addr>
       <len>1</len>
       <unit>RT</unit>
       <description>Ermittle die Drehzahl der Pumpe M2</description>
       <device ID="2053"/>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>7665</addr>
         <len>2</len>
         <unit>PR2</unit>
       </device>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="getPumpeStatusIntern" protocmd="getaddr">
       <description>Ermittle den Status der Internen Pumpe</description>
       <device ID="20CB">
@@ -747,7 +657,6 @@
         <unit>RT</unit>
       </device>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="getPumpeDrehzahlIntern" protocmd="getaddr">
       <addr>3906</addr>
       <len>1</len>
@@ -766,7 +675,6 @@
       <unit>RT</unit>
       <description>Ermittle den Status der Speicherladepumpe</description>
       <device ID="2053"/>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>6513</addr>
         <len>1</len>
@@ -784,7 +692,6 @@
         <bit>2</bit>
         <unit>BST</unit>
       </device>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>6515</addr>
         <len>1</len>
@@ -798,21 +705,18 @@
       <description>Ermittle den Status der Umwaelzpumpe Solar</description>
       <device ID="2053"/>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="getPumpeDrehzahlSolar" protocmd="getaddr">
       <addr>6552</addr>
       <len>1</len>
       <unit>RT</unit>
       <description>Ermittle die Drehzahl der Internen Pumpe</description>
       <device ID="2053"/>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>6552</addr>
         <len>2</len>
         <unit>PR2</unit>
       </device>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 GEHT NICHT -->
     <command name="getPumpeStatusSolar2" protocmd="getaddr">
       <addr>6553</addr>
       <len>1</len>
@@ -820,7 +724,6 @@
       <description>Ermittle den Status der Pumpe 2 Solar </description>
       <device ID="2053"/>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 GEHT NICHT -->
     <command name="getPumpeStatusSolar3" protocmd="getaddr">
       <addr>6554</addr>
       <len>1</len>
@@ -828,7 +731,6 @@
       <description>Ermittle den Status der Pumpe 3 Solar </description>
       <device ID="2053"/>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 GEHT NICHT -->
     <command name="getPumpeStatusSolar4" protocmd="getaddr">
       <addr>6555</addr>
       <len>1</len>
@@ -836,13 +738,11 @@
       <description>Ermittle den Status der Pumpe 4 Solar </description>
       <device ID="2053"/>
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 2010 -->
     <command name="getTempSTSSOL" protocmd="getaddr">
       <addr>081A</addr>
       <len>2</len>
       <unit>UT</unit>
-      <description>Ermittle die Speichertemperatur in Grad C
-				(NRF_TiefpassTemperaturwert_STSSOL)</description>
+      <description>Ermittle die Speichertemperatur in Grad C (NRF_TiefpassTemperaturwert_STSSOL)</description>
       <device ID="2053"/>
       <device ID="2098"/>
     </command>
@@ -860,7 +760,6 @@
       <unit>PR</unit>
       <description>Ermittle Mischerposition M2</description>
       <device ID="2053"/>
-      <!-- Device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>354C</addr>
         <len>1</len>
@@ -1140,8 +1039,7 @@
       <addr>2308</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Setze die Warmwassersolltemperatur Party M1 in Grad C
-			</description>
+      <description>Setze die Warmwassersolltemperatur Party M1 in Grad C</description>
       <device ID="2053"/>
     </command>
     <command name="getTempPartyM2" protocmd="getaddr">
@@ -1155,8 +1053,7 @@
       <addr>3308</addr>
       <len>1</len>
       <unit>ST</unit>
-      <description>Setze die Warmwassersolltemperatur Party M2 in Grad C
-			</description>
+      <description>Setze die Warmwassersolltemperatur Party M2 in Grad C</description>
       <device ID="2053"/>
     </command>
     <command name="setBetriebPartyM1" protocmd="setaddr">
@@ -1317,12 +1214,10 @@
     </command>
     <!-- KONFIGURATION UND SETZEN -->
     <!-- xxx Heizkreispumpenlogik-Funktion xxx -->
-    <!-- eingefuegt von ceteris paribus 27.09.2011 -->
     <!-- A5:0 Ohne Heizkreispumpenlogik-Funktion Mit Heizkreispumpenlogik−Funktion: 
-			Heizkreispumpe aus, wenn A5:1 AT > RTSoll + 5 K A5:2 AT > RTSoll + 4 K A5:3 
-			AT > RTSoll + 3 K A5:4 AT > RTSoll + 2 K A5:5 AT > RTSoll + 1 K A5:6 AT = 
-			RTSoll A5:7 AT > RTSoll -1 K bis A5:15 AT > RTSoll -9 K -->
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
+         Heizkreispumpe aus, wenn A5:1 AT > RTSoll + 5 K A5:2 AT > RTSoll + 4 K A5:3
+         AT > RTSoll + 3 K A5:4 AT > RTSoll + 2 K A5:5 AT > RTSoll + 1 K A5:6 AT =
+         RTSoll A5:7 AT > RTSoll -1 K bis A5:15 AT > RTSoll -9 K -->
     <command name="getKA5" protocmd="getaddr">
       <addr>27A5</addr>
       <len>1</len>
@@ -1330,7 +1225,6 @@
       <description>Ermittle die Heizkreispumpenlogik&#x2212;Funktion</description>
       <!-- KA5_KonfSommersparSchaltschwelle A5 0x27a5 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setKA5" protocmd="setaddr">
       <addr>27A5</addr>
       <len>1</len>
@@ -1338,16 +1232,13 @@
       <description>Setze die Heizkreispumpenlogik&#x2212;Funktion</description>
       <!-- KA5_KonfSommersparSchaltschwelle A5 0x27a5 1Byte -->
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="getKA5M2" protocmd="getaddr">
       <addr>37A5</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Heizkreispumpenlogik&#x2212;Funktion M2
-			</description>
+      <description>Ermittle die Heizkreispumpenlogik&#x2212;Funktion M2</description>
       <!-- KA5_KonfSommersparSchaltschwelleM2 A5 0x37a5 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setKA5M2" protocmd="setaddr">
       <addr>37A5</addr>
       <len>1</len>
@@ -1355,16 +1246,13 @@
       <description>Setze die Heizkreispumpenlogik&#x2212;Funktion M2</description>
       <!-- KA5_KonfSommersparSchaltschwelleM2 A5 0x37a5 1Byte -->
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="getKA5M3" protocmd="getaddr">
       <addr>47A5</addr>
       <len>1</len>
       <unit>UTI</unit>
-      <description>Ermittle die Heizkreispumpenlogik&#x2212;Funktion M3
-			</description>
+      <description>Ermittle die Heizkreispumpenlogik&#x2212;Funktion M3</description>
       <!-- KA5_KonfSommersparSchaltschwelleM2 A5 0x47a5 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setKA5M3" protocmd="setaddr">
       <addr>47A5</addr>
       <len>1</len>
@@ -1375,12 +1263,11 @@
     <!-- xxx Konfiguration A6 Erweiterte Sparschaltung xxx -->
     <!-- KA6_KonfiAbsolutSommersparM2 A6 0x37a6 -->
     <!-- A6:36 Erweiterte Sparschaltung nicht aktiv A6:5 bis A6:35 Erweiterte 
-			Sparschaltung aktiv, d.h. bei einem variabel einstellbaren Wert von 5 bis 
-			35 ºC zuzüglich 1ºC werden Brenner und Heizkreispumpe ausgeschaltet. Grundlage 
-			ist die gedämpfte Außentemperatur, die sich aus tatsächlicher Außentemperatur 
-			und einer Zeitkonstanten, die das Auskühlen eines durchschnittlichen Gebäudes 
-			berücksichtigt, zusammensetzt. -->
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
+         Sparschaltung aktiv, d.h. bei einem variabel einstellbaren Wert von 5 bis
+         35 °C zuzüglich 1°C werden Brenner und Heizkreispumpe ausgeschaltet. Grundlage
+         ist die gedämpfte Außentemperatur, die sich aus tatsächlicher Außentemperatur
+         und einer Zeitkonstanten, die das Auskühlen eines durchschnittlichen Gebäudes
+         berücksichtigt, zusammensetzt. -->
     <command name="getKA6" protocmd="getaddr">
       <addr>27A6</addr>
       <len>1</len>
@@ -1388,7 +1275,6 @@
       <description>Ermittle die AbsolutSommersparschaltung </description>
       <!-- KA6_KonfiAbsolutSommerspar A6 0x27a6 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setKA6" protocmd="setaddr">
       <addr>27A6</addr>
       <len>1</len>
@@ -1396,7 +1282,6 @@
       <description>Setze die AbsolutSommersparschaltung</description>
       <!-- KA6_KonfiAbsolutSommerspar A6 0x27a6 -->
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="getKA6M2" protocmd="getaddr">
       <addr>37A6</addr>
       <len>1</len>
@@ -1404,7 +1289,6 @@
       <description>Ermittle die AbsolutSommersparschaltung M2</description>
       <!-- KA6_KonfiAbsolutSommersparM2 A6 0x37a6 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setKA6M2" protocmd="setaddr">
       <addr>37A6</addr>
       <len>1</len>
@@ -1412,7 +1296,6 @@
       <description>Setze die AbsolutSommersparschaltung M2</description>
       <!-- KA6_KonfiAbsolutSommersparM2 A6 0x37a6 1Byte -->
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="getKA6M3" protocmd="getaddr">
       <addr>47A6</addr>
       <len>1</len>
@@ -1420,7 +1303,6 @@
       <description>Ermittle die AbsolutSommersparschaltung M3</description>
       <!-- KA6_KonfiAbsolutSommersparM3 A6 0x47a6 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 27.09.2011 -->
     <command name="setKA6M3" protocmd="setaddr">
       <addr>47A6</addr>
       <len>1</len>
@@ -1429,7 +1311,6 @@
       <!-- KA6_KonfiAbsolutSommersparM3 A6 0x47a6 1Byte -->
     </command>
     <!-- Auswirkung Mischer auf interne Pumpe -->
-    <!-- get Befehl eingefuegt von ceteris paribus 26.09.2011 -->
     <command name="getKonfiWirkung_aufPumpe" protocmd="getaddr">
       <addr>37A8</addr>
       <len>1</len>
@@ -1438,7 +1319,6 @@
       <!-- 0 ohne 1 M2 setzt Anforderung an Int.Pumpe - nur sinnvoll bei Mischerkreis -->
       <!-- wenn nicht vorhanden Rückgabewert -1.0 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 26.09.2011 -->
     <command name="setKonfiWirkung_aufPumpe" protocmd="setaddr">
       <addr>37A8</addr>
       <len>1</len>
@@ -1447,7 +1327,6 @@
       <!-- 0 ohne 1 M2 setzt Anforderung an Int.Pumpe - nur sinnvoll bei Mischerkreis -->
       <!-- wenn nicht vorhanden Rückgabewert -1.0 -->
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 14.11.2011 -->
     <command name="getKA3_KonfiFrostgrenzeM1_GWG" protocmd="getaddr">
       <addr>27A3</addr>
       <len>1</len>
@@ -1455,7 +1334,6 @@
       <description>Ermittle die eingestellte Frostgrenze A1M1</description>
       <!-- Range GradCelsius SByte 1 -9 15 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 14.11.2011 -->
     <command name="setKA3_KonfiFrostgrenzeM1_GWG" protocmd="setaddr">
       <addr>27A3</addr>
       <len>1</len>
@@ -1463,7 +1341,6 @@
       <description>Setze die Frostgrenze A1M1</description>
       <!-- Range GradCelsius SByte 1 -9 15 -->
     </command>
-    <!-- get Befehl eingefuegt von ceteris paribus 26.09.2011 -->
     <command name="getKA3_KonfiFrostgrenzeM2_GWG" protocmd="getaddr">
       <addr>37A3</addr>
       <len>1</len>
@@ -1471,7 +1348,6 @@
       <description>Ermittle die eingestellte Frostgrenze</description>
       <!-- Range GradCelsius SByte 1 -9 15 -->
     </command>
-    <!-- set Befehl eingefuegt von ceteris paribus 26.09.2011 -->
     <command name="setKA3_KonfiFrostgrenzeM2_GWG" protocmd="setaddr">
       <addr>37A3</addr>
       <len>1</len>
@@ -1723,18 +1599,16 @@
       <addr>7656</addr>
       <len>4</len>
       <unit>DT</unit>
-      <description>KS Karte Typ
-			</description>
+      <description>KS Karte Typ</description>
     </command>
-    <!-- Befehl eingefuegt von ceteris paribus 27.10.2011 -->
     <command name="getAnlagenschema" protocmd="getaddr">
       <addr>7700</addr>
       <len>2</len>
       <unit>ST</unit>
       <description>Ermittle das Anlagenschema</description>
       <!-- K00_KonfiAnlagenschemaGWG_W (00) Heizkreis-Warmwasserschema Adresse 
-				7700 1 A1 | 1 2 A1 + WW | 2 3 M2 | 3 4 M2 + WW | 4 5 A1 + M2 | 5 6 A1 + M2 
-				+ WW | 6 -->
+           7700 1 A1 | 1 2 A1 + WW | 2 3 M2 | 3 4 M2 + WW | 4 5 A1 + M2 | 5 6 A1 + M2
+           + WW | 6 -->
     </command>
     <command name="init" protocmd="getaddr">
       <description>Inintialisierung</description>
@@ -1744,7 +1618,6 @@
     </command>
     <command name="get" protocmd="gettestaddr">
       <description>Testabfrage, Adresse eingeben</description>
-      <!-- device 20CB eingefuegt von ceteris paribus 2010 -->
       <device ID="20CB">
         <addr>dummy</addr>
         <len>2</len>
@@ -1794,16 +1667,14 @@
       </device>
     </command>
     <command name="kmget" protocmd="getkmtestaddr">
-      <description>Testabfrage, KM-Bus EEProm Adresse eingeben
-			</description>
+      <description>Testabfrage, KM-Bus EEProm Adresse eingeben</description>
       <device ID="2053">
         <addr>dummy</addr>
         <len>1</len>
       </device>
     </command>
     <command name="getExtBA" protocmd="getxaddr">
-      <description>Ermittle Zustand der externen Betriebsartenumschaltung
-			</description>
+      <description>Ermittle Zustand der externen Betriebsartenumschaltung</description>
       <device ID="2053">
         <addr>00</addr>
         <len>1</len>
@@ -1828,14 +1699,11 @@
         <unit>BST</unit>
       </device>
     </command>
-    <!-- Befehl 'getVentilStatus' sprechend analog Viessmann geaendert und 
-			ergaenzt von ceteris paribus 2010 -->
     <command name="getUmschaltventil" protocmd="getaddr">
       <addr>0A10</addr>
       <len>1</len>
       <unit>USV</unit>
-      <description>Ermittle den Status des Umschaltventils WW/Heizen
-			</description>
+      <description>Ermittle den Status des Umschaltventils WW/Heizen</description>
       <device ID="2098"/>
       <device ID="2053">
         <addr>01</addr>
@@ -1844,14 +1712,11 @@
         <unit>BST</unit>
       </device>
     </command>
-    <!-- Befehl 'setVentilStatus' sprechend analog Viessmann geaendert und 
-			ergaenzt von ceteris paribus 2012 -->
     <command name="setUmschaltventil" protocmd="setaddr">
       <addr>0A10</addr>
       <len>1</len>
       <unit>USV</unit>
-      <description>Setze den Status des Umschaltventils WW/Heizen
-			</description>
+      <description>Setze den Status des Umschaltventils WW/Heizen</description>
       <device ID="2098"/>
       <device ID="2053">
         <addr>01</addr>
