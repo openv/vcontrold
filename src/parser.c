@@ -143,8 +143,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     unsigned long etime;
     char out_buff[1024];
     int _len  = 0;
-    // struct timespec t_sLeep;
-    // struct timespec t_sleep_rem;
+    //struct timespec t_sLeep;
+    //struct timespec t_sleep_rem;
 
     bzero(simIn, sizeof(simIn));
     bzero(simOut, sizeof(simOut));
@@ -277,8 +277,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     return 0; // 0==geawandelt nach unit
                 }
 
-                if (iniFD && *simIn && *simOut)
-                {
+                if (iniFD && *simIn && *simOut) {
                     // wir haben gesendet und empfangen, das geben wir nun aus
                     fprintf(iniFD, "%s= %s \n", simOut, simIn);
                 }
@@ -288,7 +287,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             case PAUSE:
                 logIT(LOG_INFO, "Warte %i ms", cmpPtr->len);
                 usleep(cmpPtr->len * 1000L);
-                /* t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
+                /* 
+                t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
                 t_sleep.tv_nsec=(long) cmpPtr->len * 1000000;
                 if (nanosleep(&t_sleep,&t_sleep_rem)==-1)
                     nanosleep(&t_sleep_rem,NULL);
@@ -320,7 +320,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     char2hex(string, cmpPtr->send, cmpPtr->len);
                     strcat(simOut, string);
                     strcat(simOut, " ");
-                    // free(cmpPtr->send);
+                    //free(cmpPtr->send);
                     //cmpPtr->len=0;
                 }
                 break;
@@ -341,9 +341,9 @@ RETRY:
 
 int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
 {
-    // char string[256];
+    //char string[256];
     char uString[100];
-    // char *uSPtr=uString;
+    //char *uSPtr=uString;
     logIT(LOG_INFO, "Execute %s", cmd);
     // wir parsen die einzelnen Zeilen
     char hex[MAXBUF];
