@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Client Routinen fuer vcontrold Abfragen */
+// Client Routinen fuer vcontrold Abfragen
 
 #include <syslog.h>
 #include <stdio.h>
@@ -45,7 +45,7 @@ trPtr newTrNode(trPtr ptr)
     }
 
     nptr = calloc(1, sizeof(*ptr));
-    if (!nptr) {
+    if (! nptr) {
         fprintf(stderr, "malloc gescheitert\n");
         exit(1);
     }
@@ -68,6 +68,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     if (signal(SIGALRM, sig_alrm) == SIG_ERR) {
         logIT1(LOG_ERR, "SIGALRM error");
     }
+
     if (setjmp(env_alrm) != 0) {
         logIT(LOG_ERR, "timeout wait:%s", wait);
         return -1;
@@ -105,7 +106,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
 
     }
 
-    if (!realloc(*recv, strlen(*recv) + 1)) {
+    if (! realloc(*recv, strlen(*recv) + 1)) {
         logIT1(LOG_ERR, "realloc Fehler!!");
         exit(1);
     }
@@ -153,10 +154,8 @@ size_t sendServer(int fd, char *s_buf, size_t len)
     // Buffer leeren
     // da tcflush nicht richtig funktioniert, verwenden wir nonblocking read
     fcntl(fd, F_SETFL, O_NONBLOCK);
-    while (readn(fd, string, sizeof(string)) > 0)
-    {
-    }
-    fcntl(fd, F_SETFL, !O_NONBLOCK);
+    while (readn(fd, string, sizeof(string)) > 0) { }
+    fcntl(fd, F_SETFL, ! O_NONBLOCK);
     return Writen(fd, s_buf, len);
 }
 
@@ -167,7 +166,7 @@ trPtr sendCmdFile(int sockfd, const char *filename)
     trPtr ptr;
     trPtr startPtr = NULL;
 
-    if (!(filePtr = fopen(filename, "r"))) {
+    if (! (filePtr = fopen(filename, "r"))) {
         return NULL;
     } else {
         logIT(LOG_INFO, "Kommando-Datei %s geoeffnet", filename);
@@ -176,7 +175,7 @@ trPtr sendCmdFile(int sockfd, const char *filename)
     bzero(line, sizeof(line));
     while (fgets(line, MAXBUF - 1, filePtr)) {
         ptr = newTrNode(startPtr);
-        if (!startPtr) {
+        if (! startPtr) {
             startPtr = ptr;
         }
         ptr->cmd = calloc(strlen(line), sizeof(char));
@@ -200,7 +199,7 @@ trPtr sendCmds(int sockfd, char *commands)
     sptr = strtok(commands, ",");
     do {
         ptr = newTrNode(startPtr);
-        if (!startPtr) {
+        if (! startPtr) {
             startPtr = ptr;
         }
         ptr->cmd = calloc(strlen(sptr) + 1, sizeof(char));
