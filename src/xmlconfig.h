@@ -112,7 +112,7 @@ struct command {
     int retry;
     unsigned short recvTimeout;
     char bit;
-    char nodeType; /* 0==alles kopiert 1==alles Orig. 2== nur Adresse, unit len orig. */
+    char nodeType; // 0==alles kopiert 1==alles Orig. 2== nur Adresse, unit len orig.
     compilePtr cmpPtr;
     char *description;
     commandPtr next;
