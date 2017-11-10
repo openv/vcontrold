@@ -88,10 +88,8 @@ int openSocket(int tcpport)
 
     ressave = res;
 
-    /*
-     Try open socket with each address getaddrinfo returned,
-     until getting a valid listening socket.
-     */
+    // Try open socket with each address getaddrinfo returned,
+    // until getting a valid listening socket.
 
     listenfd = -1;
     while (res) {
@@ -319,6 +317,7 @@ ssize_t Readn(int fd, void *ptr, size_t nbytes)
 
 static ssize_t my_read(int fd, char *ptr)
 {
+
     static ssize_t read_cnt = 0;
     static char *read_ptr;
     static char read_buf[MAXLINE];

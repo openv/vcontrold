@@ -25,7 +25,7 @@ int opentty(char *device);
 int openDevice(char *device);
 void closeDevice(int fd);
 
-// Schnittstellenparameter
+// Interface parameters
 
 #define TTY "/dev/usb/tts/0"
 

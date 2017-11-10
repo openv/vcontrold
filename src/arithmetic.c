@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Berechnung arithmetischer Ausdruecke */
+// Calculation of arithmetic expressions
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -74,19 +74,19 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
 
 float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
 {
-    // printf("execExpression: %s\n",*str);
+    //printf("execExpression: %s\n",*str);
     int f = 1;
     float term1, term2;
-    // float exp1,exp2;
+    //float exp1,exp2;
     char *item;
-    // unsigned char bPtr[10];
+    //unsigned char bPtr[10];
     unsigned char bPtr[10];
 
     int n;
-    // bPtr Bytes 0..9 frisieren und nach nPtr kopieren
-    // wir haben Zeichen empfangen
+    // Tweak bPtr Bytes 0..9 and copy them to nPtr
+    // We did not receive characters
     for (n = 0; n <= 9; n++) {
-        // bPtr[n]=*bInPtr++ & 255;
+        //bPtr[n]=*bInPtr++ & 255;
         bPtr[n] = *bInPtr++;
     }
 
@@ -106,7 +106,7 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     if (*err) {
         return 0;
     }
-    // printf(" T1=%f\n",term1);
+    //printf(" T1=%f\n",term1);
 
     int t;
     while ((t = nextToken(str, &item, &n)) != END) {
@@ -119,7 +119,7 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
             f = -1;
             break;
         default:
-            // printf(" Exp=%f\n",term1);
+            //printf(" Exp=%f\n",term1);
             pushBack(str, n);
             return (term1);
         }
@@ -128,17 +128,17 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
         if (*err) {
             return 0;
         }
-        // printf(" T2=%f\n",term2);
+        //printf(" T2=%f\n",term2);
         term1 += term2 * f;
     }
 
-    // printf(" Exp=%f\n",term1);
+    //printf(" Exp=%f\n",term1);
     return term1;
 }
 
 float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
 {
-    // printf("execTerm: %s\n",*str);
+    //printf("execTerm: %s\n",*str);
     float factor1, factor2;
     int op;
     char *item;
@@ -149,7 +149,7 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
         return 0;
     }
 
-    // printf(" F1=%f\n",factor1);
+    //printf(" F1=%f\n",factor1);
     while (1) {
         switch (nextToken(str, &item, &n)) {
         case MAL:
@@ -160,11 +160,11 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
             break;
         default:
             pushBack(str, n);
-            // printf("  ret(%f)\n",factor1);
+            //printf("  ret(%f)\n",factor1);
             return (factor1);
         }
         factor2 = execFactor(str, bPtr, floatV, err);
-        // printf(" F2=%f\n",factor2);
+        //printf(" F2=%f\n",factor2);
         if (*err) {
             return 0;
         }
@@ -178,7 +178,7 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
 
 float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
 {
-    // printf("execFactor: %s\n",*str);
+    //printf("execFactor: %s\n",*str);
     char nstring[100];
     float expression;
     float factor;
@@ -227,7 +227,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         do {
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
-        // kommt nun ein Punkt haben wir eine Dez. Zahl
+        // If a . follows, we have a decimal number
         if (token == PUNKT) {
             do {
                 *nPtr++ = *item;
@@ -236,7 +236,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         pushBack(str, n);
         *nPtr = '\0';
         factor = atof(nstring);
-        // printf("  Zahl: %s (f:%f)\n",nstring,factor);
+        //printf("  Zahl: %s (f:%f)\n",nstring,factor);
         return (factor);
     case KAUF:
         expression = execExpression(str, bPtr, floatV, err);
@@ -256,7 +256,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
 
 int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
 {
-    // printf("execExpression: %s\n",*str);
+    //printf("execExpression: %s\n",*str);
     int f = 1;
     int term1, term2;
     //int exp1, exp2;
@@ -265,10 +265,10 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
 
     unsigned char bPtr[10];
     int n;
-    // bPtr Bytes 0..9 frisieren und nach nPtr kopieren
-    // wir haben Zeichen empfangen
+    // Tweak bPtr bytes 0..9 and copy them to nPtr
+    // We have received characters
     for (n = 0; n <= 9; n++) {
-        // bPtr[n]=*bInPtr++ & 255;
+        //bPtr[n]=*bInPtr++ & 255;
         bPtr[n] = *bInPtr++;
     }
 
@@ -336,7 +336,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
 
 int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
-    // printf("execTerm: %s\n",*str);
+    //printf("execTerm: %s\n",*str);
     int factor1, factor2;
     int op;
     char *item;
@@ -374,7 +374,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
             break;
         default:
             pushBack(str, n);
-            // printf("  ret(%f)\n",factor1);
+            //printf("  ret(%f)\n",factor1);
             return factor1;
         }
 
@@ -409,7 +409,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
 
 int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
-    // printf("execFactor: %s\n",*str);
+    //printf("execFactor: %s\n",*str);
     char nstring[100];
     int expression;
     int factor;
@@ -479,7 +479,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         do {
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
-        // kommt nun ein Punkt haben wir eine Dez. Zahl
+        // If a . follows, we have a decimal number
         if (token == PUNKT) {
             do {
                 *nPtr++ = *item;
@@ -510,7 +510,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
 int nextToken(char **str, char **c, int *count)
 {
     char item;
-    // printf("\tInput String:%s\n",*str);
+    //printf("\tInput String:%s\n",*str);
     item = **str;
     while (isblank(item)) {
         item = *(++*str);
@@ -518,7 +518,7 @@ int nextToken(char **str, char **c, int *count)
 
     *c = *str;
     (*str)++;
-    // printf("\t  Token: %c   [ %s ] \n",**c,*str);
+    //printf("\t  Token: %c   [ %s ] \n",**c,*str);
     *count = 1;
 
     switch (**c) {
@@ -644,5 +644,5 @@ int nextToken(char **str, char **c, int *count)
 void  pushBack(char **str, int count)
 {
     (*str) -= count;
-    // printf("\t<<::%s\n",*str);
+    //printf("\t<<::%s\n",*str);
 }

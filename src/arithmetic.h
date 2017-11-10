@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/* Berechnung arithmetischer Ausdruecke */
+// Calculation of arithmetic expressions
 
 #ifndef ARITHMETIC_H
 #define ARITHMETIC_H

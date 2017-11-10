@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Vito-Control Client
+// Vcontrold client
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -66,14 +66,14 @@ usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--c
     exit(1);
 }
 
-// hier geht's los
+// Here we go
 
 int inetversion = 0;
 
 int main(int argc, char *argv[])
 {
 
-    // Auswertung der Kommandozeilenschalter
+    // Get the command line options
     char *host;
     int port = 0;
     char commands[512] = "";
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
             port = atoi(optarg);
             if (port == 0) {
                 fprintf(stderr, "Ungültiger Wert für option --port: %s\n", optarg);
-                usage(); // und damit exit
+                usage(); // and exit
             }
             break;
 
@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // Kommandos direkt angegeben */
+    // Give commands directly
     resPtr = NULL;
     if (*commands) {
         resPtr = sendCmds(sockfd, commands);
@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
         ofilePtr = fdopen(fileno(stdout), "w");
     }
 
-    // das Ergebnis ist in der Liste resPtr, nun unterscheiden wir die Ausgabe
+    // The result is in the resPtr list, now we differentiate the output
     if (csvfile) {
         // Kompakt Format mit Semikolon getrennt
         if (! (filePtr = fopen(csvfile, "a"))) {
@@ -352,13 +352,14 @@ int main(int argc, char *argv[])
             strncat(result, string, sizeof(result) - strlen(result) - 1);
             resPtr = resPtr->next;
         }
-        // letztes Semikolon verdampfen und \n dran
+        // Remove the last semicolon and add \n
         if (*result) {
             *(result + strlen(result) - 1) = '\n';
             fputs(result, filePtr);
         }
         fclose(filePtr);
-    } else if (tmplfile) { // Template angegeben
+    } else if (tmplfile) {
+        // Template given
         char line[1000];
         char *lptr;
         char *lSptr;
@@ -371,15 +372,15 @@ int main(int argc, char *argv[])
         trPtr *idxPtr;
         short varReplaced;
 
-        // im Array idxPtr werden die einzelnen Ergebnisse ueber den Index referenziert
+        // In array idxPtr, the particular results are referenced via the index
         for (count = 0; tPtr; tPtr = tPtr->next) {
             count++;
         }
 
-        // wir reservieren uns ein Array mit der passenden Groesse
+        // We reserve an array with a suitable size
         idxPtr = calloc(count, sizeof(tPtr));
 
-        maxIdx = count; // groesster Index in den Variablen
+        maxIdx = count; // Biggest index in the variables
 
         count = 0;
         tPtr = resPtr;
@@ -392,15 +393,15 @@ int main(int argc, char *argv[])
             logIT(LOG_ERR, "Kann Template-Datei %s nicht oeffnen", tmplfile);
             exit(1);
         }
-        /* Es gibt folgende Variablen zum Ersetzen:
-           $Rn: Result (trPtr->raw)
-           $n: Float (trPtr->result) */
+        // The following variables are to replace:
+        // $Rn: Result (trPtr->raw)
+        // $n: Float (trPtr->result)
         while ((fgets(line, sizeof(line) - 1, filePtr))) {
             logIT(LOG_INFO, "Tmpl Zeile:%s", line);
             lSptr = line;
             while ((lptr = strchr(lSptr, '$'))) {
                 varReplaced = 0;
-                if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ ist durch \ ausmaskiert
+                if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ is masked by a backslash
                     bzero(string, sizeof(string));
                     strncpy(string, lSptr, lptr - lSptr - 1);
                     fprintf(ofilePtr, "%s%c", string, *lptr);
@@ -408,7 +409,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 lEptr = lptr + 1;
-                // wir suchen nun das Ende der Variablen
+                // Noew, we search the end of the variables.
                 while (isalpha(*lEptr) || isdigit(*lEptr)) {
                     lEptr++;
                 }
@@ -416,16 +417,16 @@ int main(int argc, char *argv[])
                 strncpy(varname, lptr + 1, lEptr - lptr - 1);
                 logIT(LOG_INFO, "\tVariable erkannt:%s", varname);
 
-                // wir geben schon mal alles bis dahin aus
+                // We output everything up to this
                 bzero(string, sizeof(string));
                 strncpy(string, lSptr, lptr - lSptr);
                 fprintf(ofilePtr, "%s", string);
 
-                // wir unterscheiden die verschiedenen Variablen
+                // We differentiate the different variables
 
                 // $Rn
                 if ((strlen(varname) > 1) && (*varname == 'R') && (idx = atoi(varname + 1))) {
-                    // Variable R Index dahinter in idx
+                    // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "%s:%s", tPtr->cmd, tPtr->raw);
@@ -438,7 +439,7 @@ int main(int argc, char *argv[])
                 }
                 // $Cn
                 else if ((strlen(varname) > 1) && (*varname == 'C') && (idx = atoi(varname + 1))) {
-                    // Variable R Index dahinter in idx
+                    // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "Kommando: %s", tPtr->cmd);
@@ -451,7 +452,7 @@ int main(int argc, char *argv[])
                 }
                 // $En
                 else if ((strlen(varname) > 1) && (*varname == 'E') && (idx = atoi(varname + 1))) {
-                    // Variable R Index dahinter in idx
+                    // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "Fehler: %s:%s", tPtr->cmd, tPtr->err);
@@ -486,7 +487,8 @@ int main(int argc, char *argv[])
 
         fclose(filePtr);
 
-        if (outfile && *outfile && execMe) { // Datei ausfuerhbar machen und starten
+        if (outfile && *outfile && execMe) {
+            // Make the file executable and start
             fclose(ofilePtr);
             bzero(string, sizeof(string));
             logIT(LOG_INFO, "Fuehre Datei %s aus", outfile);
@@ -505,7 +507,8 @@ int main(int argc, char *argv[])
             exit(ret);
         }
 
-    } else if (munin) { // Munin Format ausgeben
+    } else if (munin) {
+        // Output Munin format
         while (resPtr) {
             fprintf(ofilePtr, "%s.value ", resPtr->cmd);
             if (resPtr->err) {
@@ -521,7 +524,8 @@ int main(int argc, char *argv[])
             resPtr = resPtr->next;
         }
 
-    } else if (cacti) { // Cacti Format ausgeben
+    } else if (cacti) {
+        // Output Cacti format
         int index = 1;
         while (resPtr) {
             fprintf(ofilePtr, "v%d:", index);

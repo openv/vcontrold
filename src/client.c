@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Client Routinen fuer vcontrold Abfragen
+// Client routines for vcontrold queries
 
 #include <syslog.h>
 #include <stdio.h>
@@ -151,8 +151,8 @@ void disconnectServer(int sockfd)
 size_t sendServer(int fd, char *s_buf, size_t len)
 {
     char string[256];
-    // Buffer leeren
-    // da tcflush nicht richtig funktioniert, verwenden wir nonblocking read
+    // Empty buffer
+    // As tcflush does not work correctly, we use nonblocking read
     fcntl(fd, F_SETFL, O_NONBLOCK);
     while (readn(fd, string, sizeof(string)) > 0) { }
     fcntl(fd, F_SETFL, ! O_NONBLOCK);
@@ -183,8 +183,8 @@ trPtr sendCmdFile(int sockfd, const char *filename)
     }
 
     if (! sendTrList(sockfd, startPtr)) {
-         // da ging was bei der Kommunikation schief
-        return (NULL);
+        // Something with the communication went wrong
+        return NULL;
     }
 
     return startPtr;
@@ -208,7 +208,7 @@ trPtr sendCmds(int sockfd, char *commands)
 
     if (! sendTrList(sockfd, startPtr))
     {
-        // da ging was bei der Kommunikation schief
+        // Something with the communication went wrong
         return NULL;
     }
 
@@ -253,12 +253,12 @@ int sendTrList(int sockfd, trPtr ptr)
         logIT1(LOG_INFO, dumPtr);
         free(dumPtr);
 
-        // wir fuellen Fehler und result
+        // We fill errors and result
         if (strstr(ptr->raw, errTXT) == ptr->raw) {
             ptr->err = ptr->raw;
             fprintf(stderr, "SRV %s\n", ptr->err);
         } else {
-            // hier suchen wir das erste Wort in raw und speichern es als result
+            // Here, we search the first word in raw and save it as result
             char *rptr;
             char len;
             rptr = strchr(ptr->raw, ' ');

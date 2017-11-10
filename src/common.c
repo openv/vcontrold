@@ -14,9 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- * Testprogramm fuer Vito- Abfrage
- */
+// Test program for vito queries
 
 #define _GNU_SOURCE
 
@@ -41,7 +39,7 @@ int dbgFD = -1;
 
 int initLog(int useSyslog, char *logfile, int debugSwitch)
 {
-    // oeffnet bei Bedarf syslog oder log-Datei
+    // If needed, opes the syslog or log file
     if (useSyslog) {
         syslogger = 1;
         openlog("vito", LOG_PID, LOG_LOCAL0);
@@ -49,7 +47,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
     }
 
     if (logfile) {
-        // Logfile ist nicht NULL und nicht leer
+        // Log file is not NULL and not empty
         if (strcmp(logfile, "") == 0) {
             return 0;
         }
@@ -90,12 +88,12 @@ void logIT (int class, char *string, ...)
             strcat(errMsg, "\n");
         } else {
             strcpy(&errMsg[sizeof(errMsg) - 12], "OVERFLOW\n");
-            // sollte den semop Fehler loesen
+            // Should solve the semop error
         }
     }
 
     errClass = class;
-    // Steuerzeichen verdampfen
+    // Remove control characters
     cPtr = tPtr;
     while (*cPtr) {
         if (iscntrl(*cPtr)) {
@@ -105,7 +103,7 @@ void logIT (int class, char *string, ...)
     }
 
     if (dbgFD >= 0) {
-        // der Debug FD ist gesetzt und wir senden die Infos zuerst dort hin
+        // The debug FD is set and we firstly send the info there
         dprintf(dbgFD, "DEBUG:%s: %s\n", tPtr, print_buffer);
     }
 
@@ -125,7 +123,7 @@ void logIT (int class, char *string, ...)
         fflush(logFD);
     }
 
-    // Ausgabe nur, wenn 2 als STDERR geoeffnet ist
+    // Output only if 2 is open as STDERR
     if (isatty(2)) {
         fprintf(stderr, "[%d] %s: %s\n", pid, tPtr, print_buffer);
     }
@@ -140,14 +138,13 @@ void sendErrMsg(int fd)
     if ((fd >= 0) && (errClass <= 3)) {
         snprintf(string, sizeof(string), "ERR: %s", errMsg);
         write(fd, string, strlen(string));
-        errClass = 99; // damit wird sie nur ein mal angezeigt
+        errClass = 99; // Thus it's only displayed once
         bzero(errMsg, sizeof(errMsg));
     }
 
     *errMsg = '\0';
-    /* zurück auf Anfang, egal, ob wirklich ausgegeben -
-       kann für debugging auskommentiert werden, dann
-       sammeln sich in errMsg die Fehler */
+    // Back to start, no matter if we actually output
+    // Can be commented out for debugging, then we get the errors in errMsg
 }
 
 void setDebugFD(int fd)
@@ -179,7 +176,7 @@ int char2hex(char *outString, const char *charPtr, int len)
         strcat(outString, string);
     }
 
-    // letztes Leerzeichen verdampfen
+    // Remove first space
     outString[strlen(outString) - 1] = '\0';
 
     return len;

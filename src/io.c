@@ -38,7 +38,7 @@
 #include "common.h"
 
 #ifdef __CYGWIN__
-/* NCC is not defined under cygwin */
+// NCC is not defined under cygwin
 #define NCC NCCS
 #endif
 
@@ -52,8 +52,8 @@ void closeDevice(int fd)
 
 int openDevice(char *device)
 {
-    // wir unterscheiden hier TTY und Socket Verbindung
-    // Socket: kein / am Anfang und ein :
+    // We differentiate TTY and Socket connections.
+    // Socker: no / at the beginning and a :
     int fd;
     char *dptr;
 
@@ -61,18 +61,18 @@ int openDevice(char *device)
         char host[MAXBUF];
         int port;
         port = atoi(dptr + 1);
-        // dptr-device liefert die Laenge des Hostes
+        // The dptr device gives us the length of the host
         bzero(host, sizeof(host));
         strncpy(host, device, dptr - device);
-        // 3. Parameter ==1 --->noTCPDelay wird gesetzt
+        // Third parameter == 1 --> noTCPDelay set
         fd = openCliSocket(host, port, 1);
     } else {
         fd = opentty(device);
     }
 
     if (fd < 0) {
-        // hier kann noch Fehlerkram rein
-        return (-1);
+        // Here goes some error stuff
+        return -1;
     }
 
     return fd;
@@ -116,7 +116,7 @@ int opentty(char *device)
 
     tcsetattr(fd, TCSADRAIN, &newsb);
 
-    // DTR High fuer Spannungsversorgung
+    // DTR High for voltage supply
     int modemctl = 0;
     ioctl(fd, TIOCMGET, &modemctl);
     modemctl |= TIOCM_DTR;
@@ -134,15 +134,15 @@ int my_send(int fd, char *s_buf, int len)
     int i;
     char string[256];
 
-    // Buffer leeren
-    // da tcflush nicht richtig funktioniert, verwenden wir nonblocking read
+    // Empty buffer
+    // As tcflush doesn't work correctly, we use nonblocking read
     fcntl(fd, F_SETFL, O_NONBLOCK);
     while (readn(fd, string, sizeof(string)) > 0) {
     }
     fcntl(fd, F_SETFL, !O_NONBLOCK);
     tcflush(fd, TCIFLUSH);
 
-    // wir benutzen die Socket feste Vairante aus socket.c
+    // We use the socket fixed variant from socket.c
     writen(fd, s_buf, len);
     for (i = 0; i < len; i++) {
         unsigned char byte = s_buf[i] & 255;
@@ -171,7 +171,7 @@ int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
             return (-1);
         }
         alarm(TIMEOUT);
-        // wir benutzen die Socket feste Vairante aus socket.c
+        // We use the socket fixed variant from socket.c
         if (readn(fd, &r_buf[i], 1) <= 0) {
             logIT1(LOG_ERR, "error read tty");;
             alarm(0);
@@ -334,7 +334,7 @@ int waitfor(int fd, char *w_buf, int w_len)
     logIT(LOG_INFO, "Warte auf %s", hexString);
     start = time(NULL);
 
-    // wir warten auf das erste Zeichen, danach muss es passen
+    // We wait for the first character, then everything has to apply
     do {
         etime = 0;
         if (receive(fd, r_buf, 1, &etime) < 0) {

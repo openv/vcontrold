@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Routinen fuer das Lesen von Kommandos
+// Routines for reading commands
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,12 +35,11 @@
 #include "io.h"
 #include "framer.h"
 
-extern FILE *iniFD; // fuer das Anlegen des Sim. INI Files
+extern FILE *iniFD; // For creation of the Sim. INI Files
 
 void *getUnit(char *str)
 {
-    // wir parsen die Eingabe nach einer bekannten Unit
-    // und geben einen Zeiger auf die Struktur zurueck
+    // We parse the input for a known unit and return a pointer to the struct
     return (NULL);
 }
 
@@ -60,14 +59,14 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
     }
 
     if (token) {
-        // wir parsen den Hex String und liefern ihn gewandelt zurück
-        // erste Leerstelle suchen
+        // We parse a hex string and return it processed
+        // Search first blank
         char *ptr;
         ptr = strchr(line, ' ');
         if (! ptr) {
             logIT(LOG_ERR, "Parse error, kein Leerzeichen gefunden: %s", line);
         } else {
-            // wir nudeln den Rest der Zeile durch
+            // We process the rst of the line
             char pString[MAXBUF];
             char *pPtr;
             while (*ptr != '\0') {
@@ -77,7 +76,7 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                     pPtr[i] = '\0';
                 }
                 pPtr = pString;
-                // Leerstellen verdampfen
+                // Remove blanks
                 int endFound = 0;
                 while ( *++ptr == ' ')
                     if (*ptr == '\0') {
@@ -87,7 +86,7 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                 if (endFound) {
                     break;
                 }
-                // wir lesen nun die Zeichen ein bis zum naechsten Blank oder Ende
+                // Now, we read the characters to the next blank or end
                 while ((*ptr != ' ') && (*ptr != '\0') && (*ptr != '\n') && (*ptr != '\r')) {
                     *pPtr++ = *ptr++;
                 }
@@ -98,10 +97,10 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
 
                 *pPtr = '\0';
                 ++*hexlen;
-                // wenn es sich um Pause oder Receive handelt, behandeln wir den Wert als Integer
+                // If it's Pause or Reveice, we tread it as an integer
                 if (token == PAUSE || token == RECV) {
                     *hexlen = atoi(pString);
-                    // Bei RECV kann man noch die Unit angeben, in die umgerechnet werden soll
+                    // With RECV, one can give the unit to be converted
                     if (token == RECV) {
                         pPtr = pString;
                         while (*ptr && (isdigit(*ptr) || isspace(*ptr))) {
@@ -111,7 +110,7 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                     }
                     return token;
                 } else if (token == BYTES ) {
-                    // hier folgt noch die Unit
+                    // Here follows the unit
                     pPtr = pString;
                     while (*ptr && (isdigit(*ptr) || isspace(*ptr))) {
                         ptr++;
@@ -148,7 +147,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
 
     bzero(simIn, sizeof(simIn));
     bzero(simOut, sizeof(simOut));
-    // wir wandeln zuerst die zu sendenen Bytes, nicht daas wir mittendrin abbrechen muessen
+    // First, we convert the bytes to send to be sure not to abort right in the middle of it
     if (! supressUnit) {
         while (cPtr) {
             if (cPtr->token != BYTES) {
@@ -161,13 +160,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     return (-1);
                 }
                 if (cPtr->send) {
-                    // wir haben das schon mal gesendet, der Speicher war noch alloziert
+                    // We already sent this, the memory is still allocated
                     free(cPtr->send);
                     cPtr->send = NULL;
                 }
                 cPtr->send = calloc(len, sizeof(char));
                 cPtr->len = len;
-                sendLen = 0; // wir senden nicht den ungewandelten sendBuf
+                sendLen = 0; // We don't send the converted sendBuf
                 memcpy(cPtr->send, sendBuf, len);
             }
             cPtr = cPtr->next;
@@ -175,7 +174,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     }
 
     do {
-        cPtr = cmpPtr; // fuer die naechste Runde brauchen wir den Anfang
+        cPtr = cmpPtr; // We need the starting point for the next round
         while (cmpPtr) {
             switch (cmpPtr->token) {
             case WAIT:
@@ -206,7 +205,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 }
 
                 if (iniFD && *simIn && *simOut) {
-                    // wir haben schon was gesendet und empfangen, das geben wir nun aus
+                    // We already sent and received something, so we output it
                     fprintf(iniFD, "%s= %s\n", simOut, simIn);
                     bzero(simOut, sizeof(simOut));
                     bzero(simIn, sizeof(simIn));
@@ -222,7 +221,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 if (cmpPtr->len > recvLen) {
                     logIT(LOG_ERR, "Recv Buffer zu klein. Ist: %d Soll %d", recvLen, cmpPtr->len);
                     cmpPtr->len = recvLen;
-                    // hoffentlich kommen wir hier nicht hin
+                    // Hopefully, we don't end up here
                 }
                 etime = 0;
                 bzero(recvBuf, sizeof(recvBuf));
@@ -230,8 +229,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     logIT1(LOG_ERR, "Fehler recv, Abbruch");
                     return -1;
                 }
-                // falls wir beim empfangen laenger als der Timeout gebraucht haben
-                // gehts in die naechste Runde
+                // If receiving took longer than the timeout, we start the next round
                 if (recvTimeout && (etime > recvTimeout)) {
                     logIT(LOG_NOTICE, "Recv Timeout: %ld ms  > %d ms (Retry: %d)",
                           etime, recvTimeout, (int)(retry - 1));
@@ -242,10 +240,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     goto RETRY;
                 }
 
-                // falls ein errStr definiert ist, schauen wir mal ob das Ergebnis richtig ist
+                // If some errStr is defined, we check if the result is correct
                 if (cmpPtr->errStr && *cmpPtr->errStr) {
                     if (memcmp(recvBuf, cmpPtr->errStr, cmpPtr->len) == 0) {
-                        // falsche Antwort
+                        // Wrong answer
                         logIT(LOG_NOTICE, "Errstr matched, Ergebnis falsch (Retry:%d)", retry - 1);
                         if (retry <= 1) {
                             logIT1(LOG_ERR, "Ergebnis falsch, Abbruch");
@@ -260,8 +258,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 strcat(simIn, string);
                 strcat(simIn, " ");
 
-                // falls wir eine Unit haben (==uPtr) rechnen wir den
-                // empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck
+                // If we have a Unit (== uPtr), we convert the received value and also
+                // return the converted value to uPtr
                 bzero(result, sizeof(result));
                 if (! supressUnit && cmpPtr->uPtr) {
                     if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
@@ -272,16 +270,16 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     strncpy(recvBuf, result, recvLen);
 
                     if (iniFD && *simIn && *simOut) {
-                        // wir haben gesendet und empfangen, das geben wir nun aus
-                        // fprintf(iniFD,"%s= %s ;%s\n",simOut,simIn,result);
+                        // We already sent and received, now we output it.
+                        //fprintf(iniFD,"%s= %s ;%s\n",simOut,simIn,result);
                         fprintf(iniFD, "%s= %s \n", simOut, simIn);
                     }
 
-                    return 0; // 0==gewandelt nach unit
+                    return 0; // 0 == converted to unit
                 }
 
                 if (iniFD && *simIn && *simOut) {
-                    // wir haben gesendet und empfangen, das geben wir nun aus
+                    // We already sent and received, now we output it.
                     fprintf(iniFD, "%s= %s \n", simOut, simIn);
                 }
                 return cmpPtr->len;
@@ -299,19 +297,17 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 break;
 
             case BYTES:
-                // wir senden den sendBuffer, der uebergeben wurde
-                // es fand keine Wandlung statt
+                // We send the forwarded sendBuffer. No converting has been done.
                 if (sendLen) {
                     if (!my_send(fd, sendBuf, sendLen)) {
                         logIT1(LOG_ERR, "Fehler send, Abbruch");
-                        return (-1);
+                        return -1;
                     }
                     char2hex(string, sendBuf, sendLen);
                     strcat(simOut, string);
                     strcat(simOut, " ");
                 } else if (cmpPtr->len) {
-                    // es ist eine Einheit definiert soll benutzt werden und wir haben das
-                    // oben schon gewandelt
+                    // A unit to use is already defined, and we already converted it
                     if (! my_send(fd, cmpPtr->send, cmpPtr->len)) {
                         logIT1(LOG_ERR, "Fehler send unit Bytes, Abbruch");
                         free(cmpPtr->send);
@@ -336,7 +332,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
         }
 RETRY:
         retry--;
-        cmpPtr = cPtr; // von vorne bitte
+        cmpPtr = cPtr; // One more time, please
     } while ((cmpPtr->errStr || recvTimeout) && (retry > 0));
 
     return 0;
@@ -348,14 +344,14 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
     char uString[100];
     //char *uSPtr=uString;
     logIT(LOG_INFO, "Execute %s", cmd);
-    // wir parsen die einzelnen Zeilen
+    // We parse the individual lines
     char hex[MAXBUF];
     int token;
     int hexlen = 0;
     int t;
     unsigned long etime;
     token = parseLine(cmd, hex, &hexlen, uString, sizeof(uString));
-    // wenn noOpen fuer debug Zwecke gesetzt ist, machen wir hier nichts
+    // If noOpen is set for debugging, we do nothing here.
 
     switch (token) {
     case WAIT:
@@ -383,9 +379,8 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
             exit(1);
         }
         logIT(LOG_INFO, "Recv: %ld ms", etime);
-        // falls wir eine Unit haben (==uPtr) rechnen wir den
-        // empfangenen Wert um, und geben den umgerechneten Wert auch in uPtr zurueck
-        return (hexlen);
+        // If we have a unit (== uPtr), we convert the received value and also return it to uPtr
+        return hexlen;
         break;
 
     case PAUSE:
@@ -442,7 +437,7 @@ void removeCompileList(compilePtr ptr)
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
 
-    // Rekursion
+    // Recursion
     if (! cPtr) {
         return 0;
     }
@@ -450,8 +445,8 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
         expand(cPtr->next, pPtr);
     }
 
-    // falls keine Adresse gesetzt ist machen wir nichts
-    if (!cPtr->addr) {
+    // If no address has been set, we do nothing
+    if (! cPtr->addr) {
         return 0;
     }
 
@@ -467,15 +462,15 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     icmdPtr iPtr;
 
-    // send des Kommand Pointers muss gebaut werden
+    // The command pointer's send has to be assembled
 
-    // 1. Suche Kommando pcmd bei den Kommandos des Protokolls
+    // 1. Search command pcmd at the protocol's command
     if (! (iPtr = (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
         logIT(LOG_ERR, "Protokoll Kommando %s (bei %s) nicht definiert", cPtr->pcmd, cPtr->name);
         exit(3);
     }
 
-    // 2. Parse die zeile und ersetze die Variablen durch Werte in cPtr
+    // 2. Parse the line and replace the variables with values from cPtr
     sendPtr = iPtr->send;
     sendStartPtr = iPtr->send;
     if (! sendPtr) {
@@ -484,8 +479,8 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     logIT(LOG_INFO, "protocmd Zeile: %s", sendPtr);
     bzero(eString, sizeof(eString));
-    cPtr->retry = iPtr->retry; // wir uebernehmen den Retry Wert aus des Protokoll Kommandos
-    cPtr->recvTimeout = iPtr->recvTimeout; // dito fuer den Receive Timeout
+    cPtr->retry = iPtr->retry; // We take the Retry value from the protocol command
+    cPtr->recvTimeout = iPtr->recvTimeout; // Same for the receive timeout
     do {
         ptr = sendPtr;
         while (*ptr++) {
@@ -497,17 +492,17 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
             if ((*bptr == ' ') || (*bptr == ';') || (*bptr == '\0'))
             { break; }
         }
-        // kopiere nicht umgewandelten String
+        // Don't copy the converted string
         strncpy(ePtr, sendPtr, ptr - sendPtr);
         ePtr += ptr - sendPtr;
         bzero(var, sizeof(var));
         strncpy(var, ptr + 1, bptr - ptr - 1);
-        // snprintf(string, sizeof(string),"   Var: %s",var);
-        // logIT(LOG_INFO,string);
+        //snprintf(string, sizeof(string),"   Var: %s",var);
+        //logIT(LOG_INFO,string);
         if (*var) {
-            // Haben wir uerbhaupt Variablen zu expandieren
+            // Do we have variabls to expand at all?
             if (strstr(var, "addr") == var) {
-                // immer zwei Byte zusammen
+                // Always two bytes
                 int i;
                 bzero(string, sizeof(string));
                 for (i = 0; i < strlen(cPtr->addr) - 1; i += 2) {
@@ -541,11 +536,11 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     tmpPtr = calloc(strlen(eString) + 1, sizeof(char));
     strcpy(tmpPtr, eString);
 
-    // 3. Expandiere die Zeile dann wie gehabt
+    // 3. Expand the line as usual
     sendPtr = tmpPtr;
     sendStartPtr = sendPtr;
 
-    // wir suchen nach woertern und schauen, ob es die als Macros gibt
+    // We search for words and look if we have them as macros
     bzero(eString, sizeof(eString));
     ePtr = eString;
     do {
@@ -581,7 +576,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
 compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 {
-    // Rekursion
+    // Recursion
     if (!cPtr) {
         return 0;
     }
@@ -589,7 +584,7 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
         buildByteCode(cPtr->next, uPtr);
     }
 
-    // falls keine Adresse gesetzt ist machen wir nichts
+    // If no address has been given, we do nothing
     if (! cPtr->addr) {
         return 0;
     }
@@ -612,7 +607,7 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     sendStartPtr = cPtr->send;
 
     if (! sendPtr) {
-        // hier gibt es nichts zu tun
+        // Nothing to do here
         return 0;
     }
 

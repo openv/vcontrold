@@ -45,7 +45,7 @@ union semun {
 */
 int initsem(key_t key, int nsems)
 {
-    //key from ftok()
+    // key from ftok()
     int i;
     union semun arg;
     struct semid_ds buf;

@@ -1,4 +1,4 @@
-/*  Copyright 2007-2017 the original vcontrold development team
+/*  Copyright 2007-2017 Frank Nobis <...>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -13,14 +13,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-//
-//  vclient.h
-//  vcontrol_svn
-//
-//  Created by Frank Nobis on 08.11.13.
-//
-//
 
 #ifndef VCLIENT_H
 #define VCLIENT_H
