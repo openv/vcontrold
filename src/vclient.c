@@ -14,9 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
- * Vito-Control Client
- */
+// Vito-Control Client
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,12 +27,11 @@
 #include <time.h>
 #include <ctype.h>
 #include <getopt.h>
+#include <fcntl.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
-#include <fcntl.h>
-
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
@@ -43,7 +40,6 @@
 #include "io.h"
 #include "client.h"
 #include "vclient.h"
-
 #include "version.h"
 
 void usage()
@@ -70,15 +66,14 @@ usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--c
     exit(1);
 }
 
-/* hier gehts los */
+// hier geht's los
 
 int inetversion = 0;
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 
-    /* Auswertung der Kommandozeilenschalter */
+    // Auswertung der Kommandozeilenschalter
     char *host;
     int port = 0;
     char commands[512] = "";
@@ -101,41 +96,42 @@ main(int argc, char *argv[])
 
     while (1) {
         static struct option long_options[] = {
-
-            {"host",        required_argument,    0, 'h'},
-            {"port",        required_argument,    0, 'p'},
-            {"command",        required_argument,    0, 'c'},
-            {"commandfile",    required_argument,    0, 'f'},
-            {"csvfile",        required_argument,    0, 's'},
-            {"template",    required_argument,    0, 't'},
-            {"output",        required_argument,    0, 'o'},
-            {"execute",        required_argument,    0, 'x'},
-            {"verbose",        no_argument,        &verbose, 1},
-            {"munin",        no_argument,        &munin, 1},
-            {"cacti",        no_argument,        &cacti, 1},
-            {"inet4",        no_argument,        &inetversion, 4},
-            {"inet6",        no_argument,        &inetversion, 6},
-            {"help",        no_argument,        0,    0},
-            {0, 0, 0, 0}
+            {"host",        required_argument, 0,            'h'},
+            {"port",        required_argument, 0,            'p'},
+            {"command",     required_argument, 0,            'c'},
+            {"commandfile", required_argument, 0,            'f'},
+            {"csvfile",     required_argument, 0,            's'},
+            {"template",    required_argument, 0,            't'},
+            {"output",      required_argument, 0,            'o'},
+            {"execute",     required_argument, 0,            'x'},
+            {"verbose",     no_argument,       &verbose,     1},
+            {"munin",       no_argument,       &munin,       1},
+            {"cacti",       no_argument,       &cacti,       1},
+            {"inet4",       no_argument,       &inetversion, 4},
+            {"inet6",       no_argument,       &inetversion, 6},
+            {"help",        no_argument,       0,            0},
+            {0,             0,                 0,            0}
         };
-        /* getopt_long stores the option index here. */
+        // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:f:h:kmo:p:s:t:vx:46",
-                           long_options, &option_index);
+        opt = getopt_long (argc, argv, "c:f:h:kmo:p:s:t:vx:46", long_options, &option_index);
 
-        /* Detect the end of the options. */
-        if (opt == -1)
-        { break; }
+        // Detect the end of the options.
+        if (opt == -1) {
+            break;
+        }
 
         switch (opt) {
         case 0:
-            /* If this option sets a flag, we do nothing for now */
-            if (long_options[option_index].flag != 0)
-            { break; }
+            // If this option sets a flag, we do nothing for now
+            if (long_options[option_index].flag != 0) {
+                break;
+            }
             if (verbose) {
                 printf("option %s", long_options[option_index].name);
-                if (optarg)
-                { printf(" with arg %s", optarg); }
+                if (optarg) {
+                    printf(" with arg %s", optarg);
+                }
                 printf("\n");
             }
             if (strcmp("help", long_options[option_index].name) == 0) {
@@ -149,30 +145,34 @@ main(int argc, char *argv[])
             break;
 
         case 'm':
-            if (verbose)
-            { puts ("option -m\n"); }
+            if (verbose) {
+                puts ("option -m\n");
+            }
             munin = 1;
             break;
 
         case 'k':
-            if (verbose)
-            { puts ("option -k\n"); }
+            if (verbose) {
+                puts ("option -k\n");
+            }
             cacti = 1;
             break;
 
         case 'h':
-            if (verbose)
-            { printf ("option -h with value `%s'\n", optarg); }
+            if (verbose) {
+                printf ("option -h with value `%s'\n", optarg);
+            }
             host = optarg;
             break;
 
         case 'p':
-            if (verbose)
-            { printf ("option -p with value `%s'\n", optarg); }
+            if (verbose) {
+                printf ("option -p with value `%s'\n", optarg);
+            }
             port = atoi(optarg);
             if (port == 0) {
                 fprintf(stderr, "Ungültiger Wert für option --port: %s\n", optarg);
-                usage();    /* und damit exit */
+                usage(); // und damit exit
             }
             break;
 
@@ -194,46 +194,53 @@ main(int argc, char *argv[])
             break;
 
         case 'f':
-            if (verbose)
-            { printf ("option -f with value `%s'\n", optarg); }
+            if (verbose) {
+                printf ("option -f with value `%s'\n", optarg);
+            }
             cmdfile = optarg;
             break;
 
         case 's':
-            if (verbose)
-            { printf ("option -s with value `%s'\n", optarg); }
+            if (verbose) {
+                printf ("option -s with value `%s'\n", optarg);
+            }
             csvfile = optarg;
             break;
 
         case 't':
-            if (verbose)
-            { printf ("option -t with value `%s'\n", optarg); }
+            if (verbose) {
+                printf ("option -t with value `%s'\n", optarg);
+            }
             tmplfile = optarg;
             break;
 
         case 'o':
         case 'x':
-            if (verbose)
-            { printf ("option -%c with value `%s'\n", opt, optarg); }
+            if (verbose) {
+                printf ("option -%c with value `%s'\n", opt, optarg);
+            }
             outfile = optarg;
-            if (opt == 'x')
-            { execMe = 1; }
+            if (opt == 'x') {
+                execMe = 1;
+            }
             break;
 
         case '4':
-            if (verbose)
-            { printf ("option -%c with value `%s'\n", opt, optarg); }
+            if (verbose) {
+                printf ("option -%c with value `%s'\n", opt, optarg);
+            }
             inetversion = 4;
             break;
 
         case '6':
-            if (verbose)
-            { printf ("option -%c with value `%s'\n", opt, optarg); }
+            if (verbose) {
+                printf ("option -%c with value `%s'\n", opt, optarg);
+            }
             inetversion = 6;
             break;
 
         case '?':
-            /* getopt_long already printed an error message. */
+            // getopt_long already printed an error message.
             usage();
             break;
 
@@ -242,16 +249,16 @@ main(int argc, char *argv[])
         }
     }
 
-    /* Collect any remaining command line arguments (not options).
-     * and use the as commands like for the -c option.
-     */
+    // Collect any remaining command line arguments (not options).
+    // and use the as commands like for the -c option.
     if (optind < argc) {
         if (verbose) {
             printf ("non-option ARGV-elements: ");
         }
         while (optind < argc) {
-            if (verbose)
-            { printf ("%s ", argv[optind]); }
+            if (verbose) {
+                printf ("%s ", argv[optind]);
+            }
             if (strlen(commands) == 0) {
                 strncpy(commands, argv[optind], sizeof(commands));
             } else {
@@ -265,52 +272,55 @@ main(int argc, char *argv[])
             }
             optind++;
         }
-        if (verbose)
-        { putchar ('\n'); }
+        if (verbose) {
+            putchar ('\n');
+        }
     }
 
     initLog(0, dummylog, verbose);
-    if (!*commands && !cmdfile)
-    { usage(); }
+    if (! *commands && !cmdfile) {
+        usage();
+    }
     /* Check for :<port> if port==0
-     * then separate the port number from the host name
-     * or the IP adsress.
-     * The IP address could be a plain old IPv4 or a IPv6 one,
-     * which could contain more than one ':', so that makes a bad
-     * separator in the IPv6 case and you better use --port
-     * -h 192.168.2.1:3002 vs --host 2003:abcd:ff::1 --port 3002
-     * or --host 2003:abcd:ff::1:3002, assume the last :3002 be the port
-     * This is just for backwards compatibility.
-     */
+       then separate the port number from the host name
+       or the IP adsress.
+       The IP address could be a plain old IPv4 or a IPv6 one,
+       which could contain more than one ':', so that makes a bad
+       separator in the IPv6 case and you better use --port
+       -h 192.168.2.1:3002 vs --host 2003:abcd:ff::1 --port 3002
+       or --host 2003:abcd:ff::1:3002, assume the last :3002 be the port
+       This is just for backwards compatibility. */
     if (port == 0) {
-        /* check for last ':' in host */
+        // check for last ':' in host
         char *last_colon = NULL;
 
         last_colon = strrchr(host, ':');
         port = atoi(last_colon + 1);
-        /*printf(">>> port=%d\n", port);*/
+        //printf(">>> port=%d\n", port);
         *last_colon = '\0';
     }
+
     sockfd = connectServer(host, port);
     if (sockfd < 0) {
         logIT(LOG_ERR, "Keine Verbindung zu %s", host);
         exit(1);
     }
-    /* Kommandos direkt angegeben */
+
+    // Kommandos direkt angegeben */
     resPtr = NULL;
     if (*commands) {
         resPtr = sendCmds(sockfd, commands);
     } else if (cmdfile) {
         resPtr = sendCmdFile(sockfd, cmdfile);
     }
-    if (!resPtr) {
+    if (! resPtr) {
         logIT(LOG_ERR, "Fehler bei der Server Kommunikation");
         exit(1);
     }
     disconnectServer(sockfd);
 
     if (outfile) {
-        if (!(ofilePtr = fopen(outfile, "w"))) {
+        if (! (ofilePtr = fopen(outfile, "w"))) {
             logIT(LOG_ERR, "Kann Datei %s nicht anlegen", outfile);
             exit(1);
         }
@@ -320,10 +330,10 @@ main(int argc, char *argv[])
         ofilePtr = fdopen(fileno(stdout), "w");
     }
 
-    /* das Ergebnis ist in der Liste resPtr, nun unterscheiden wir die Ausgabe */
+    // das Ergebnis ist in der Liste resPtr, nun unterscheiden wir die Ausgabe
     if (csvfile) {
-        /* Kompakt Format mit Semikolon getrennt */
-        if (!(filePtr = fopen(csvfile, "a"))) {
+        // Kompakt Format mit Semikolon getrennt
+        if (! (filePtr = fopen(csvfile, "a"))) {
             logIT(LOG_ERR, "Kann Datei %s nicht anlegen", csvfile);
             exit(1);
         }
@@ -331,7 +341,7 @@ main(int argc, char *argv[])
         bzero(result, sizeof(result));
         while (resPtr) {
             if (resPtr->err) {
-                /* fprintf(stderr,"%s:%s\n",resPtr->cmd,resPtr->err); */
+                //fprintf(stderr,"%s:%s\n",resPtr->cmd,resPtr->err);
                 fprintf(stderr, "%s: server error\n", resPtr->cmd);
                 strcat(result, ";");
                 resPtr = resPtr->next;
@@ -342,13 +352,13 @@ main(int argc, char *argv[])
             strncat(result, string, sizeof(result) - strlen(result) - 1);
             resPtr = resPtr->next;
         }
-        /*letztes Semikolon verdampfen und \n dran*/
+        // letztes Semikolon verdampfen und \n dran
         if (*result) {
             *(result + strlen(result) - 1) = '\n';
             fputs(result, filePtr);
         }
         fclose(filePtr);
-    } else if (tmplfile) { /* Template angegeben*/
+    } else if (tmplfile) { // Template angegeben
         char line[1000];
         char *lptr;
         char *lSptr;
@@ -361,14 +371,15 @@ main(int argc, char *argv[])
         trPtr *idxPtr;
         short varReplaced;
 
-        /* im Array idxPtr werden die einzelnen Ergebnisse ueber den Index referenziert */
-        for (count = 0; tPtr; tPtr = tPtr->next)
-        { count++; }
+        // im Array idxPtr werden die einzelnen Ergebnisse ueber den Index referenziert
+        for (count = 0; tPtr; tPtr = tPtr->next) {
+            count++;
+        }
 
-        /* wir reservieren uns ein Array mit der passenden Groesse */
+        // wir reservieren uns ein Array mit der passenden Groesse
         idxPtr = calloc(count, sizeof(tPtr));
 
-        maxIdx = count; /* groesster Index in den Variablen */
+        maxIdx = count; // groesster Index in den Variablen
 
         count = 0;
         tPtr = resPtr;
@@ -377,21 +388,19 @@ main(int argc, char *argv[])
             tPtr = tPtr->next;
         }
 
-        if (!(filePtr = fopen(tmplfile, "r"))) {
+        if (! (filePtr = fopen(tmplfile, "r"))) {
             logIT(LOG_ERR, "Kann Template-Datei %s nicht oeffnen", tmplfile);
             exit(1);
         }
-        /*
-        Es gibt folgende Variablen zum Ersetzen:
-            $Rn: Result (trPtr->raw)
-            $n: Float (trPtr->result)
-        */
+        /* Es gibt folgende Variablen zum Ersetzen:
+           $Rn: Result (trPtr->raw)
+           $n: Float (trPtr->result) */
         while ((fgets(line, sizeof(line) - 1, filePtr))) {
             logIT(LOG_INFO, "Tmpl Zeile:%s", line);
             lSptr = line;
             while ((lptr = strchr(lSptr, '$'))) {
                 varReplaced = 0;
-                if ((lptr > line) && (*(lptr - 1) == '\\')) { /* $ ist durch \ ausmaskiert */
+                if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ ist durch \ ausmaskiert
                     bzero(string, sizeof(string));
                     strncpy(string, lSptr, lptr - lSptr - 1);
                     fprintf(ofilePtr, "%s%c", string, *lptr);
@@ -399,66 +408,63 @@ main(int argc, char *argv[])
                     continue;
                 }
                 lEptr = lptr + 1;
-                /* wir suchen nun das Ende der Variablen */
-                while (isalpha(*lEptr) || isdigit(*lEptr))
-                { lEptr++; }
+                // wir suchen nun das Ende der Variablen
+                while (isalpha(*lEptr) || isdigit(*lEptr)) {
+                    lEptr++;
+                }
                 bzero(varname, sizeof(varname));
                 strncpy(varname, lptr + 1, lEptr - lptr - 1);
                 logIT(LOG_INFO, "\tVariable erkannt:%s", varname);
 
-                /* wir geben schon mal alles bis dahin aus */
+                // wir geben schon mal alles bis dahin aus
                 bzero(string, sizeof(string));
                 strncpy(string, lSptr, lptr - lSptr);
                 fprintf(ofilePtr, "%s", string);
 
-                /* wir unterscheiden die verschiedenen Variablen */
+                // wir unterscheiden die verschiedenen Variablen
 
-                /* $Rn */
-                if ((strlen(varname) > 1) &&
-                        (*varname == 'R') &&
-                        (idx = atoi(varname + 1))) {
-                    /* Variable R Index dahinter in idx */
+                // $Rn
+                if ((strlen(varname) > 1) && (*varname == 'R') && (idx = atoi(varname + 1))) {
+                    // Variable R Index dahinter in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "%s:%s", tPtr->cmd, tPtr->raw);
-                        if (tPtr->raw)
-                        { fprintf(ofilePtr, "%s", tPtr->raw); }
+                        if (tPtr->raw) {
+                            fprintf(ofilePtr, "%s", tPtr->raw);
+                        }
                     } else {
                         logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
                     }
                 }
-                /* $Cn */
-                else if ((strlen(varname) > 1) &&
-                         (*varname == 'C') &&
-                         (idx = atoi(varname + 1))) {
-                    /* Variable R Index dahinter in idx */
+                // $Cn
+                else if ((strlen(varname) > 1) && (*varname == 'C') && (idx = atoi(varname + 1))) {
+                    // Variable R Index dahinter in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "Kommando: %s", tPtr->cmd);
-                        if (tPtr->cmd)
-                        { fprintf(ofilePtr, "%s", tPtr->cmd); }
+                        if (tPtr->cmd) {
+                            fprintf(ofilePtr, "%s", tPtr->cmd);
+                        }
                     } else {
                         logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
                     }
                 }
-                /* $En */
-                else if ((strlen(varname) > 1) &&
-                         (*varname == 'E') &&
-                         (idx = atoi(varname + 1))) {
-                    /* Variable R Index dahinter in idx */
+                // $En
+                else if ((strlen(varname) > 1) && (*varname == 'E') && (idx = atoi(varname + 1))) {
+                    // Variable R Index dahinter in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "Fehler: %s:%s", tPtr->cmd, tPtr->err);
-                        if (tPtr->err)
-                        { fprintf(ofilePtr, "%s", tPtr->err); }
-                        else
-                        { fprintf(ofilePtr, "OK"); }
-
+                        if (tPtr->err) {
+                            fprintf(ofilePtr, "%s", tPtr->err);
+                        } else {
+                            fprintf(ofilePtr, "OK");
+                        }
                     } else {
                         logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
                     }
                 }
-                /* $n */
+                // $n
                 else if (isdigit(*varname) && (idx = atoi(varname)))  {
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
@@ -477,8 +483,10 @@ main(int argc, char *argv[])
             }
             fprintf(ofilePtr, "%s", lSptr);
         }
+
         fclose(filePtr);
-        if (outfile && *outfile && execMe) { /* Datei ausfuerhbar machen und starten */
+
+        if (outfile && *outfile && execMe) { // Datei ausfuerhbar machen und starten
             fclose(ofilePtr);
             bzero(string, sizeof(string));
             logIT(LOG_INFO, "Fuehre Datei %s aus", outfile);
@@ -486,15 +494,18 @@ main(int argc, char *argv[])
                 logIT(LOG_ERR, "Fehler chmod +x %s", outfile);
                 exit(1);
             }
+
             short ret;
             if ((ret = system(outfile)) == -1) {
                 logIT(LOG_ERR, "Fehler system(%s)", outfile);
                 exit(1);
             }
+
             logIT(LOG_INFO, "Ret Code: %d", ret);
             exit(ret);
         }
-    } else if (munin) { /*Munin Format ausgeben*/
+
+    } else if (munin) { // Munin Format ausgeben
         while (resPtr) {
             fprintf(ofilePtr, "%s.value ", resPtr->cmd);
             if (resPtr->err) {
@@ -502,13 +513,15 @@ main(int argc, char *argv[])
                 resPtr = resPtr->next;
                 continue;
             }
-            if (resPtr->raw)
-            { fprintf(ofilePtr, "%f\n", resPtr->result); }
-            else
-            { fprintf(ofilePtr, "U\n"); }
+            if (resPtr->raw) {
+                fprintf(ofilePtr, "%f\n", resPtr->result);
+            } else {
+                fprintf(ofilePtr, "U\n");
+            }
             resPtr = resPtr->next;
         }
-    } else if (cacti) { /*Cacti Format ausgeben*/
+
+    } else if (cacti) { // Cacti Format ausgeben
         int index = 1;
         while (resPtr) {
             fprintf(ofilePtr, "v%d:", index);
@@ -518,27 +531,32 @@ main(int argc, char *argv[])
                 index++;
                 continue;
             }
-            if (resPtr->raw)
-            { fprintf(ofilePtr, "%f ", resPtr->result); }
-            else
-            { fprintf(ofilePtr, "U "); }
+            if (resPtr->raw) {
+                fprintf(ofilePtr, "%f ", resPtr->result);
+            } else {
+                fprintf(ofilePtr, "U ");
+            }
             index++;
             resPtr = resPtr->next;
         }
         fprintf(ofilePtr, "\n");
+
     } else {
         while (resPtr) {
             fprintf(ofilePtr, "%s:\n", resPtr->cmd);
             if (resPtr->err) {
-                /*    fprintf(stderr,"%s",resPtr->err); */
+                //fprintf(stderr,"%s",resPtr->err);
                 fprintf(stderr, "server error\n");
                 resPtr = resPtr->next;
                 continue;
             }
-            if (resPtr->raw)
-            { fprintf(ofilePtr, "%s\n", resPtr->raw); }
+            if (resPtr->raw) {
+                fprintf(ofilePtr, "%s\n", resPtr->raw);
+            }
             resPtr = resPtr->next;
         }
     }
+
     return 0;
+
 }
