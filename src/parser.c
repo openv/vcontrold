@@ -78,11 +78,12 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                 pPtr = pString;
                 // Remove blanks
                 int endFound = 0;
-                while ( *++ptr == ' ')
+                while ( *++ptr == ' ') {
                     if (*ptr == '\0') {
                         endFound = 1;
                         break;
                     }
+                }
                 if (endFound) {
                     break;
                 }
