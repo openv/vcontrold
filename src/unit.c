@@ -81,7 +81,7 @@ int getCycleTime(char *recv, int len, char *result)
 
     //if ((len/2)*2 !=len) {
     if (len % 2) {
-        sprintf(result, "Anzahl Bytes ungerade");
+        sprintf(result, "Byte count not even");
         return (0);
     }
 
@@ -89,9 +89,9 @@ int getCycleTime(char *recv, int len, char *result)
 
     for (i = 0; i < len; i += 2) {
         if (recv[i] == (char)0xff) {
-            snprintf(string, sizeof(string), "%d:An:--     Aus:--\n", (i / 2) + 1);
+            snprintf(string, sizeof(string), "%d:On:--     Off:--\n", (i / 2) + 1);
         } else {
-            snprintf(string, sizeof(string), "%d:An:%02d:%02d  Aus:%02d:%02d\n", (i / 2) + 1,
+            snprintf(string, sizeof(string), "%d:On:%02d:%02d  Off:%02d:%02d\n", (i / 2) + 1,
                      (recv[i] & 0xF8) >> 3, (recv[i] & 7) * 10,
                      (recv[i + 1] & 0xF8) >> 3, (recv[i + 1] & 7) * 10);
         }
@@ -136,7 +136,7 @@ int setCycleTime(char *input, char *sendBuf)
         } else {
             // Is the a : in the string?
             if (! strchr(sptr, ':')) {
-                sprintf(sendBuf, "Falsches Zeitformat: %s", sptr);
+                sprintf(sendBuf, "Wrong time format: %s", sptr);
                 return 0;
             }
             sscanf(sptr, "%i:%i", &hour, &min);
@@ -150,7 +150,7 @@ int setCycleTime(char *input, char *sendBuf)
     } while ((sptr = strtok(NULL, " ")) != NULL);
 
     if ((count / 2) * 2 != count) {
-        logIT(LOG_WARNING, "Anzahl Zeiten ungerade, ignoriere %s", cptr);
+        logIT(LOG_WARNING, "Lines count odd, ignoring %s", cptr);
         *(bptr - 1) = 0xff;
     }
 
@@ -161,9 +161,11 @@ int getSysTime(char *recv, int len, char *result)
 {
     char day[3];
     if (len != 8) {
-        sprintf(result, "Systemzeit: Len <>8 Bytes");
+        sprintf(result, "System time: Len <> 8 bytes");
         return (0);
     }
+    // TODO: Can this be translated, or is it used as German day abbreviations
+    // when communicating with the heating controller?
     switch (recv[4]) {
     case 0:
         strcpy(day, "So");
@@ -190,7 +192,7 @@ int getSysTime(char *recv, int len, char *result)
         strcpy(day, "So");
         break;
     default:
-        sprintf(result, "Fehler Tagwandlung: %02X", recv[4]);
+        sprintf(result, "Error day conversion: %02X", recv[4]);
         return (0);
     }
 
@@ -212,16 +214,18 @@ int setSysTime(char *input, char *sendBuf, short bufsize)
         time(&tt);
         t = localtime(&tt);
         bzero(systime, sizeof(systime));
-        sprintf(systime, "%04d  %02d %02d %02d %02d %02d %02d", t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_wday, t->tm_hour, t->tm_min, t->tm_sec);
+        sprintf(systime, "%04d  %02d %02d %02d %02d %02d %02d",
+                t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_wday,
+                t->tm_hour, t->tm_min, t->tm_sec);
         // We put a blank in the year
         systime[4] = systime[3];
         systime[3] = systime[2];
         systime[2] = ' ';
-        logIT(LOG_INFO, "aktuelle Sys.Zeit %s", systime);
+        logIT(LOG_INFO, "current system time %s", systime);
         return (string2chr(systime, sendBuf, bufsize));
     } else {
-        logIT1(LOG_ERR, "Setzen von explizieter Zeit noch nicht unterstuetzt");
-        return (0);
+        logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
+        return 0;
     }
 }
 
@@ -234,8 +238,8 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
     char *ptr;
 
     if (len % 9) {
-        sprintf(result, "Anzahl Bytes nicht mod 9");
-        return (0);
+        sprintf(result, "Bytes count is not mod 9");
+        return 0;
     }
 
     for (i = 0; i < len; i += 9) {
@@ -246,7 +250,8 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
         if (bytes2Enum(ePtr, ptr, &errtext, 1))
             // Rest SysTime
             if (getSysTime(ptr + 1, 8, systime)) {
-                snprintf(string, sizeof(string), "%s %s (%02X)\n", systime, errtext, (unsigned char) *ptr);
+                snprintf(string, sizeof(string),
+                         "%s %s (%02X)\n", systime, errtext, (unsigned char) *ptr);
                 strcat(result, string);
                 continue;
             }
@@ -363,7 +368,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
             strcpy(result, tPtr);
             return 1;
         } else {
-            sprintf(result, "Kein passendes Enum gefunden");
+            sprintf(result, "Didn't find an appropriate enum");
             return -1;
         }
     }
@@ -409,7 +414,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         floatV = uintV; // Implicit type conversion to float for our arithmetic
         sprintf(formatI, "%%08X %%s");
     } else if (uPtr->type) {
-        logIT(LOG_ERR, "Unbekannter Typ %s in Unit %s", uPtr->type, uPtr->name);
+        logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
         return -1;
     }
 
@@ -434,7 +439,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         // calc in XML and get defined within
         logIT(LOG_INFO, "Typ: %s (in float: %f)", uPtr->type, floatV);
         inPtr = uPtr->gCalc;
-        logIT(LOG_INFO, "(FLOAT) Exp:%s [%s]", inPtr, buffer);
+        logIT(LOG_INFO, "(FLOAT) Exp: %s [%s]", inPtr, buffer);
         erg = execExpression(&inPtr, recvBuf, floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
@@ -445,14 +450,14 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     } else if (uPtr->gICalc && *uPtr->gICalc) {
         // icalc in XML and get defined within
         inPtr = uPtr->gICalc;
-        logIT(LOG_INFO, "(INT) Exp:%s [BP:%d] [%s]", inPtr, bitpos, buffer);
+        logIT(LOG_INFO, "(INT) Exp: %s [BP:%d] [%s]", inPtr, bitpos, buffer);
         ergI = execIExpression(&inPtr, recvBuf, bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
             return -1;
         }
-        logIT(LOG_INFO, "Erg: (Hex max. 4Byte) %08x", ergI);
+        logIT(LOG_INFO, "Res: (Hex max. 4 byte) %08x", ergI);
         res = ergI;
         if ( uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, recvLen)) {
             strcpy(result, tPtr);
@@ -526,7 +531,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         if (! *input)
         { return -1; }
         if (!(count = text2Enum(uPtr->ePtr, input, &ptr, sendLen))) {
-            sprintf(sendBuf, "Kein passendes Enum gefunden");
+            sprintf(sendBuf, "Did not find an appropriate enum");
             return -1;
         } else {
             memcpy(sendBuf, ptr, count);
@@ -543,12 +548,12 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         // calc in XML and get defined within
         floatV = atof(input);
         inPtr = uPtr->sCalc;
-        logIT(LOG_INFO, "Send Exp:%s [V=%f]", inPtr, floatV);
+        logIT(LOG_INFO, "Send Exp: %s [V=%f]", inPtr, floatV);
         erg = execExpression(&inPtr, dumBuf, floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sCalc, error);
             strcpy(sendBuf, string);
-            return (-1);
+            return -1;
         }
         ergType = FLOAT;
     }
@@ -559,16 +564,16 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         if (uPtr->ePtr) {
             // There are enums
             if (! *input) {
-                sprintf(sendBuf, "Input fehlt");
-                return (-1);
+                sprintf(sendBuf, "Input missing");
+                return -1;
             }
             if (! (count = text2Enum(uPtr->ePtr, input, &ptr, sendLen))) {
-                sprintf(sendBuf, "Kein passendes Enum gefunden");
-                return (-1);
+                sprintf(sendBuf, "Did not find an appropriate enum");
+                return -1;
             } else {
                 bzero(dumBuf, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
-                logIT(LOG_INFO, "(INT) Exp:%s [BP:%d]", inPtr, bitpos);
+                logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
                 ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
                 if (*errPtr) {
                     logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
@@ -576,7 +581,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                     return (-1);
                 }
                 ergType = INT;
-                snprintf(string, sizeof(string), "Erg: (Hex max. 4Byte) %08x", ergI);
+                snprintf(string, sizeof(string), "Res: (Hex max. 4 byte) %08x", ergI);
             }
         }
     }
@@ -619,7 +624,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             memcpy(sendBuf, &uintV, 2);
         } else if (uPtr->type) {
             bzero(string, sizeof(string));
-            logIT(LOG_ERR, "Unbekannter Typ %s in Unit %s", uPtr->type, uPtr->name);
+            logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
             return (-1);
         }
 
@@ -636,7 +641,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             }
         }
 
-        logIT(LOG_INFO, "Typ: %s (Bytes: %s)  ", uPtr->type, buffer);
+        logIT(LOG_INFO, "Type: %s (bytes: %s)  ", uPtr->type, buffer);
 
         return 1;
     }

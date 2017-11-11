@@ -99,7 +99,7 @@ int openSocket(int tcpport)
         int optval = 1;
         if (listenfd > 0 && setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
                                        &optval, sizeof optval) < 0 ) {
-            logIT1(LOG_ERR, "setsockopt gescheitert!");
+            logIT1(LOG_ERR, "setsockopt failed!");
             exit(1);
         }
         if (! (listenfd < 0)) {
@@ -120,7 +120,7 @@ int openSocket(int tcpport)
     }
 
     listen(listenfd, LISTEN_QUEUE);
-    logIT(LOG_NOTICE, "TCP socket %d geoeffnet", tcpport);
+    logIT(LOG_NOTICE, "TCP socket %d opened", tcpport);
 
     freeaddrinfo(ressave);
 
@@ -144,12 +144,12 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
                     clientservice, sizeof(clientservice), NI_NUMERICHOST);
 
         if (connfd < 0) {
-            logIT(LOG_NOTICE, "accept auf host %s: port %s", clienthost, clientservice);
+            logIT(LOG_NOTICE, "accept on host %s: port %s", clienthost, clientservice);
             close(connfd);
             continue;
         }
 
-        logIT(LOG_NOTICE, "Client verbunden %s:%s (FD:%d)", clienthost, clientservice, connfd);
+        logIT(LOG_NOTICE, "Client connected %s:%s (FD:%d)", clienthost, clientservice, connfd);
         if (! makeChild) {
             return (connfd);
         } else if ( (childpid = fork()) == 0) {
@@ -157,7 +157,7 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
             close(listenfd);
             return connfd;
         } else {
-            logIT(LOG_INFO, "Child Prozess mit pid:%d gestartet", childpid);
+            logIT(LOG_INFO, "Child prozess started with pid %d", childpid);
         }
 
         close(connfd);
@@ -166,7 +166,7 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
 
 void closeSocket(int sockfd)
 {
-    logIT(LOG_INFO, "Verbindung beendet (fd:%d)", sockfd);
+    logIT(LOG_INFO, "Closed connection (fd:%d)", sockfd);
     close(sockfd);
 }
 
@@ -185,7 +185,7 @@ int openCliSocket(char *host, int port, int noTCPdelay)
     snprintf(port_string, sizeof(port_string), "%d", port);
     n = getaddrinfo(host, port_string, &hints, &res);
     if (n < 0) {
-        logIT(LOG_ERR, "Fehler getaddrinfo: %s:%s", host, gai_strerror(n));
+        logIT(LOG_ERR, "Error in getaddrinfo: %s:%s", host, gai_strerror(n));
         exit(1);
     }
 
@@ -208,13 +208,13 @@ int openCliSocket(char *host, int port, int noTCPdelay)
     freeaddrinfo(ressave);
 
     if (sockfd < 0) {
-        logIT(LOG_ERR, "TTY Net: Keine Verbingung zu %s:%d", host, port);
+        logIT(LOG_ERR, "TTY Net: No connection to %s:%d", host, port);
         return (-1);
     }
-    logIT(LOG_INFO, "ClI Net: verbunden %s:%d (FD:%d)", host, port, sockfd);
+    logIT(LOG_INFO, "ClI Net: connected %s:%d (FD:%d)", host, port, sockfd);
     int flag = 1;
     if (noTCPdelay && (setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int)))) {
-        logIT(LOG_ERR, "Fehler setsockopt TCP_NODELAY (%s)", strerror(errno));
+        logIT(LOG_ERR, "Error in setsockopt TCP_NODELAY (%s)", strerror(errno));
     }
 
     return sockfd;
@@ -253,7 +253,7 @@ ssize_t writen(int fd, const void *vptr, size_t n)
 ssize_t Writen(int fd, void *ptr, size_t nbytes)
 {
     if (writen(fd, ptr, nbytes) != nbytes) {
-        logIT1(LOG_ERR, "Fehler beim schreiben auf socket");
+        logIT1(LOG_ERR, "Error writing to socket");
         return 0;
     }
     return (nbytes);
@@ -307,7 +307,7 @@ ssize_t Readn(int fd, void *ptr, size_t nbytes)
 {
     ssize_t n;
     if ((n = readn(fd, ptr, nbytes)) < 0) {
-        logIT1(LOG_ERR, "Fehler beim lesen von socket");
+        logIT1(LOG_ERR, "Error reading from socket");
         return 0;
     }
     return n;
@@ -379,7 +379,7 @@ ssize_t Readline(int fd, void *ptr, size_t maxlen)
 {
     ssize_t n;
     if ((n = readline(fd, ptr, maxlen)) < 0) {
-        logIT1(LOG_ERR, "Fehler beim lesen von socket");
+        logIT1(LOG_ERR, "Error reading from socket");
         return 0;
     }
     return n;

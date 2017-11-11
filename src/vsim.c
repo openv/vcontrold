@@ -63,7 +63,7 @@ void logIT (int class, char *string, ...)
 
 static void sigPipeHandler(int signo)
 {
-    logIT(LOG_ERR, "SIGPIPE empfangen");
+    logIT(LOG_ERR, "Received SIGPIPE");
 }
 
 static void dump(char *buf, int len, char *txt)
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
             logIT(LOG_INFO, "\nvcontrold disconnected");
             closeSocket(sockfd);
         } else {
-            logIT(LOG_ERR, "Fehler bei Verbindungsaufbau");
+            logIT(LOG_ERR, "Error during connection setup");
         }
     }
 }

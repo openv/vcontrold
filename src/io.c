@@ -82,7 +82,7 @@ int opentty(char *device)
 {
     int fd;
 
-    logIT(LOG_LOCAL0, "konfiguriere serielle Schnittstelle %s", device);
+    logIT(LOG_LOCAL0, "Configuring serial interface %s", device);
     if ((fd = open(device, O_RDWR)) < 0) {
         logIT(LOG_ERR, "cannot open %s:%m", device);
         exit(1);
@@ -331,7 +331,7 @@ int waitfor(int fd, char *w_buf, int w_len)
         strncat(hexString, dummy, strlen(dummy));
     }
 
-    logIT(LOG_INFO, "Warte auf %s", hexString);
+    logIT(LOG_INFO, "Waiting for %s", hexString);
     start = time(NULL);
 
     // We wait for the first character, then everything has to apply
@@ -356,11 +356,11 @@ int waitfor(int fd, char *w_buf, int w_len)
             return 0;
         }
         if ( r_buf[0] != w_buf[i]) {
-            logIT1(LOG_ERR, "Synchronisation verloren");
+            logIT1(LOG_ERR, "Lost synchronization");
             exit(1);
         }
     }
 
-    // logIT1(LOG_INFO,"Zeichenkette erkannt");
+    // logIT1(LOG_INFO,"Recognized string");
     return 1;
 }

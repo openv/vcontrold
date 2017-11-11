@@ -62,7 +62,7 @@ protocolPtr newProtocolNode(protocolPtr ptr)
 
     nptr = calloc(1, sizeof(Protocol));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -111,7 +111,7 @@ unitPtr newUnitNode(unitPtr ptr)
 
     nptr = calloc(1, sizeof(Unit));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -165,7 +165,7 @@ macroPtr newMacroNode(macroPtr ptr)
 
     nptr = calloc(1, sizeof(Macro));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -213,7 +213,7 @@ commandPtr newCommandNode(commandPtr ptr)
 
     nptr = calloc(1, sizeof(Command));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -301,7 +301,7 @@ devicePtr newDeviceNode(devicePtr ptr)
 
     nptr = calloc(1, sizeof(Device));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -348,7 +348,7 @@ icmdPtr newIcmdNode(icmdPtr ptr)
 
     nptr = calloc(1, sizeof(iCmd));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -407,7 +407,7 @@ allowPtr newAllowNode(allowPtr ptr)
 
     nptr = calloc(1, sizeof(Allow));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -439,7 +439,7 @@ enumPtr newEnumNode(enumPtr ptr)
 
     nptr = calloc(1, sizeof(Enumerate));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -723,7 +723,7 @@ unitPtr parseUnit(xmlNodePtr cur)
             unit = getPropertyNode(cur->properties, (xmlChar *)"name");
             if (unit) {
                 // neue Unit gelesen
-                logIT(LOG_INFO, "Neue Unit: %s", unit);
+                logIT(LOG_INFO, "New unit: %s", unit);
                 uPtr = newUnitNode(uStartPtr);
                 if (! uStartPtr) {
                     uStartPtr = uPtr;
@@ -756,7 +756,7 @@ unitPtr parseUnit(xmlNodePtr cur)
                     memcpy(ePtr->bytes, string, ePtr->len);
                 }
             } else {
-                logIT(LOG_ERR, "Property Node ohne text=");
+                logIT(LOG_ERR, "Property node without text=");
                 return (NULL);
             }
 
@@ -843,7 +843,7 @@ unitPtr parseUnit(xmlNodePtr cur)
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
-            logIT(LOG_ERR, "Fehler beim parsen unit");
+            logIT(LOG_ERR, "Error parsing unit");
             return NULL;
         }
     }
@@ -873,7 +873,7 @@ macroPtr parseMacro(xmlNodePtr cur)
             macro = getPropertyNode(cur->properties, (xmlChar *)"name");
             if (macro) {
                 // Read new macro
-                logIT(LOG_INFO, "Neues Macro: %s", macro);
+                logIT(LOG_INFO, "New macro: %s", macro);
                 mPtr = newMacroNode(mStartPtr);
                 if (! mStartPtr) {
                     mStartPtr = mPtr;
@@ -898,7 +898,7 @@ macroPtr parseMacro(xmlNodePtr cur)
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
-            logIT(LOG_INFO, "Fehler beim parsen macro");
+            logIT(LOG_INFO, "Error parsing macro");
             return (NULL);
         }
     }
@@ -942,7 +942,7 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
             protocmd = getPropertyNode(cur->properties, (xmlChar *)"protocmd");
             if (command) {
                 // Read new command
-                logIT(LOG_INFO, "Neues Command: %s", command);
+                logIT(LOG_INFO, "New command: %s", command);
                 cPtr = newCommandNode(cStartPtr);
                 if (! cStartPtr) {
                     cStartPtr = cPtr;
@@ -970,10 +970,10 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
             protocmd = getPropertyNode(cur->properties, (xmlChar *)"protocmd");
             if (id) {
                 // Read new device below command
-                logIT(LOG_INFO, "    Neues Device-Command: %s", id);
+                logIT(LOG_INFO, "    New device command: %s", id);
                 // Search device from the list
                 if (! (dPtr = getDeviceNode(dePtr, id))) {
-                    logIT(LOG_ERR, "Device %s nicht definiert (%d)", id, cur->line);
+                    logIT(LOG_ERR, "Device %s is not defined (%d)", id, cur->line);
                     return NULL;
                 }
                 // We take the description from the command entry
@@ -1128,7 +1128,7 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
                 cur = NULL;
             }
         } else {
-            logIT(LOG_ERR, "Fehler beim parsen command");
+            logIT(LOG_ERR, "Error parsing command");
             return NULL;
         }
     }
@@ -1157,7 +1157,7 @@ icmdPtr parseICmd(xmlNodePtr cur)
             command = getPropertyNode(cur->properties, (xmlChar *)"name");
             if (command) {
                 // Read new command
-                logIT(LOG_INFO, "Neues iCommand: %s", command);
+                logIT(LOG_INFO, "New iCommand: %s", command);
                 icPtr = newIcmdNode(icStartPtr);
                 if (! icStartPtr) {
                     icStartPtr = icPtr;
@@ -1200,7 +1200,7 @@ icmdPtr parseICmd(xmlNodePtr cur)
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
-            logIT(LOG_ERR, "Fehler beim parsen command");
+            logIT(LOG_ERR, "Error parsing command");
             return NULL;
         }
     }
@@ -1252,11 +1252,11 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
                 }
 
                 if (! (dPtr->protoPtr = getProtocolNode(pPtr, proto))) {
-                    logIT(LOG_ERR, "Protokoll %s nicht definiert", proto);
+                    logIT(LOG_ERR, "Protocol %s not defined", proto);
                     return NULL;
                 }
             } else {
-                logIT(LOG_ERR, "Fehler beim parsen device");
+                logIT(LOG_ERR, "Error parsing device");
                 return NULL;
             }
 
@@ -1296,7 +1296,7 @@ protocolPtr parseProtocol(xmlNodePtr cur)
             proto = getPropertyNode(cur->properties, (xmlChar *)"name");
             if (proto) {
                 // Read new protocol
-                logIT(LOG_INFO, "Neues Protokoll: %s", proto);
+                logIT(LOG_INFO, "New protocol %s", proto);
                 protoPtr = newProtocolNode(protoStartPtr);
                 if (! protoStartPtr) {
                     protoStartPtr = protoPtr;
@@ -1308,7 +1308,7 @@ protocolPtr parseProtocol(xmlNodePtr cur)
                     nullIT(&protoPtr->name);
                 }
             } else {
-                logIT(LOG_ERR, "Fehler beim parsen proto");
+                logIT(LOG_ERR, "Error parsing protocol");
                 return NULL;
             }
             protoFound = 1;
@@ -1404,12 +1404,12 @@ int parseXMLFile(char *filename)
     // Run Xinlcude
     short xc = 0;
     if ((xc = xmlXIncludeProcessFlags(doc, XML_PARSE_XINCLUDE | XML_PARSE_NOXINCNODE)) == 0) {
-        logIT(LOG_WARNING, "Kein XInclude durchgefuehrt");
+        logIT(LOG_WARNING, "Didn't perform XInclude");
     } else if (xc < 0) {
-        logIT(LOG_ERR, "Fehler bei XInclude");
+        logIT(LOG_ERR, "Error during XInclude");
         return (0);
     } else {
-        logIT(LOG_INFO, "%d XInclude durchgefuehrt", xc);
+        logIT(LOG_INFO, "%d XInclude performed", xc);
     }
 
     removeComments(cur); // now the xml tree is complete --> remove all comments
@@ -1430,7 +1430,7 @@ int parseXMLFile(char *filename)
         if (strstr((char *)cur->name, "unix"))  {
             if (unixFound) {
                 // We must not reach here, second pass
-                logIT(LOG_ERR, "Fehler in der XML Konfig");
+                logIT(LOG_ERR, "Error in XML config");
                 return 0;
             }
             prevPtr = cur;
@@ -1451,7 +1451,7 @@ int parseXMLFile(char *filename)
         } else if (strstr((char *)cur->name, "protocols")) {
             if (protocolsFound) {
                 // We must not reach here, second pass
-                logIT(LOG_ERR, "Fehler in der XML Konfig");
+                logIT(LOG_ERR, "Error in XML config");
                 return 0;
             }
             protocolsFound = 1;
@@ -1497,7 +1497,7 @@ int parseXMLFile(char *filename)
         while (dPtr) {
             if (! getCommandNode(dPtr->cmdPtr, cPtr->name)) {
                 // We don't know this one and copy the commands
-                logIT(LOG_INFO, "Kopiere Kommando %s nach Device %s", cPtr->name, dPtr->id);
+                logIT(LOG_INFO, "Copying command %s to device %s", cPtr->name, dPtr->id);
                 ncPtr = newCommandNode(dPtr->cmdPtr);
                 if (! dPtr->cmdPtr) {
                     dPtr->cmdPtr = ncPtr;
@@ -1519,7 +1519,7 @@ int parseXMLFile(char *filename)
 
     // We search the default device
     if (! (TcfgPtr->devPtr = getDeviceNode(TdevPtr, TcfgPtr->devID))) {
-        logIT(LOG_ERR, "Device %s nicht definiert\n", TcfgPtr->devID);
+        logIT(LOG_ERR, "Device %s is not defined\n", TcfgPtr->devID);
         return 0;
     }
 

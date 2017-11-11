@@ -244,12 +244,12 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
             return 0;
         }
         if (nextToken(str, &item, &n) != KZU) {
-            sprintf(err, "factor Erwartet:) [%c]\n", *item);
+            sprintf(err, "expected factor:) [%c]\n", *item);
             return 0;
         }
         return (expression);
     default:
-        sprintf(err, "factor Erwartet: B0..B9 Zahl ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..B9 number ( ) [%c]\n", *item);
         return 0;
     }
 }
@@ -401,7 +401,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
         } else if (op == SHR) {
             factor1 >>= factor2;
         } else {
-            sprintf(err, "Fehler Exec ITerm, unbeknnates Token %d", op);
+            sprintf(err, "Error exec ITerm: Unknown token %d", op);
             return (0);
         }
     }
@@ -495,14 +495,14 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
             return 0;
         }
         if (nextToken(str, &item, &n) != KZU) {
-            sprintf(err, "factor Erwartet:) [%c]\n", *item);
+            sprintf(err, "expected factor:) [%c]\n", *item);
             return 0;
         }
         return (expression);
     case NICHT:
         return ~execIFactor(str, bPtr, bitpos, pPtr, err);
     default:
-        sprintf(err, "factor Erwartet: B0..B9 P0..P9 BP Zahl ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..B9 P0..P9 BP number ( ) [%c]\n", *item);
         return 0;
     }
 }

@@ -44,24 +44,42 @@
 
 void usage()
 {
-    printf("usage: vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>] [-s <csv-Datei>] [-t <Template-Datei>] [-o <outpout Datei> [-x <exec-Datei>] [-k] [-m] [-v]\n\
-or\n\
-usage: vclient --host <ip> --port <port> [--command <command1,command2,..>] [--commandfile <commandfile>] [--cvsfile <csv-Datei>] [--template <Template-Datei>] [--output <outpout Datei>] [--execute <exec-Datei>] [--cacti] [--munin] [--verbose] [command3 [command4] ...]\n\n\
-\t-h|--host\t<IPv4>:<Port> oder <IPv6> des vcontrold\n\
-\t-p|--port\t<Port> des vcontrold bei IPv6\n\
-\t-c|--command\tListe von auszufuehrenden Kommandos, durch Komma getrennt\n\
-\t-f|--commandfile\tOptional Datei mit Kommandos, pro Zeile ein Kommando\n\
-\t-s|--csvfile\tAusgabe des Ergebnisses im CSV Format zur Weiterverarbeitung\n\
-\t-t|--template\tTemplate, Variablen werden mit zurueckgelieferten Werten ersetzt.\n\
-\t-o|--output\tOutput, der stdout Output wird in die angegebene Datei geschrieben\n\
-\t-x|--execute\tDas umgewandelte Template (-t) wird in die angegebene Datei geschrieben und anschliessend ausgefuehrt.\n\
-\t-m|--munin\tMunin Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
-\t-k|--cacti\tCacti Datalogger kompatibles Format; Einheiten und Details zu Fehler gehen verloren.\n\
-\t-v|--verbose\tVerbose Modus zum testen\n\
-\t-4|--inet4\tIPv4 wird bevorzugt\n\
-\t-6|--inet6\tIPv6 wird bevorzugt. Wird keine dieser Optionen angegben werden die OS default Einstellungen verwendet\n\
-\t--help\tGibst diese Butzugshinweise aus.\n");
-    printf("\tVERSION %s\n", VERSION);
+
+    //      1       10        20        30        40        50        60        70        80
+
+    printf("usage:\n");
+    printf("    vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>]\n");
+    printf("            [-s <csv file>] [-t <template file>] [-o <outpout file>]\n");
+    printf("            [-x <exec file>] [-k] [-m] [-v]\n\n");
+
+    printf("or:\n");
+    printf("    vclient --host <ip> --port <port> [--command <command1,command2,..>]\n");
+    printf("            [--commandfile <command file>] [--cvsfile <csv fatei>]\n");
+    printf("            [--template <template file>] [--output <output file>]\n");
+    printf("            [--execute <exec file>] [--cacti] [--munin] [--verbose]\n");
+    printf("            [command3 [command4] ...]\n\n");
+
+    printf("    -h|--host         <IPv4>:<Port> or <IPv6> of vcontrold\n");
+    printf("    -p|--port         <port> of vcontrold when using IPv6\n");
+    printf("    -c|--command      List of commands to be executed, sparated by commas\n");
+    printf("    -f|--commandfile  Optional command file, one command per line\n");
+    printf("    -s|--csvfile      Format output in CSV for further processing\n");
+    printf("    -t|--template     Template, variables are substituted with acquired values\n");
+    printf("    -o|--output       Write to given file instead of STDOUT\n");
+    printf("    -x|--execute      The converted template (cf. -t) is written to the given\n");
+    printf("                      file and executed subsequently\n");
+    printf("    -m|--munin        Output a Munin data logger compatible format (units and\n");
+    printf("                      error details are discarded)\n");
+    printf("    -k|--cacti        Output a Cacti data logger compatible format (units and\n");
+    printf("                      error details are discarded)\n");
+    printf("    -v|--verbose      Be verbose (for testing purposes)\n");
+    printf("    -4|--inet4        IPv4 is preferred\n");
+    printf("    -6|--inet6        IPv6 is preferred\n");
+    printf("                      (if none of the two above is set, the system default will\n");
+    printf("                      be used)\n");
+    printf("    --help            Display this help message\n\n");
+
+    printf("Version %s\n", VERSION);
 
     exit(1);
 }
@@ -104,13 +122,13 @@ int main(int argc, char *argv[])
             {"template",    required_argument, 0,            't'},
             {"output",      required_argument, 0,            'o'},
             {"execute",     required_argument, 0,            'x'},
-            {"verbose",     no_argument,       &verbose,     1},
-            {"munin",       no_argument,       &munin,       1},
-            {"cacti",       no_argument,       &cacti,       1},
-            {"inet4",       no_argument,       &inetversion, 4},
-            {"inet6",       no_argument,       &inetversion, 6},
-            {"help",        no_argument,       0,            0},
-            {0,             0,                 0,            0}
+            {"verbose",     no_argument,       &verbose,     1  },
+            {"munin",       no_argument,       &munin,       1  },
+            {"cacti",       no_argument,       &cacti,       1  },
+            {"inet4",       no_argument,       &inetversion, 4  },
+            {"inet6",       no_argument,       &inetversion, 6  },
+            {"help",        no_argument,       0,            0  },
+            {0,             0,                 0,            0  }
         };
         // getopt_long stores the option index here.
         int option_index = 0;
@@ -171,21 +189,23 @@ int main(int argc, char *argv[])
             }
             port = atoi(optarg);
             if (port == 0) {
-                fprintf(stderr, "Ungültiger Wert für option --port: %s\n", optarg);
+                fprintf(stderr, "Invalid value for option --port: %s\n", optarg);
                 usage(); // and exit
             }
             break;
 
         case 'c':
             if (verbose) {
-                printf ("option -c with value `%s'\n", optarg);
-                printf ("sizeof optarg:%lu, strlen:%lu, sizeof commands:%lu, strlen:%lu,  [%s]\n", sizeof(optarg), strlen(optarg), sizeof(commands), strlen(commands), commands);
+                printf("option -c with value `%s'\n", optarg);
+                printf("sizeof optarg:%lu, strlen:%lu, sizeof commands:%lu, strlen:%lu,  [%s]\n",
+                       sizeof(optarg), strlen(optarg), sizeof(commands), strlen(commands),
+                       commands);
             }
             if (strlen(commands) == 0) {
                 strncpy(commands, optarg, sizeof(commands));
             } else {
                 if (strlen(optarg) + 2 > sizeof(commands) - strlen(commands)) {
-                    fprintf(stderr, "too much commands\n");
+                    fprintf(stderr, "too many commands\n");
                     break;
                 }
                 strncat(commands, ",", 1);
@@ -263,7 +283,7 @@ int main(int argc, char *argv[])
                 strncpy(commands, argv[optind], sizeof(commands));
             } else {
                 if (strlen(argv[optind]) + 2 > sizeof(commands) - strlen(commands)) {
-                    fprintf(stderr, "Kommandoliste zu lang\n");
+                    fprintf(stderr, "Command list too long\n");
                     optind++;
                     break;
                 }
@@ -302,7 +322,7 @@ int main(int argc, char *argv[])
 
     sockfd = connectServer(host, port);
     if (sockfd < 0) {
-        logIT(LOG_ERR, "Keine Verbindung zu %s", host);
+        logIT(LOG_ERR, "No connection to %s", host);
         exit(1);
     }
 
@@ -314,18 +334,18 @@ int main(int argc, char *argv[])
         resPtr = sendCmdFile(sockfd, cmdfile);
     }
     if (! resPtr) {
-        logIT(LOG_ERR, "Fehler bei der Server Kommunikation");
+        logIT(LOG_ERR, "Error communicating with the server");
         exit(1);
     }
     disconnectServer(sockfd);
 
     if (outfile) {
         if (! (ofilePtr = fopen(outfile, "w"))) {
-            logIT(LOG_ERR, "Kann Datei %s nicht anlegen", outfile);
+            logIT(LOG_ERR, "Could not create file %s", outfile);
             exit(1);
         }
         bzero(string, sizeof(string));
-        logIT(LOG_INFO, "Ausgabe Datei %s", outfile);
+        logIT(LOG_INFO, "Output file %s", outfile);
     } else {
         ofilePtr = fdopen(fileno(stdout), "w");
     }
@@ -334,7 +354,7 @@ int main(int argc, char *argv[])
     if (csvfile) {
         // Kompakt Format mit Semikolon getrennt
         if (! (filePtr = fopen(csvfile, "a"))) {
-            logIT(LOG_ERR, "Kann Datei %s nicht anlegen", csvfile);
+            logIT(LOG_ERR, "Could not create file %s", csvfile);
             exit(1);
         }
         bzero(string, sizeof(string));
@@ -390,14 +410,14 @@ int main(int argc, char *argv[])
         }
 
         if (! (filePtr = fopen(tmplfile, "r"))) {
-            logIT(LOG_ERR, "Kann Template-Datei %s nicht oeffnen", tmplfile);
+            logIT(LOG_ERR, "Could not open template file %s", tmplfile);
             exit(1);
         }
         // The following variables are to replace:
         // $Rn: Result (trPtr->raw)
         // $n: Float (trPtr->result)
         while ((fgets(line, sizeof(line) - 1, filePtr))) {
-            logIT(LOG_INFO, "Tmpl Zeile:%s", line);
+            logIT(LOG_INFO, "Tmpl line: %s", line);
             lSptr = line;
             while ((lptr = strchr(lSptr, '$'))) {
                 varReplaced = 0;
@@ -415,7 +435,7 @@ int main(int argc, char *argv[])
                 }
                 bzero(varname, sizeof(varname));
                 strncpy(varname, lptr + 1, lEptr - lptr - 1);
-                logIT(LOG_INFO, "\tVariable erkannt:%s", varname);
+                logIT(LOG_INFO, "    Recognized variable: %s", varname);
 
                 // We output everything up to this
                 bzero(string, sizeof(string));
@@ -434,7 +454,7 @@ int main(int argc, char *argv[])
                             fprintf(ofilePtr, "%s", tPtr->raw);
                         }
                     } else {
-                        logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
                     }
                 }
                 // $Cn
@@ -442,12 +462,12 @@ int main(int argc, char *argv[])
                     // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
-                        logIT(LOG_INFO, "Kommando: %s", tPtr->cmd);
+                        logIT(LOG_INFO, "Command: %s", tPtr->cmd);
                         if (tPtr->cmd) {
                             fprintf(ofilePtr, "%s", tPtr->cmd);
                         }
                     } else {
-                        logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of Variable $%s > %d", varname, maxIdx - 1);
                     }
                 }
                 // $En
@@ -455,14 +475,14 @@ int main(int argc, char *argv[])
                     // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
-                        logIT(LOG_INFO, "Fehler: %s:%s", tPtr->cmd, tPtr->err);
+                        logIT(LOG_INFO, "Error: %s: %s", tPtr->cmd, tPtr->err);
                         if (tPtr->err) {
                             fprintf(ofilePtr, "%s", tPtr->err);
                         } else {
                             fprintf(ofilePtr, "OK");
                         }
                     } else {
-                        logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
                     }
                 }
                 // $n
@@ -473,7 +493,7 @@ int main(int argc, char *argv[])
                         //if (tPtr->result)
                         fprintf(ofilePtr, "%f", tPtr->result);
                     } else {
-                        logIT(LOG_ERR, "Index der Variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
                     }
                 } else {
                     bzero(string, sizeof(string));
@@ -491,15 +511,15 @@ int main(int argc, char *argv[])
             // Make the file executable and start
             fclose(ofilePtr);
             bzero(string, sizeof(string));
-            logIT(LOG_INFO, "Fuehre Datei %s aus", outfile);
+            logIT(LOG_INFO, "Executing file %s", outfile);
             if (chmod(outfile, S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
-                logIT(LOG_ERR, "Fehler chmod +x %s", outfile);
+                logIT(LOG_ERR, "Error chmod +x %s", outfile);
                 exit(1);
             }
 
             short ret;
             if ((ret = system(outfile)) == -1) {
-                logIT(LOG_ERR, "Fehler system(%s)", outfile);
+                logIT(LOG_ERR, "Error system(%s)", outfile);
                 exit(1);
             }
 

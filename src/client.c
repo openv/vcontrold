@@ -46,7 +46,7 @@ trPtr newTrNode(trPtr ptr)
 
     nptr = calloc(1, sizeof(*ptr));
     if (! nptr) {
-        fprintf(stderr, "malloc gescheitert\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
 
@@ -77,7 +77,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     alarm(CL_TIMEOUT);
 
     if (! (*recv = calloc(ALLOCSIZE, sizeof(char)))) {
-        logIT1(LOG_ERR, "Fehler calloc");
+        logIT1(LOG_ERR, "calloc error");
         exit(1);
     }
 
@@ -91,7 +91,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
         *rptr++ = c;
         if (! ((rptr - *recv + 1) % ALLOCSIZE)) {
             if (realloc(*recv, ALLOCSIZE * sizeof(char) *  ++rcount) == NULL) {
-                logIT1(LOG_ERR, "Fehler realloc");
+                logIT1(LOG_ERR, "realloc error");
                 exit(1);
             }
         }
@@ -107,12 +107,12 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     }
 
     if (! realloc(*recv, strlen(*recv) + 1)) {
-        logIT1(LOG_ERR, "realloc Fehler!!");
+        logIT1(LOG_ERR, "realloc error");
         exit(1);
     }
 
     if (count <= 0) {
-        logIT(LOG_ERR, "exit mit count=%ld", count);;
+        logIT(LOG_ERR, "exit with count=%ld", count);;
     }
 
     return count;
@@ -125,13 +125,13 @@ int connectServer(char *host, int port)
     if (host[0] != '/' ) {
         sockfd = openCliSocket(host, port, 0);
         if (sockfd) {
-            logIT(LOG_INFO, "Verbindung zu %s Port %d aufgebaut", host, port);
+            logIT(LOG_INFO, "Setup connection to %s port %d", host, port);
         } else {
-            logIT(LOG_INFO, "Verbindung zu %s Port %d gescheitert", host, port);
+            logIT(LOG_INFO, "Setting up connection to %s port %d failed", host, port);
             return -1;
         }
     } else {
-        logIT(LOG_ERR, "Host Format: IP|Name:Port");
+        logIT(LOG_ERR, "Host format: IP|Name:Port");
         return -1;
     }
     return sockfd;
@@ -169,7 +169,7 @@ trPtr sendCmdFile(int sockfd, const char *filename)
     if (! (filePtr = fopen(filename, "r"))) {
         return NULL;
     } else {
-        logIT(LOG_INFO, "Kommando-Datei %s geoeffnet", filename);
+        logIT(LOG_INFO, "Opened command file %s", filename);
     }
 
     bzero(line, sizeof(line));

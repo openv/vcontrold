@@ -43,7 +43,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
     if (useSyslog) {
         syslogger = 1;
         openlog("vito", LOG_PID, LOG_LOCAL0);
-        syslog(LOG_LOCAL0, "vito gestartet");
+        syslog(LOG_LOCAL0, "vito started");
     }
 
     if (logfile) {
@@ -54,7 +54,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
 
         logFD = fopen(logfile, "a");
         if (! logFD) {
-            printf("Konnte %s nicht oeffnen %s", logfile, strerror (errno));
+            printf("Could not open %s: %s", logfile, strerror (errno));
             return 0 ;
         }
     }
@@ -159,7 +159,7 @@ char hex2chr(char *hex)
 
     snprintf(buffer, sizeof(buffer), "0x%s", hex);
     if (sscanf(hex, "%x", &hex_value) != 1) {
-        logIT(LOG_WARNING, "Ungültige Hex Zeichen in %s", hex);
+        logIT(LOG_WARNING, "Invalid hex char in %s", hex);
     }
 
     return hex_value;
