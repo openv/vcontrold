@@ -40,9 +40,9 @@ union semun {
 #endif
 
 /*
-** initsem() -- more-than-inspired by W. Richard Stevens' UNIX Network
-** Programming 2nd edition, volume 2, lockvsem.c, page 295.
-*/
+ * initsem() -- more-than-inspired by W. Richard Stevens' UNIX Network
+ * Programming 2nd edition, volume 2, lockvsem.c, page 295.
+ */
 int initsem(key_t key, int nsems)
 {
     // key from ftok()

@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// io.c Kommunikation mit der Vito* Steuerung
+// Communication with the vito controller
 
 #include <stdlib.h>
 #include <stdio.h>

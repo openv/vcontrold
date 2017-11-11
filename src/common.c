@@ -28,7 +28,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 
-#include"common.h"
+#include "common.h"
 
 int syslogger = 0;
 int debug = 0;
