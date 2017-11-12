@@ -57,7 +57,7 @@ protocolPtr newProtocolNode(protocolPtr ptr)
 {
     protocolPtr nptr;
     if (ptr && ptr->next) {
-        return (newProtocolNode(ptr->next));
+        return newProtocolNode(ptr->next);
     }
 
     nptr = calloc(1, sizeof(Protocol));
@@ -106,7 +106,7 @@ unitPtr newUnitNode(unitPtr ptr)
 {
     unitPtr nptr;
     if (ptr && ptr->next) {
-        return (newUnitNode(ptr->next));
+        return newUnitNode(ptr->next);
     }
 
     nptr = calloc(1, sizeof(Unit));
@@ -185,7 +185,7 @@ macroPtr getMacroNode(macroPtr ptr, const char *name)
 
     if (ptr->name && strcmp(ptr->name, name) != 0) {
         //if (*name && !(strstr(ptr->name,name)==ptr->name))
-        return (getMacroNode(ptr->next, name));
+        return getMacroNode(ptr->next, name);
     }
 
     return ptr;
@@ -296,7 +296,7 @@ devicePtr newDeviceNode(devicePtr ptr)
 {
     devicePtr nptr;
     if (ptr && ptr->next) {
-        return (newDeviceNode(ptr->next));
+        return newDeviceNode(ptr->next);
     }
 
     nptr = calloc(1, sizeof(Device));
@@ -310,7 +310,7 @@ devicePtr newDeviceNode(devicePtr ptr)
     }
 
     nptr->next = NULL;
-    return (nptr);
+    return nptr;
 }
 
 devicePtr getDeviceNode(devicePtr ptr, char *id)
@@ -402,7 +402,7 @@ allowPtr newAllowNode(allowPtr ptr)
 {
     allowPtr nptr;
     if (ptr && ptr->next) {
-        return (newAllowNode(ptr->next));
+        return newAllowNode(ptr->next);
     }
 
     nptr = calloc(1, sizeof(Allow));
@@ -458,13 +458,13 @@ enumPtr getEnumNode(enumPtr ptr, char *search, int len)
 
     if ((len > 0) && ptr->bytes && (memcmp(ptr->bytes, search, len) == 0)) {
         // len given, we search for bytes
-        return (ptr);
+        return ptr;
     } else if (!len && ptr->text && (strcmp(ptr->text, search) == 0)) {
         // len == 0 --> string comparison
-        return (ptr);
+        return ptr;
     } else if ((len < 0) && (ptr->bytes == NULL)) {
         // len == -1 --> default value
-        return (ptr);
+        return ptr;
     } else {
         return getEnumNode(ptr->next, search, len);
     }
@@ -523,7 +523,7 @@ void printNode(xmlNodePtr ptr)
 char *getTextNode(xmlNodePtr cur)
 {
     if ((cur->children) && (cur->children->type == XML_TEXT_NODE)) {
-        return ((char *)cur->children->content);
+        return (char *)cur->children->content;
     } else {
         return NULL;
     }
@@ -532,9 +532,9 @@ char *getTextNode(xmlNodePtr cur)
 char *getPropertyNode(xmlAttrPtr cur, xmlChar *name)
 {
     if ((cur) && (cur->type == XML_ATTRIBUTE_NODE) && strstr((char *)cur->name, (char *)name)) {
-        return ((char *)getTextNode((xmlNodePtr) cur));
+        return (char *)getTextNode((xmlNodePtr) cur);
     } else if (cur && cur->next) {
-        return ((char *)getPropertyNode(cur->next, name));
+        return (char *)getPropertyNode(cur->next, name);
     } else {
         return NULL;
     }
@@ -757,7 +757,7 @@ unitPtr parseUnit(xmlNodePtr cur)
                 }
             } else {
                 logIT(LOG_ERR, "Property node without text=");
-                return (NULL);
+                return NULL;
             }
 
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
@@ -848,7 +848,7 @@ unitPtr parseUnit(xmlNodePtr cur)
         }
     }
 
-    return (uStartPtr);
+    return uStartPtr;
 }
 
 macroPtr parseMacro(xmlNodePtr cur)
@@ -899,11 +899,11 @@ macroPtr parseMacro(xmlNodePtr cur)
                 ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
             logIT(LOG_INFO, "Error parsing macro");
-            return (NULL);
+            return NULL;
         }
     }
 
-    return (mStartPtr);
+    return mStartPtr;
 }
 
 commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
@@ -1407,7 +1407,7 @@ int parseXMLFile(char *filename)
         logIT(LOG_WARNING, "Didn't perform XInclude");
     } else if (xc < 0) {
         logIT(LOG_ERR, "Error during XInclude");
-        return (0);
+        return 0;
     } else {
         logIT(LOG_INFO, "%d XInclude performed", xc);
     }

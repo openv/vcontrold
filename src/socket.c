@@ -150,7 +150,7 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
 
         logIT(LOG_NOTICE, "Client connected %s:%s (FD:%d)", clienthost, clientservice, connfd);
         if (! makeChild) {
-            return (connfd);
+            return connfd;
         } else if ( (childpid = fork()) == 0) {
             // unser Kind
             close(listenfd);
@@ -211,7 +211,7 @@ int openCliSocket(char *host, int port, int noTCPdelay)
 
     if (sockfd < 0) {
         logIT(LOG_ERR, "TTY Net: No connection to %s:%d", host, port);
-        return (-1);
+        return -1;
     }
     logIT(LOG_INFO, "ClI Net: connected %s:%d (FD:%d)", host, port, sockfd);
     int flag = 1;
@@ -258,7 +258,7 @@ ssize_t Writen(int fd, void *ptr, size_t nbytes)
         logIT1(LOG_ERR, "Error writing to socket");
         return 0;
     }
-    return (nbytes);
+    return nbytes;
 }
 
 // include readn
@@ -300,7 +300,7 @@ ssize_t readn(int fd, void *vptr, size_t n)
         ptr   += nread;
     }
 
-    return (n - nleft); //return >= 0
+    return n - nleft; //return >= 0
 }
 
 // end readn
@@ -332,7 +332,7 @@ again:
             }
             return -1;
         } else if (read_cnt == 0) {
-            return (0);
+            return 0;
         }
         read_ptr = read_buf;
     }
@@ -344,10 +344,10 @@ again:
 
 ssize_t readline(int fd, void *vptr, size_t maxlen)
 {
-    int        n;
-    ssize_t    rc;
-    char       c;
-    char       *ptr;
+    int n;
+    ssize_t rc;
+    char c;
+    char *ptr;
 
     ptr = vptr;
     for (n = 1; n < maxlen; n++) {
@@ -381,6 +381,7 @@ ssize_t readline(int fd, void *vptr, size_t maxlen)
 ssize_t Readline(int fd, void *ptr, size_t maxlen)
 {
     ssize_t n;
+
     if ((n = readline(fd, ptr, maxlen)) < 0) {
         logIT1(LOG_ERR, "Error reading from socket");
         return 0;

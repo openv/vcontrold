@@ -40,8 +40,9 @@ int sendTrList(int sockfd, trPtr ptr);
 trPtr newTrNode(trPtr ptr)
 {
     trPtr nptr;
+
     if (ptr && ptr->next) {
-        return (newTrNode(ptr->next));
+        return newTrNode(ptr->next);
     }
 
     nptr = calloc(1, sizeof(*ptr));
@@ -122,6 +123,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
 int connectServer(char *host, int port)
 {
     int sockfd;
+
     if (host[0] != '/' ) {
         sockfd = openCliSocket(host, port, 0);
         if (sockfd) {
@@ -141,6 +143,7 @@ void disconnectServer(int sockfd)
 {
     char string[8];
     char *ptr;
+
     snprintf(string, sizeof(string), "quit\n");
     sendServer(sockfd, string, strlen(string));
     recvSync(sockfd, BYE, &ptr);
@@ -151,6 +154,7 @@ void disconnectServer(int sockfd)
 size_t sendServer(int fd, char *s_buf, size_t len)
 {
     char string[256];
+
     // Empty buffer
     // As tcflush does not work correctly, we use nonblocking read
     fcntl(fd, F_SETFL, O_NONBLOCK);
@@ -229,7 +233,7 @@ int sendTrList(int sockfd, trPtr ptr)
     }
 
     while (ptr) {
-        // bzero(string,sizeof(string));
+        //bzero(string,sizeof(string));
         snprintf(string, sizeof(string), "%s\n", ptr->cmd);
 
         if (sendServer(sockfd, string, strlen(string)) <= 0) {

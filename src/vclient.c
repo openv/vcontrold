@@ -42,9 +42,11 @@
 #include "vclient.h"
 #include "version.h"
 
+// global variables
+int inetversion = 0;
+
 void usage()
 {
-
     //      1       10        20        30        40        50        60        70        80
 
     printf("usage:\n");
@@ -84,13 +86,8 @@ void usage()
     exit(1);
 }
 
-// Here we go
-
-int inetversion = 0;
-
 int main(int argc, char *argv[])
 {
-
     // Get the command line options
     char *host;
     int port = 0;
@@ -132,7 +129,7 @@ int main(int argc, char *argv[])
         };
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:f:h:kmo:p:s:t:vx:46", long_options, &option_index);
+        opt = getopt_long(argc, argv, "c:f:h:kmo:p:s:t:vx:46", long_options, &option_index);
 
         // Detect the end of the options.
         if (opt == -1) {
@@ -156,36 +153,31 @@ int main(int argc, char *argv[])
                 usage();
             }
             break;
-
         case 'v':
-            puts ("option -v\n");
+            puts("option -v\n");
             verbose = 1;
             break;
-
         case 'm':
             if (verbose) {
-                puts ("option -m\n");
+                puts("option -m\n");
             }
             munin = 1;
             break;
-
         case 'k':
             if (verbose) {
-                puts ("option -k\n");
+                puts("option -k\n");
             }
             cacti = 1;
             break;
-
         case 'h':
             if (verbose) {
-                printf ("option -h with value `%s'\n", optarg);
+                printf("option -h with value `%s'\n", optarg);
             }
             host = optarg;
             break;
-
         case 'p':
             if (verbose) {
-                printf ("option -p with value `%s'\n", optarg);
+                printf("option -p with value `%s'\n", optarg);
             }
             port = atoi(optarg);
             if (port == 0) {
@@ -193,7 +185,6 @@ int main(int argc, char *argv[])
                 usage(); // and exit
             }
             break;
-
         case 'c':
             if (verbose) {
                 printf("option -c with value `%s'\n", optarg);
@@ -212,24 +203,21 @@ int main(int argc, char *argv[])
                 strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
             }
             break;
-
         case 'f':
             if (verbose) {
-                printf ("option -f with value `%s'\n", optarg);
+                printf("option -f with value `%s'\n", optarg);
             }
             cmdfile = optarg;
             break;
-
         case 's':
             if (verbose) {
-                printf ("option -s with value `%s'\n", optarg);
+                printf("option -s with value `%s'\n", optarg);
             }
             csvfile = optarg;
             break;
-
         case 't':
             if (verbose) {
-                printf ("option -t with value `%s'\n", optarg);
+                printf("option -t with value `%s'\n", optarg);
             }
             tmplfile = optarg;
             break;
@@ -237,33 +225,29 @@ int main(int argc, char *argv[])
         case 'o':
         case 'x':
             if (verbose) {
-                printf ("option -%c with value `%s'\n", opt, optarg);
+                printf("option -%c with value `%s'\n", opt, optarg);
             }
             outfile = optarg;
             if (opt == 'x') {
                 execMe = 1;
             }
             break;
-
         case '4':
             if (verbose) {
-                printf ("option -%c with value `%s'\n", opt, optarg);
+                printf("option -%c with value `%s'\n", opt, optarg);
             }
             inetversion = 4;
             break;
-
         case '6':
             if (verbose) {
-                printf ("option -%c with value `%s'\n", opt, optarg);
+                printf("option -%c with value `%s'\n", opt, optarg);
             }
             inetversion = 6;
             break;
-
         case '?':
             // getopt_long already printed an error message.
             usage();
             break;
-
         default:
             abort();
         }
@@ -273,11 +257,11 @@ int main(int argc, char *argv[])
     // and use the as commands like for the -c option.
     if (optind < argc) {
         if (verbose) {
-            printf ("non-option ARGV-elements: ");
+            printf("non-option ARGV-elements: ");
         }
         while (optind < argc) {
             if (verbose) {
-                printf ("%s ", argv[optind]);
+                printf("%s ", argv[optind]);
             }
             if (strlen(commands) == 0) {
                 strncpy(commands, argv[optind], sizeof(commands));
@@ -293,7 +277,7 @@ int main(int argc, char *argv[])
             optind++;
         }
         if (verbose) {
-            putchar ('\n');
+            putchar('\n');
         }
     }
 

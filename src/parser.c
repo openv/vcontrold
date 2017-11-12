@@ -40,12 +40,13 @@ extern FILE *iniFD; // For creation of the Sim. INI Files
 void *getUnit(char *str)
 {
     // We parse the input for a known unit and return a pointer to the struct
-    return (NULL);
+    return NULL;
 }
 
 int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
 {
     int token = 0;
+
     if (strstr(line, "WAIT") == line) {
         token = WAIT;
     } else if (strstr(line, "SEND BYTES") == line) {
@@ -158,7 +159,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             if (cPtr->uPtr) {
                 if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
                     logIT(LOG_ERR, "Error in unit conversion: %s", sendBuf);
-                    return (-1);
+                    return -1;
                 }
                 if (cPtr->send) {
                     // We already sent this, the memory is still allocated
@@ -181,14 +182,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             case WAIT:
                 if (! framer_waitfor(fd, cmpPtr->send, cmpPtr->len)) {
                     logIT1(LOG_ERR, "Error in wait, terminating");
-                    return (-1);
+                    return -1;
                 }
                 bzero(string, sizeof(string));
                 char2hex(string, cmpPtr->send, cmpPtr->len);
                 strcat(simIn, string);
                 strcat(simIn, " ");
                 break;
-
             case SEND:
                 _len  = 0;
                 while (1) {
@@ -202,7 +202,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
 
                 if (! framer_send(fd, out_buff, _len)) {
                     logIT1(LOG_ERR, "Error in send, terminating");
-                    return (-1);
+                    return -1;
                 }
 
                 if (iniFD && *simIn && *simOut) {
@@ -217,7 +217,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 strcat(simOut, string);
                 strcat(simOut, " ");
                 break;
-
             case RECV:
                 if (cmpPtr->len > recvLen) {
                     logIT(LOG_ERR, "Recv buffer too small. Is: %d, should be %d", recvLen, cmpPtr->len);
@@ -236,7 +235,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                           etime, recvTimeout, (int)(retry - 1));
                     if (retry <= 1) {
                         logIT1(LOG_ERR, "Recv timeout, terminating");
-                        return (-1);
+                        return -1;
                     }
                     goto RETRY;
                 }
@@ -266,7 +265,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
                         <= 0) {
                         logIT(LOG_ERR, "Error in unit conversion: %s", result);
-                        return (-1);
+                        return -1;
                     }
                     strncpy(recvBuf, result, recvLen);
 
@@ -285,7 +284,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 }
                 return cmpPtr->len;
                 break;
-
             case PAUSE:
                 logIT(LOG_INFO, "Waiting %i ms", cmpPtr->len);
                 usleep(cmpPtr->len * 1000L);
@@ -296,7 +294,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     nanosleep(&t_sleep_rem,NULL);
                 */
                 break;
-
             case BYTES:
                 // We send the forwarded sendBuffer. No converting has been done.
                 if (sendLen) {
@@ -314,7 +311,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         free(cmpPtr->send);
                         cmpPtr->send = NULL;
                         cmpPtr->len = 0;
-                        return (-1);
+                        return -1;
                     }
                     bzero(string, sizeof(string));
                     char2hex(string, cmpPtr->send, cmpPtr->len);
@@ -324,10 +321,9 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     //cmpPtr->len=0;
                 }
                 break;
-
             default:
                 logIT(LOG_ERR, "Unknown token: %d", cmpPtr->token);
-                return (-1);
+                return -1;
             }
             cmpPtr = cmpPtr->next;
         }
@@ -344,13 +340,15 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
     //char string[256];
     char uString[100];
     //char *uSPtr=uString;
-    logIT(LOG_INFO, "Execute %s", cmd);
     // We parse the individual lines
     char hex[MAXBUF];
     int token;
     int hexlen = 0;
     int t;
     unsigned long etime;
+
+    logIT(LOG_INFO, "Execute %s", cmd);
+
     token = parseLine(cmd, hex, &hexlen, uString, sizeof(uString));
     // If noOpen is set for debugging, we do nothing here.
 
@@ -361,14 +359,12 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
             return -1;
         }
         break;
-
     case SEND:
         if (! my_send(fd, hex, hexlen)) {
             logIT1(LOG_ERR, "Error send, terminating");
             exit(1);
         }
         break;
-
     case RECV:
         if (hexlen > recvLen) {
             logIT(LOG_ERR, "Recv buffer too small. Is: %d should be %d", recvLen, hexlen);
@@ -383,13 +379,11 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
         // If we have a unit (== uPtr), we convert the received value and also return it to uPtr
         return hexlen;
         break;
-
     case PAUSE:
         t = (int) hexlen / 1000;
         logIT(LOG_INFO, "Waiting %i s", t);
         sleep(t);
         break;
-
     default:
         logIT(LOG_INFO, "Unknown command: %s", cmd);
 
@@ -401,8 +395,9 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
 compilePtr newCompileNode(compilePtr ptr)
 {
     compilePtr nptr;
+
     if (ptr && ptr->next) {
-        return (newCompileNode(ptr->next));
+        return newCompileNode(ptr->next);
     }
 
     nptr = calloc(1, sizeof(Compile));
@@ -437,7 +432,6 @@ void removeCompileList(compilePtr ptr)
 
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
-
     // Recursion
     if (! cPtr) {
         return 0;

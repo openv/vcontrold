@@ -74,15 +74,16 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
 
 float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
 {
-    //printf("execExpression: %s\n",*str);
     int f = 1;
     float term1, term2;
     //float exp1,exp2;
     char *item;
     //unsigned char bPtr[10];
     unsigned char bPtr[10];
-
     int n;
+
+    //printf("execExpression: %s\n",*str);
+
     // Tweak bPtr Bytes 0..9 and copy them to nPtr
     // We did not receive characters
     for (n = 0; n <= 9; n++) {
@@ -121,7 +122,7 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
         default:
             //printf(" Exp=%f\n",term1);
             pushBack(str, n);
-            return (term1);
+            return term1;
         }
 
         term2 = execTerm(str, bPtr, floatV, err);
@@ -138,11 +139,12 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
 
 float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
 {
-    //printf("execTerm: %s\n",*str);
     float factor1, factor2;
     int op;
     char *item;
     int n;
+
+    //printf("execTerm: %s\n",*str);
 
     factor1 = execFactor(str, bPtr, floatV, err);
     if (*err) {
@@ -161,7 +163,7 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
         default:
             pushBack(str, n);
             //printf("  ret(%f)\n",factor1);
-            return (factor1);
+            return factor1;
         }
         factor2 = execFactor(str, bPtr, floatV, err);
         //printf(" F2=%f\n",factor2);
@@ -178,7 +180,6 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
 
 float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
 {
-    //printf("execFactor: %s\n",*str);
     char nstring[100];
     float expression;
     float factor;
@@ -186,6 +187,9 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
     char *item;
     char token;
     int n;
+
+    //printf("execFactor: %s\n",*str);
+
     switch (nextToken(str, &item, &n)) {
     case BYTE0:
         return bPtr[0];
@@ -237,7 +241,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         *nPtr = '\0';
         factor = atof(nstring);
         //printf("  Zahl: %s (f:%f)\n",nstring,factor);
-        return (factor);
+        return factor;
     case KAUF:
         expression = execExpression(str, bPtr, floatV, err);
         if (*err) {
@@ -247,7 +251,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
             sprintf(err, "expected factor:) [%c]\n", *item);
             return 0;
         }
-        return (expression);
+        return expression;
     default:
         sprintf(err, "expected factor: B0..B9 number ( ) [%c]\n", *item);
         return 0;
@@ -256,15 +260,16 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
 
 int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
 {
-    //printf("execExpression: %s\n",*str);
     int f = 1;
     int term1, term2;
     //int exp1, exp2;
     int op;
     char *item;
-
     unsigned char bPtr[10];
     int n;
+
+    //printf("execExpression: %s\n", *str);
+
     // Tweak bPtr bytes 0..9 and copy them to nPtr
     // We have received characters
     for (n = 0; n <= 9; n++) {
@@ -316,7 +321,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
             break;
         default:
             pushBack(str, n);
-            return (term1);
+            return term1;
         }
 
         if (op == MINUS) {
@@ -331,16 +336,18 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
         term1 += term2;
     }
 
-    return (term1);
+    return term1;
 }
 
 int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
-    //printf("execTerm: %s\n",*str);
     int factor1, factor2;
     int op;
     char *item;
     int n;
+
+    //printf("execTerm: %s\n",*str);
+
     factor1 = execIFactor(str, bPtr, bitpos, pPtr, err);
     if (*err) {
         return 0;
@@ -381,7 +388,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
         factor2 = execIFactor(str, bPtr, bitpos, pPtr, err);
 
         if (*err) {
-            return (0);
+            return 0;
         }
 
         if (op == MAL) {
@@ -402,14 +409,13 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
             factor1 >>= factor2;
         } else {
             sprintf(err, "Error exec ITerm: Unknown token %d", op);
-            return (0);
+            return 0;
         }
     }
 }
 
 int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
-    //printf("execFactor: %s\n",*str);
     char nstring[100];
     int expression;
     int factor;
@@ -417,6 +423,8 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
     char *item;
     char token;
     int n;
+
+    //printf("execFactor: %s\n",*str);
 
     switch (nextToken(str, &item, &n)) {
     case BYTE0:
@@ -498,7 +506,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
             sprintf(err, "expected factor:) [%c]\n", *item);
             return 0;
         }
-        return (expression);
+        return expression;
     case NICHT:
         return ~execIFactor(str, bPtr, bitpos, pPtr, err);
     default:
@@ -510,7 +518,9 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
 int nextToken(char **str, char **c, int *count)
 {
     char item;
+
     //printf("\tInput String:%s\n",*str);
+
     item = **str;
     while (isblank(item)) {
         item = *(++*str);
@@ -624,20 +634,20 @@ int nextToken(char **str, char **c, int *count)
     case '7':
     case '8':
     case '9':
-        return (DIGIT);
+        return DIGIT;
     case 'a':
     case 'b':
     case 'c':
     case 'd':
     case 'e' :
     case 'f':
-        return (HEXDIGIT);
+        return HEXDIGIT;
     case '.':
-        return (PUNKT);
+        return PUNKT;
     case '\0':
-        return (END);
+        return END;
     default:
-        return (ERROR);
+        return ERROR;
     }
 }
 
