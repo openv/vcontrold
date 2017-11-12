@@ -13,7 +13,7 @@ endif()
 if (EXISTS ${BASE_DIR}/.git)
     # --> git:
     include (${CMAKE_CURRENT_LIST_DIR}/GitDescription.cmake)
-    git_get_description (VERSION GIT_ARGS)
+    git_get_description (VERSION GIT_ARGS --dirty)
     if (NOT VERSION)
         set (VERSION "unknown")
     else()
@@ -23,20 +23,18 @@ if (EXISTS ${BASE_DIR}/.git)
 
     message (STATUS "Updating version information to ${VERSION} ...")
     # write version info to a temporary file
-    configure_file (${BASE_DIR}/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
+    configure_file (${BASE_DIR}/src/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
     # update info if changed
-    execute_process (COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/version.h~ ${BASE_DIR}/version.h)
+    execute_process (COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/version.h~ ${BASE_DIR}/src/version.h)
     # make sure info doesn't get stale
     file (REMOVE ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
 
 else()
     # --> tarball
-    if (NOT EXISTS ${BASE_DIR}/version.h)
+    if (NOT EXISTS ${BASE_DIR}/src/version.h)
         message (WARNING "The generated file \"version.h\" does not exist!")
         message (WARNING "Either, something went wrong when releasing this tarball, or this is some GitHub snapshot.")
         message (WARNING "Generating a dummy version.h.")
         set (VERSION "unknown")
-        configure_file (${BASE_DIR}/version.h.in ${BASE_DIR}/version.h)
     endif()
-
 endif()
