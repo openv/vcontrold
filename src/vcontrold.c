@@ -92,6 +92,7 @@ void usage()
 short checkIP(char *ip)
 {
     allowPtr aPtr;
+
     if ((aPtr = getAllowNode(cfgPtr->aPtr, inet_addr(ip)))) {
         logIT(LOG_INFO, "%s in allowList (%s)", ip, aPtr->text);
         return 1;
@@ -124,12 +125,12 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
     int count = 0;
     //void *uPtr;
     //int maxResLen=*resultLen;
-    *resultLen = 0; // noch keine Zeichen empfangen :-)
+    *resultLen = 0; // nothing received yet :-)
 
     // Open the device only if we have something to do
-    vcontrol_semget(); // todo semjfi
+    vcontrol_semget(); // TODO semjfi
     if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
-        vcontrol_semrelease(); // todo semjfi
+        vcontrol_semrelease(); // TODO semjfi
         logIT(LOG_ERR, "Error opening %s", device);
         result = "\0";
         *resultLen = 0;
@@ -142,21 +143,21 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
         result = "\0";
         *resultLen = 0;
         framer_closeDevice(fd);
-        vcontrol_semrelease(); // todo semjfi
+        vcontrol_semrelease(); // TODO semjfi
         return 0;
     }
     logIT(LOG_INFO, "Reading cmd file %s", filename);
     // Empty queue
-    // todo semjfi vcontrol_semget();
+    // TODO semjfi vcontrol_semget();
     tcflush(fd, TCIOFLUSH);
-    // todo semjfi vcontrol_semrelease();
+    // TODO semjfi vcontrol_semrelease();
     while (fgets(line, MAXBUF - 1, cmdPtr)) {
         // Remove \n
         line[strlen(line) - 1] = '\0';
         bzero(recvBuf, sizeof(recvBuf));
-        // todo semjfi vcontrol_semget();
+        // TODO semjfi vcontrol_semget();
         count = execCmd(line, fd, recvBuf, sizeof(recvBuf));
-        // todo semjfi vcontrol_semrelease();
+        // TODO semjfi vcontrol_semrelease();
         int n;
         char *ptr;
         ptr = recvBuf;
@@ -170,8 +171,9 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
             unsigned char byte = *ptr++ & 255;
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);
-            if (n >= MAXBUF - 3)
-            { break; }
+            if (n >= MAXBUF - 3) {
+                break;
+            }
         }
         if (count - 1) {
             // timeout
@@ -182,7 +184,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
 
     }
     framer_closeDevice(fd);
-    vcontrol_semrelease(); // todo semjfi
+    vcontrol_semrelease(); // TODO semjfi
     fclose(cmdPtr);
     return 1;
 }
@@ -224,7 +226,7 @@ int rawModus(int socketfd, char *device)
 
     if (! mkstemp(tmpfile)) {
         // Another try
-        if (!mkstemp(tmpfile)) {
+        if (! mkstemp(tmpfile)) {
             logIT1(LOG_ERR, "Error creating mkstemp");
             return 0;
         }
@@ -318,7 +320,7 @@ int interactive(int socketfd, char *device )
         } else if (strstr(readBuf, "quit") == readBuf) {
             Writen(socketfd, bye, strlen(bye));
             framer_closeDevice(fd);
-            vcontrol_semrelease(); // todo semjfi
+            vcontrol_semrelease(); // TODO semjfi
             return 1;
         } else if (strstr(readBuf, "debug on") == readBuf) {
             setDebugFD(socketfd);
@@ -347,7 +349,7 @@ int interactive(int socketfd, char *device )
             rawModus(socketfd, device);
         } else if (strstr(readBuf, "close") == readBuf) {
             framer_closeDevice(fd);
-            vcontrol_semrelease(); // todo semjfi
+            vcontrol_semrelease(); // TODO semjfi
             snprintf(string, sizeof(string), "%s closed\n", device);
             Writen(socketfd, string, strlen(string));
             fd = -1;
@@ -402,7 +404,7 @@ int interactive(int socketfd, char *device )
                     if (!Writen(socketfd, prompt, strlen(prompt))) {
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
-                        vcontrol_semrelease(); // todo semjfi
+                        vcontrol_semrelease(); // TODO semjfi
                         return 0;
                     }
                     continue;
@@ -438,14 +440,14 @@ int interactive(int socketfd, char *device )
                     if (!Writen(socketfd, prompt, strlen(prompt))) {
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
-                        vcontrol_semrelease();  //todo semjfi
+                        vcontrol_semrelease();  // TODO semjfi
                         return 0;
                     }
                     continue;
                 }
             }
 
-#if 1 == 2 // todo semjfi
+#if 1 == 2 // TODO semjfi
             if ((fd < 0) && (fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                 logIT(LOG_ERR, "Error opening %s", device);
                 sendErrMsg(socketfd);
@@ -464,7 +466,7 @@ int interactive(int socketfd, char *device )
                 logIT(LOG_INFO, "Executing pre command %s", cPtr->precmd);
 
                 if (execByteCode(pcPtr->cmpPtr, fd, pRecvBuf, sizeof(pRecvBuf), sendBuf, sendLen, 1, pcPtr->bit, pcPtr->retry, pRecvBuf, pcPtr->recvTimeout) == -1) {
-                    // todo semjfi vcontrol_semrelease();
+                    // TODO semjfi vcontrol_semrelease();
                     logIT(LOG_ERR, "Error executing %s", readBuf);
                     sendErrMsg(socketfd);
                     break;
@@ -480,7 +482,7 @@ int interactive(int socketfd, char *device )
             //  0: Preformatted string
             //  n: raw bytes
             count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf), sendBuf, sendLen, noUnit, cPtr->bit, cPtr->retry, pRecvBuf, cPtr->recvTimeout);
-            // todo semjfi vcontrol_semrelease();
+            // TODO semjfi vcontrol_semrelease();
 
             if (count == -1) {
                 logIT(LOG_ERR, "Error executing %s", readBuf);
@@ -612,7 +614,7 @@ int interactive(int socketfd, char *device )
             if (!Writen(socketfd, UNKNOWN, strlen(UNKNOWN))) {
                 sendErrMsg(socketfd);
                 framer_closeDevice(fd);
-                vcontrol_semrelease(); // todo semjfi
+                vcontrol_semrelease(); // TODO semjfi
                 return 0;
             }
         }
@@ -622,14 +624,14 @@ int interactive(int socketfd, char *device )
         if (!Writen(socketfd, prompt, strlen(prompt))) {
             sendErrMsg(socketfd);
             framer_closeDevice(fd);
-            vcontrol_semrelease(); // todo semjfi
+            vcontrol_semrelease(); // TODO semjfi
             return 0;
         }
         bzero(readBuf, sizeof(readBuf));
     }
     sendErrMsg(socketfd);
     framer_closeDevice(fd);
-    vcontrol_semrelease(); // todo semjfi
+    vcontrol_semrelease(); // TODO semjfi
     return 0;
 }
 

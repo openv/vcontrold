@@ -155,10 +155,10 @@ int my_send(int fd, char *s_buf, int len)
 int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
 {
     int i;
-
     struct tms tms_t;
     clock_t start, end, mid, mid1;
     unsigned long clktck;
+
     clktck = sysconf(_SC_CLK_TCK);
     start = times(&tms_t);
     mid1 = start;
@@ -168,14 +168,14 @@ int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
         }
         if (setjmp(env_alrm) != 0) {
             logIT1(LOG_ERR, "read timeout");
-            return (-1);
+            return -1;
         }
         alarm(TIMEOUT);
         // We use the socket fixed variant from socket.c
         if (readn(fd, &r_buf[i], 1) <= 0) {
             logIT1(LOG_ERR, "error read tty");;
             alarm(0);
-            return (-1);
+            return -1;
         }
 
         alarm(0);
@@ -194,6 +194,7 @@ int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
 static int setnonblock(int fd)
 {
     int flags;
+
     // If they have O_NONBLOCK, use the Posix way to do it
 #if defined(O_NONBLOCK)
     if (-1 == (flags = fcntl(fd, F_GETFL, 0))) {
@@ -210,6 +211,7 @@ static int setnonblock(int fd)
 static int setblock(int fd)
 {
     int flags;
+
     // If they have O_BLOCK, use the Posix way to do it
 #if defined(O_NONBLOCK)
     if (-1 == (flags = fcntl(fd, F_GETFL, 0))) {
@@ -265,7 +267,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
             logIT(LOG_ERR, "<RECV: read timeout");
             setblock(fd);
             logIT(LOG_INFO, dump(string, "<RECV: received", r_buf, i));
-            return (-1);
+            return -1;
         } else if (retval < 0) {
             if (errno == EINTR) {
                 logIT(LOG_INFO, "<RECV: select interrupted - redo");
@@ -326,6 +328,7 @@ int waitfor(int fd, char *w_buf, int w_len)
     char hexString[128] = "\0";
     char dummy[3];
     unsigned long etime;
+
     for (i = 0; i < w_len; i++) {
         sprintf(dummy, "%02X", w_buf[i]);
         strncat(hexString, dummy, strlen(dummy));

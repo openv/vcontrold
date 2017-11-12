@@ -82,12 +82,16 @@ int getCycleTime(char *recv, int len, char *result)
     //if ((len/2)*2 !=len) {
     if (len % 2) {
         sprintf(result, "Byte count not even");
-        return (0);
+        return 0;
     }
 
     bzero(string, sizeof(string));
 
     for (i = 0; i < len; i += 2) {
+        // TODO - vitoopen: Leave output in German.
+        // CHANGING THIS WOULD BREAK existing applications.
+        // => maybe we could enable english results later with a build option, 
+        // but not for the default.
         if (recv[i] == (char)0xff) {
             snprintf(string, sizeof(string), "%d:An:--     Aus:--\n", (i / 2) + 1);
         } else {
@@ -160,10 +164,12 @@ int setCycleTime(char *input, char *sendBuf)
 int getSysTime(char *recv, int len, char *result)
 {
     char day[3];
+
     if (len != 8) {
         sprintf(result, "System time: Len <> 8 bytes");
-        return (0);
+        return 0;
     }
+
     // TODO: Can this be translated, or is it used as German day abbreviations
     // when communicating with the heating controller?
     switch (recv[4]) {
@@ -193,7 +199,7 @@ int getSysTime(char *recv, int len, char *result)
         break;
     default:
         sprintf(result, "Error day conversion: %02X", recv[4]);
-        return (0);
+        return 0;
     }
 
     sprintf(result, "%s,%02X.%02X.%02X%02X %02x:%02X:%02X", day,
@@ -222,7 +228,7 @@ int setSysTime(char *input, char *sendBuf, short bufsize)
         systime[3] = systime[2];
         systime[2] = ' ';
         logIT(LOG_INFO, "current system time %s", systime);
-        return (string2chr(systime, sendBuf, bufsize));
+        return string2chr(systime, sendBuf, bufsize);
     } else {
         logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
         return 0;
@@ -268,9 +274,11 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
 {
     enumPtr ePtr = NULL;
     char string[200];
+
     if (! len) {
         return 0;
     }
+
     // Search for the appropriate enum and return the value
     if (! (ePtr = getEnumNode(ptr, bytes, len))) {
         // We search for the default
@@ -294,6 +302,7 @@ short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
     enumPtr ePtr = NULL;
     char string[200];
     char string2[1000];
+
     // Search for the appropriate enum and return the value
     if (! (ePtr = getEnumNode(ptr, text, 0))) {
         return 0;
@@ -318,7 +327,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     char error[1000];
     char buffer[MAXBUF];
     char *errPtr = error;
-    // short t;
+    //short t;
     float erg;
     int ergI;
     char formatI[20];
@@ -340,7 +349,6 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     bzero(errPtr, sizeof(error));
 
     // We tread the different <type> entries
-
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
         // Cycle time
         if (getCycleTime(recvBuf, recvLen, result)) {
@@ -374,7 +382,6 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     }
 
     // Here are all the numeric types
-
     if (strstr(uPtr->type, "char") == uPtr->type) {
         // Conversion to Char 1Byte
         memcpy(&charV, recvBuf, 1);
@@ -422,6 +429,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     int n;
     char *ptr;
     char res;
+
     ptr = recvBuf;
     bzero(buffer, sizeof(buffer));
     for (n = 0; n <= 9; n++) {
@@ -520,7 +528,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         }
     }
     if (strstr(uPtr->type, "systime") == uPtr->type) {
-        // Cycle time
+        // System time
         if (! (*sendLen = setSysTime(input, sendBuf, *sendLen))) {
             return -1;
         } else  {
@@ -578,7 +586,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                 if (*errPtr) {
                     logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
                     strcpy(sendBuf, string);
-                    return (-1);
+                    return -1;
                 }
                 ergType = INT;
                 snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x", ergI);
@@ -625,7 +633,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         } else if (uPtr->type) {
             bzero(string, sizeof(string));
             logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
-            return (-1);
+            return -1;
         }
 
         bzero(buffer, sizeof(buffer));
