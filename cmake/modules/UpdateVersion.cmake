@@ -32,8 +32,11 @@ if (EXISTS ${BASE_DIR}/.git)
 else()
     # --> tarball
     if (NOT EXISTS ${BASE_DIR}/version.h)
-        message (SEND_ERROR "The generated file \"version.h\" does not exist!")
-        message (AUTHOR_WARNING "When creating a release tarball, please make sure to run cmake -P ${CMAKE_CURRENT_LIST_FILE}")
+        message (WARNING "The generated file \"version.h\" does not exist!")
+        message (WARNING "Either, something went wrong when releasing this tarball, or this is some GitHub snapshot.")
+        message (WARNING "Generating a dummy version.h.")
+        set (VERSION "unknown")
+        configure_file (${BASE_DIR}/version.h.in ${BASE_DIR}/version.h)
     endif()
 
 endif()
