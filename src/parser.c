@@ -485,13 +485,15 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     do {
         ptr = sendPtr;
         while (*ptr++) {
-            if ((*ptr == '$') || (*ptr == '\0'))
-            { break; }
+            if ((*ptr == '$') || (*ptr == '\0')) {
+                break;
+            }
         }
         bptr = ptr;
         while (*bptr++) {
-            if ((*bptr == ' ') || (*bptr == ';') || (*bptr == '\0'))
-            { break; }
+            if ((*bptr == ' ') || (*bptr == ';') || (*bptr == '\0')) {
+                break;
+            }
         }
         // Don't copy the converted string
         strncpy(ePtr, sendPtr, ptr - sendPtr);

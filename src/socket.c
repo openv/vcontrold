@@ -82,7 +82,7 @@ int openSocket(int tcpport)
     free(port);
 
     if (n < 0) {
-        logIT(LOG_ERR, "getaddrinfo error:: [%s]\n", gai_strerror(n));
+        logIT(LOG_ERR, "getaddrinfo error: [%s]\n", gai_strerror(n));
         return -1;
     }
 
@@ -114,8 +114,7 @@ int openSocket(int tcpport)
 
     if (listenfd < 0) {
         freeaddrinfo(ressave);
-        fprintf(stderr,
-                "socket error:: could not open socket\n");
+        fprintf(stderr, "socket error: could not open socket\n");
         exit(1);
     }
 
@@ -157,7 +156,7 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
             close(listenfd);
             return connfd;
         } else {
-            logIT(LOG_INFO, "Child prozess started with pid %d", childpid);
+            logIT(LOG_INFO, "Child process started with pid %d", childpid);
         }
 
         close(connfd);
@@ -172,8 +171,11 @@ void closeSocket(int sockfd)
 
 int openCliSocket(char *host, int port, int noTCPdelay)
 {
-    struct addrinfo hints, /* use hints for ipv46 address resolution */ *res, *ressave;
-    int n, sockfd;
+    struct addrinfo hints; // use hints for ipv46 address resolution
+    struct addrinfo *res;
+    struct addrinfo *ressave;
+    int n;
+    int sockfd;
     char port_string[16]; // the IPv6 world use a char* instead of an int in getaddrinfo
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -235,11 +237,11 @@ ssize_t writen(int fd, const void *vptr, size_t n)
     while (nleft > 0) {
         if ((nwritten = write(fd, ptr, nleft)) <= 0) {
             if (errno == EINTR) {
-                nwritten = 0;
                 // and call write() again
+                nwritten = 0;
             }  else {
-                return -1;
                 // error
+                return -1;
             }
         }
         nleft -= nwritten;
@@ -273,15 +275,15 @@ ssize_t readn(int fd, void *vptr, size_t n)
     while (nleft > 0) {
         if ((nread = read(fd, ptr, nleft)) < 0) {
             if (errno == EINTR) {
-                nread = 0;
                 // and call read() again
+                nread = 0;
             }
             else {
                 return -1;
             }
         } else if (nread == 0) {
-            break;
             // EOF
+            break;
         }
 
 #ifdef __CYGWIN__
@@ -343,29 +345,30 @@ again:
 ssize_t readline(int fd, void *vptr, size_t maxlen)
 {
     int        n;
-    ssize_t rc;
-    char    c, *ptr;
+    ssize_t    rc;
+    char       c;
+    char       *ptr;
 
     ptr = vptr;
     for (n = 1; n < maxlen; n++) {
         if ( (rc = my_read(fd, &c)) == 1) {
             *ptr++ = c;
             if (c == '\n') {
-                break;
                 // newline is stored, like fgets()
+                break;
             }
         } else if (rc == 0) {
             if (n == 1) {
-                return 0;
                 // EOF, no data read
+                return 0;
             }
             else {
-                break;
                 // EOF, some data was read
+                break;
             }
         } else {
-            return -1;
             // error, errno set by read()
+            return -1;
         }
     }
 

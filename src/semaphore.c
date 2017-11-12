@@ -75,8 +75,8 @@ int initsem(key_t key, int nsems)
 
         semid = semget(key, nsems, 0); // get the id
         if (semid < 0) {
-            return semid;
             // error, check errno
+            return semid;
         }
 
         // wait for other process to initialize the semaphore:

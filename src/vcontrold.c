@@ -702,8 +702,9 @@ int main(int argc, char *argv[])
             }
             if (verbose) {
                 printf("option %s", long_options[option_index].name);
-                if (optarg)
-                { printf(" with arg %s", optarg); }
+                if (optarg) {
+                    printf(" with arg %s", optarg);
+                }
                 printf("\n");
             }
             if (strcmp("help", long_options[option_index].name) == 0) {

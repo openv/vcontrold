@@ -89,9 +89,9 @@ int getCycleTime(char *recv, int len, char *result)
 
     for (i = 0; i < len; i += 2) {
         if (recv[i] == (char)0xff) {
-            snprintf(string, sizeof(string), "%d:On:--     Off:--\n", (i / 2) + 1);
+            snprintf(string, sizeof(string), "%d:An:--     Aus:--\n", (i / 2) + 1);
         } else {
-            snprintf(string, sizeof(string), "%d:On:%02d:%02d  Off:%02d:%02d\n", (i / 2) + 1,
+            snprintf(string, sizeof(string), "%d:An:%02d:%02d  Aus:%02d:%02d\n", (i / 2) + 1,
                      (recv[i] & 0xF8) >> 3, (recv[i] & 7) * 10,
                      (recv[i + 1] & 0xF8) >> 3, (recv[i + 1] & 7) * 10);
         }
@@ -150,7 +150,7 @@ int setCycleTime(char *input, char *sendBuf)
     } while ((sptr = strtok(NULL, " ")) != NULL);
 
     if ((count / 2) * 2 != count) {
-        logIT(LOG_WARNING, "Lines count odd, ignoring %s", cptr);
+        logIT(LOG_WARNING, "Times count odd, ignoring %s", cptr);
         *(bptr - 1) = 0xff;
     }
 
@@ -457,7 +457,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
             strcpy(result, string);
             return -1;
         }
-        logIT(LOG_INFO, "Res: (Hex max. 4 byte) %08x", ergI);
+        logIT(LOG_INFO, "Res: (Hex max. 4 bytes) %08x", ergI);
         res = ergI;
         if ( uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, recvLen)) {
             strcpy(result, tPtr);
@@ -581,7 +581,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                     return (-1);
                 }
                 ergType = INT;
-                snprintf(string, sizeof(string), "Res: (Hex max. 4 byte) %08x", ergI);
+                snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x", ergI);
             }
         }
     }
@@ -636,7 +636,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);
             if (n >= MAXBUF - 3) {
-                // Where is 'n' initialized?!
+                // FN: Where is 'n' initialized?!
                 break;
             }
         }
