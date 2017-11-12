@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.2.0)
 project(vcontrold C)
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -20,7 +20,6 @@ add_custom_target(
 
 include_directories(
     ${LIBXML2_INCLUDE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 set(vcontrold_SRCS
