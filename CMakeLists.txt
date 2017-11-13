@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.2.0)
 project(vcontrold C)
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
@@ -6,11 +6,17 @@ IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(CMAKE_INSTALL_PREFIX /usr)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
 find_package(LibXml2 REQUIRED)
 
-include(GetVersion)
+add_custom_target(
+    UpdateVersion ALL
+    COMMAND ${CMAKE_COMMAND}
+        -DBASE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/UpdateVersion.cmake
+    COMMENT "Updating version header."
+    BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h
+)
 
 include_directories(
     ${LIBXML2_INCLUDE_DIR}
@@ -44,10 +50,13 @@ set(vsim_SRCS
 
 add_executable(vcontrold ${vcontrold_SRCS})
 target_link_libraries(vcontrold ${LIBXML2_LIBRARIES})
+add_dependencies(vcontrold UpdateVersion)
 
 add_executable(vclient ${vclient_SRCS})
+add_dependencies(vclient UpdateVersion)
 
 add_executable(vsim ${vsim_SRCS})
+add_dependencies(vsim UpdateVersion)
 
 install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin)
 install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
