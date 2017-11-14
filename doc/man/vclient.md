@@ -81,7 +81,7 @@ EXAMPLES
 --------
 
 ```
-$ cat > sql.tmpl <<<EOF
+$ cat > sql.tmpl <<EOF
 INSERT INTO messwerte values (CURRENT_DATE,$1,$2);
 EOF
 ```
