@@ -64,7 +64,7 @@ LICENSE
 -------
 
 The `vcontrold` software, its accompanying files and documentation are licensed under **GPLv3**.
-See `LICENSE` in the package.
+See `COPYING` in the package.
 
 SEE ALSO
 --------
