@@ -58,9 +58,9 @@ add_dependencies(vclient UpdateVersion)
 add_executable(vsim ${vsim_SRCS})
 add_dependencies(vsim UpdateVersion)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/doc/man)
+
 install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin)
 install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
-file(GLOB MANPAGES ${CMAKE_CURRENT_SOURCE_DIR}/doc/man/*.1)
-install(FILES ${MANPAGES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/man1)
