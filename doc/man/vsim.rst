@@ -24,4 +24,4 @@ SEE ALSO
 
 * man 1 vcontrold
 * man 1 vclient
-* `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
+* vcontrold @GitHub: `https://github.com/openv/vcontrold <https://github.com/openv/vcontrold>`__
