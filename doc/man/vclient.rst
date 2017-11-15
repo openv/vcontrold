@@ -25,10 +25,10 @@ It features a template mode to prepare received data for logging or database inp
 OPTIONS
 =======
 
--h, --host
+-h, \--host
     <IPv4:port> or <IPv6> of vcontrold
 
--p, --port
+-p, \--port
     <port> of vcontrold when using IPv6
 
 -c, \--command <commandlist>
@@ -55,16 +55,16 @@ OPTIONS
 -k, \--cacti
     Cacti datalogger compatible output, omits units and error details
 
--v, --verbose
+-v, \--verbose
     verbose mode
 
--4, --inet4
+-4, \--inet4
     IPv4 preferred
 
--6, --inet6
+-6, \--inet6
     IPv6 preferred. If no option provided, us OS defaults.
 
---help
+\--help
     this help
 
 TEMPLATE MODE
