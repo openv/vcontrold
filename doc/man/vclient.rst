@@ -2,9 +2,9 @@
  vclient
 =========
 
---------------------------------------------------------
-vclient — vclient tool for getting values from vcontrold
---------------------------------------------------------
+--------------------------------------
+tool for getting values from vcontrold
+--------------------------------------
 
 :Author: Frank Nobis fn@radio-do.de,
          other contributors see `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
@@ -142,4 +142,4 @@ SEE ALSO
 ========
 
 * man 1 vcontrold
-* `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
+* vcontrold @GitHub: `https://github.com/openv/vcontrold <https://github.com/openv/vcontrold>`__
