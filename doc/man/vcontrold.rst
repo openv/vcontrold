@@ -2,9 +2,9 @@
  vcontrold
 ===========
 
-----------------------------------
-Unix daemon for Vito communication
-----------------------------------
+----------------------------------------------------------
+Unix daemon for communication with Viessmann Vito heatings
+----------------------------------------------------------
 
 :Author: Frank Nobis fn@radio-do.de,
          other contributors see `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
@@ -14,46 +14,46 @@ Unix daemon for Vito communication
 SYNOPSIS
 ========
 
-  vcontrold [−x <xml-file>] [−d <device>] [−l <logfile>] [−p <port>] [−s] [−n] [−i] [−g]
+  vcontrold [-x <xml-file>] [-d <device>] [-l <logfile>] [-p <port>] [-s] [-n] [-i] [-g]
 
 DESCRIPTION
 ===========
 
-vcontrold uses a serial link or an IP connection to communicate with
-a vito heating system.
+vcontrold uses a serial optical link or an IP connection to communicate with
+a Viessmann vito heating controller.
 
 OPTIONS
 =======
 
-−x <xml-file>
+-x <xml-file>
     location of the main config file
 
-−d <serial-device>
+-d <serial-device>
     serial device to use.
     This option overrides the device entry
     in the <xml-file> file.
 
-−p <port>
+-p <port>
     TCP <port> to use for remote connections.
     The default is 3002 and can be specified
     in the <xml-file> file.
     This option overrides the corresponding option in the <xml-file> file.
 
-−s
+-s
     use syslog
 
-−l
+-l
     use <logfile> instead of syslog.
 
-−n
+-n
     do not fork. This is for testing purpose only. Normaly vcontrold
     will detach from the controlling terminal and put itself into the
     background.
 
-−i
+-i
     use a temp file in ``/tmp/sim-devid.ini`` for use with the vsim simulator
 
-−g
+-g
     enable debug mode.
 
 FILES
@@ -70,11 +70,11 @@ LICENSE
 =======
 
 The vcontrold software, its accompanying files and documentation
-are licensed under <*GPLv3**.
+are licensed under the **GPLv3**.
 See COPYING in the package.
 
 SEE ALSO
 ========
 
 * man 1 vclient
-* `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
+* vcontrold @GitHub `https://github.com/openv/vcontrold <https://github.com/openv/vcontrold>`__
