@@ -37,7 +37,7 @@ OPTIONS
 -f, \-commandfile <commandfile>
     optional file with commands, one command per line
 
--s, --csvfile
+-s, \--csvfile
     output results in CSV format
 
 -t, \--template <templatefile>
