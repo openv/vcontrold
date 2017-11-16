@@ -163,7 +163,7 @@ main(int argc,char* argv[])  {
 			case 'c':
 				if (verbose) {
 					printf ("option -c with value `%s'\n", optarg);
-					printf ("sizeof optarg:%lu, strlen:%lu, sizeof commands:%lu, strlen:%lu,  [%s]\n", sizeof(optarg), strlen(optarg),sizeof(commands),strlen(commands), commands);
+					printf ("sizeof optarg:%zu, strlen:%zu, sizeof commands:%zu, strlen:%zu,  [%s]\n", sizeof(optarg), strlen(optarg),sizeof(commands),strlen(commands), commands);
 				}
 				if (strlen(commands)==0) {
 					strncpy(commands, optarg, sizeof(commands));
