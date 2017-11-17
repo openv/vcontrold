@@ -5,11 +5,13 @@ cmake_minimum_required(VERSION 3.2.0)
 
 set(RST2MAN_OPTS)
 
-set(MANUALS
-    vcontrold
-    vclient
-    vsim
-)
+set(MANUALS vcontrold)
+if(VCLIENT)
+    list(APPEND MANUALS vclient)
+endif(VCLIENT)
+if(VSIM)
+    list(APPEND MANUALS vsim)
+endif(VSIM)
 
 foreach(MANUAL IN LISTS MANUALS)
     set(MANPAGE_OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${MANUAL}.1.gz)
@@ -22,7 +24,7 @@ foreach(MANUAL IN LISTS MANUALS)
         COMMENT "Converting ${MANUAL}.rst from ReStructuredText into manpage ${MANUAL}.1.gz"
         VERBATIM
     )
-list(APPEND MANPAGES_LIST ${MANPAGE_OUTPUT})
+    list(APPEND MANPAGES_LIST ${MANPAGE_OUTPUT})
 endforeach()
 
 add_custom_target(man ALL DEPENDS ${MANPAGES_LIST})
