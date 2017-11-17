@@ -6,7 +6,22 @@ IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(CMAKE_INSTALL_PREFIX /usr)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
+option(MANPAGES "Build man pages via rst2man" ON)
+
 find_package(LibXml2 REQUIRED)
+
+if(MANPAGES)
+    find_program(RST2MAN NAMES rst2man rst2man.py)
+    if(RST2MAN)
+        message("-- Found rst2man: ${RST2MAN}")
+    else(RST2MAN)
+        message(FATAL_ERROR
+            "Could not find a rst2man executable. Either set the \"MANPAGES\" option to \"OFF\" \
+             (via cmake -DMANPAGES=OFF) or install Python's Docutils \
+             (cf. http://docutils.sourceforge.net/)."
+        )
+    endif(RST2MAN)
+endif(MANPAGES)
 
 add_custom_target(
     UpdateVersion ALL
@@ -58,9 +73,10 @@ add_dependencies(vclient UpdateVersion)
 add_executable(vsim ${vsim_SRCS})
 add_dependencies(vsim UpdateVersion)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/doc/man)
+if(MANPAGES)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/doc/man)
+endif(MANPAGES)
 
 install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin)
 install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
