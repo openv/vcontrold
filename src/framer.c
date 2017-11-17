@@ -71,21 +71,25 @@ typedef unsigned short int uint16;
 #define P300_NOT_INIT          0x05
 #define P300_INIT_OK           0x06
 
+// message buffer structure
+#define P300_LEADIN_OFFSET     0
+#define P300_LEN_OFFSET        1
 #define P300_TYPE_OFFSET       2
 #define P300_FCT_OFFSET        3
 #define P300_ADDR_OFFSET       4
 #define P300_RESP_LEN_OFFSET   6
 #define P300_BUFFER_OFFSET     7
-#define P300_EXTRA_BYTES       3
+
+#define P300_LEADIN_LEN        1
+#define P300_LEN_LEN           1
+#define P300_CRC_LEN           1
+#define P300_EXTRA_BYTES       (P300_LEADIN_LEN + P300_LEN_LEN + P300_CRC_LEN)
 
 #define FRAMER_READ_ERROR      (-1)
 #define FRAMER_LINK_STATUS(st) (0xFE00 + st)
 #define FRAMER_READ_TIMEOUT    0
 
 #define FRAMER_NO_ADDR         ((uint16) (-1))
-#define FRAMER_ADDR(pdu)       (*(uint16 *)(((char *)pdu) + 6))
-                               // cast [6] + [7] to uint8, even if no char buf
-#define FRAMER_SET_ADDR(pdu) { framer_current_addr =
 
 // current active command
 static uint16 framer_current_addr = FRAMER_NO_ADDR; // stored value depends on Endianess
@@ -97,12 +101,13 @@ static char framer_pid = 0;
 static void framer_set_actaddr(void *pdu)
 {
     char string[100];
+
     if (framer_current_addr != FRAMER_NO_ADDR) {
         snprintf(string, sizeof(string),
                  ">FRAMER: addr was still active %04X",
                  framer_current_addr);
+        logIT(LOG_ERR, string);
     }
-    logIT(LOG_ERR, string);
     framer_current_addr = *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET);
 }
 
@@ -114,11 +119,13 @@ static void framer_reset_actaddr(void)
 static int framer_check_actaddr(void *pdu)
 {
     char string[100];
+
     if (framer_current_addr != *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET)) {
         snprintf(string, sizeof(string),
                  ">FRAMER: addr corrupted stored %04X, now %04X",
                  framer_current_addr,
                  *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET));
+        logIT(LOG_ERR, string);
         return -1;
     }
     return 0;
@@ -133,6 +140,7 @@ static void framer_set_result(char result)
 static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime)
 {
     char string[100];
+
     if ((framer_pid == P300_LEADIN) &&
         ((framer_current_addr & FRAMER_LINK_STATUS(0)) == FRAMER_LINK_STATUS(0))) {
         r_buf[0] = (char) (framer_current_addr ^ FRAMER_LINK_STATUS(0));
@@ -146,7 +154,7 @@ static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime)
     return FRAMER_ERROR;
 }
 
-// synchronisation for P300 + switch to P300, back to normal for close -> repeating 05
+// Synchronization for P300 + switch to P300, back to normal for close -> repeating 05
 static int framer_close_p300(int fd)
 {
     char string[100];
@@ -167,7 +175,7 @@ static int framer_close_p300(int fd)
         rlen = receive_nb(fd, &rbuf, 1, &etime);
         if (rlen < 0) {
             framer_set_result(P300_ERROR);
-            snprintf(string, sizeof(string), ">FRAMER: close read failure");
+            snprintf(string, sizeof(string), ">FRAMER: close read failure for ack");
             logIT(LOG_ERR, string);
             return FRAMER_ERROR;
         } else if (rlen == 0) {
@@ -181,7 +189,7 @@ static int framer_close_p300(int fd)
             logIT(LOG_INFO, string);
             return FRAMER_SUCCESS;
         } else {
-            snprintf(string, sizeof(string), ">FRAMER: unexpected data %02Xk", rbuf);
+            snprintf(string, sizeof(string), ">FRAMER: unexpected data 0x%02X", rbuf);
             logIT(LOG_ERR, string);
             // continue anyway
         }
@@ -203,7 +211,7 @@ static int framer_open_p300(int fd)
     int rlen;
 
     if (! framer_close_p300(fd)) {
-        snprintf(string, sizeof(string), ">FRAMER: could not set start cond");
+        snprintf(string, sizeof(string), ">FRAMER: could not set start condition");
         logIT(LOG_ERR, string);
         return FRAMER_ERROR;
     }
@@ -220,7 +228,7 @@ static int framer_open_p300(int fd)
         rlen = receive_nb(fd, &rbuf, 1, &etime);
         if (rlen < 0) {
             framer_set_result(P300_ERROR);
-            snprintf(string, sizeof(string), ">FRAMER: enable read failure");
+            snprintf(string, sizeof(string), ">FRAMER: enable read failure for ack");
             logIT(LOG_ERR, string);
             return FRAMER_ERROR;
         } else if (rlen == 0) {
@@ -266,7 +274,7 @@ static char framer_chksum(char *buf, int len)
  * Format
  * Downlink
  * to framer
- * | LEADIN | type | function | addr | exp len |
+ * | type | function | addr | exp len |
  * to Vitotronic
  * | LEADIN | payload len | type | function | addr | exp len | chk |
  */
@@ -292,15 +300,12 @@ int framer_send(int fd, char *s_buf, int len)
         unsigned long etime;
         int rlen;
 
-        l_buf[0] = P300_LEADIN;
-        l_buf[1] = len; // only payload but len contains other bytes
-        l_buf[2] = s_buf[0]; // type
-        l_buf[3] = s_buf[1]; // function
-        for (pos = 0; pos < (len - 2); pos++) {
-            l_buf[P300_ADDR_OFFSET + pos] = s_buf[pos + 2];
-        }
-        l_buf[P300_ADDR_OFFSET + pos] = framer_chksum(l_buf + 1,
-                                        len + P300_EXTRA_BYTES - 2);
+        // prepare a new message, fill buffer starting with leadin
+        l_buf[P300_LEADIN_OFFSET] = P300_LEADIN;
+        l_buf[P300_LEN_OFFSET] = len; // only payload but len may contain other bytes
+        memcpy(&l_buf[P300_TYPE_OFFSET], s_buf, len);
+        l_buf[P300_LEADIN_LEN + P300_LEN_LEN + len] =
+                framer_chksum(l_buf + P300_LEADIN_LEN, len + P300_LEN_LEN);
         if (! my_send(fd, l_buf, len + P300_EXTRA_BYTES)) {
             snprintf(string, sizeof(string), ">FRAMER: write failure %d",
                      len + P300_EXTRA_BYTES);
@@ -324,6 +329,9 @@ int framer_send(int fd, char *s_buf, int len)
             return FRAMER_ERROR;
         }
 
+        // TODO hmueller: can we do a framer_reset_actaddr() here?
+        // If not we get a "addr was still active FE06" message ...
+        //framer_reset_actaddr();
         framer_set_actaddr(l_buf);
         snprintf(string, sizeof(string), ">FRAMER: Command send");
         logIT(LOG_ERR, string);
@@ -350,7 +358,7 @@ int framer_send(int fd, char *s_buf, int len)
  * return is FRAMER_ERROR, FRAMER_TIMEOUT or read len
  *
  * WEAKNESS:
- * If any other protocol gets an aswer beginning x41, then this will return errorneous
+ * If any other protocol gets an answer beginning 0x41, then this will return erroneous
  * KW may have values returned starting 0x41
  */
 int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
@@ -363,8 +371,9 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
     unsigned long etime;
     char chk;
 
-    l_buf[4] = 0;
-    l_buf[5] = 0; // to identify TimerWWMi bug
+    // to identify TimerWWMi bug
+    l_buf[P300_ADDR_OFFSET] = 0;
+    l_buf[P300_ADDR_OFFSET + 1] = 0;
 
     if ((r_len < 1) || (!r_buf)) {
         snprintf(string, sizeof(string), ">FRAMER: invalid read buffer %d %p", r_len, r_buf);
@@ -391,9 +400,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         return FRAMER_READ_TIMEOUT;
     } else if (framer_pid != P300_LEADIN) {
         // no P300 frame, just forward
-        for (rlen = 0; rlen < r_len; rlen++) {
-            r_buf[rlen] = l_buf[rlen];
-        }
+        memcpy(r_buf, l_buf, r_len);
         return rtmp;
     }
 
@@ -417,7 +424,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         rtmp += rlen;
     }
 
-    total = l_buf[1] + P300_EXTRA_BYTES;
+    total = l_buf[P300_LEN_OFFSET] + P300_EXTRA_BYTES;
     rlen = total - rtmp;
     if (rlen <= 0) {
         framer_reset_actaddr();
@@ -431,35 +438,42 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
     *petime += etime;
 
     // bug in Vitotronic getTimerWWMi, we got it, but complete
-    if ((l_buf[4] == 0x21) && (l_buf[5] == 0x10) && (rtmp == -1)) {
+    if ((l_buf[P300_ADDR_OFFSET] == 0x21) &&
+            (l_buf[P300_ADDR_OFFSET + 1] == 0x10) && (rtmp == -1)) {
         snprintf(string, sizeof(string), ">FRAMER: bug of getTimerWWMi - omit checksum");
         logIT(LOG_ERR, string);
-        goto except;
+    } else {
+        if (rtmp < 0) {
+            framer_reset_actaddr();
+            snprintf(string, sizeof(string), ">FRAMER: read final failure");
+            logIT(LOG_ERR, string);
+            return FRAMER_READ_ERROR;
+        } else if (rtmp == 0) {
+            framer_reset_actaddr();
+            snprintf(string, sizeof(string), ">FRAMER: read final timeout");
+            logIT(LOG_ERR, string);
+            return FRAMER_READ_TIMEOUT;
+        }
+
+        // check for leadin
+        if (l_buf[P300_LEADIN_OFFSET] != P300_LEADIN) {
+            framer_reset_actaddr();
+            snprintf(string, sizeof(string), ">FRAMER: read leadin error received 0x%02X expected 0x%02X", l_buf[P300_LEADIN_OFFSET], P300_LEADIN);
+            logIT(LOG_ERR, string);
+            return FRAMER_READ_ERROR;
+        }
+
+        chk = framer_chksum(l_buf + P300_LEADIN_LEN, total - 2);
+        if (l_buf[total - 1] != chk) {
+            framer_reset_actaddr();
+            snprintf(string, sizeof(string),
+                    ">FRAMER: read chksum error received 0x%02X calc 0x%02X",
+                    (unsigned char)l_buf[total - 1], (unsigned char)chk);
+            logIT(LOG_ERR, string);
+            return FRAMER_READ_ERROR;
+        }
     }
 
-    if (rtmp < 0) {
-        framer_reset_actaddr();
-        snprintf(string, sizeof(string), ">FRAMER: read final failure");
-        logIT(LOG_ERR, string);
-        return FRAMER_READ_ERROR;
-    } else if (rtmp == 0) {
-        framer_reset_actaddr();
-        snprintf(string, sizeof(string), ">FRAMER: read final timeout");
-        logIT(LOG_ERR, string);
-        return FRAMER_READ_TIMEOUT;
-    }
-
-    chk = framer_chksum(l_buf + 1, total - 2);
-    if (l_buf[total - 1] != chk) {
-        framer_reset_actaddr();
-        snprintf(string, sizeof(string),
-                 ">FRAMER: read chksum error received 0x%02X calc 0x%02X",
-                 (unsigned char)l_buf[total - 1], (unsigned char)chk);
-        logIT(LOG_ERR, string);
-        return FRAMER_READ_ERROR;
-    }
-
-except:
     if (l_buf[P300_TYPE_OFFSET] == P300_ERROR_REPORT) {
         framer_reset_actaddr();
         snprintf(string, sizeof(string), ">FRAMER: ERROR address %02X%02X code %d",
@@ -495,9 +509,7 @@ except:
             r_buf[rtmp] = 0x01;
         }
     } else {
-        for (rtmp = 0; rtmp < r_len; rtmp++) {
-            r_buf[rtmp] = l_buf[P300_BUFFER_OFFSET + rtmp];
-        }
+        memcpy(r_buf, &l_buf[P300_BUFFER_OFFSET], r_len);
     }
 
     framer_reset_actaddr();
