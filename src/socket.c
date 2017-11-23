@@ -148,7 +148,7 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
         if (! makeChild) {
             return connfd;
         } else if ( (childpid = fork()) == 0) {
-            // unser Kind
+            // own child
             close(listenfd);
             return connfd;
         } else {
@@ -157,6 +157,7 @@ int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
 
         close(connfd);
     }
+    return 0;
 }
 
 void closeSocket(int sockfd)
@@ -196,7 +197,7 @@ int openCliSocket(char *host, int port, int noTCPdelay)
             if (connect(sockfd, res->ai_addr, res->ai_addrlen) == 0) {
                 break;
             }
-            // we have a succesfull connection
+            // we have a successful connection
             close(sockfd);
             sockfd = -1;
         }
@@ -218,7 +219,7 @@ int openCliSocket(char *host, int port, int noTCPdelay)
     return sockfd;
 }
 
-// Stuff aus Unix Network Programming Vol 1
+// Stuff from Unix Network Programming Vol 1
 // include writen
 
 // Write "n" bytes to a descriptor.

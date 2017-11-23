@@ -44,7 +44,7 @@
 #endif
 
 static void sig_alrm(int);
-static jmp_buf    env_alrm;
+static jmp_buf env_alrm;
 
 void closeDevice(int fd)
 {
@@ -54,7 +54,7 @@ void closeDevice(int fd)
 int openDevice(char *device)
 {
     // We differentiate TTY and Socket connections.
-    // Socker: no / at the beginning and a :
+    // Socket: no / at the beginning and a :
     int fd;
     char *dptr;
 

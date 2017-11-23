@@ -48,7 +48,6 @@ int inetversion = 0;
 void usage()
 {
     //      1       10        20        30        40        50        60        70        80
-
     printf("usage:\n");
     printf("    vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>]\n");
     printf("            [-s <csv file>] [-t <template file>] [-o <outpout file>]\n");
@@ -221,7 +220,6 @@ int main(int argc, char *argv[])
             }
             tmplfile = optarg;
             break;
-
         case 'o':
         case 'x':
             if (verbose) {
@@ -336,7 +334,7 @@ int main(int argc, char *argv[])
 
     // The result is in the resPtr list, now we differentiate the output
     if (csvfile) {
-        // Kompakt Format mit Semikolon getrennt
+        // parse semicolon separated file
         if (! (filePtr = fopen(csvfile, "a"))) {
             logIT(LOG_ERR, "Could not create file %s", csvfile);
             exit(1);

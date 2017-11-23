@@ -18,7 +18,7 @@
 #define COMMON_H
 
 int initLog(int useSyslog, char *logfile, int debugSwitch);
-void logIT (int class, char *string, ...);
+void logIT(int class, char *string, ...);
 char hex2chr(char *hex);
 int char2hex(char *outString, const char *charPtr, int len);
 short string2chr(char *line, char *buf, short bufsize);
