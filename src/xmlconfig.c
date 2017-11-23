@@ -31,27 +31,29 @@
 
 
 // Declarations
-protocolPtr newProtocolNode(protocolPtr ptr);
-char *getPropertyNode(xmlAttrPtr cur, xmlChar *name);
-enumPtr newEnumNode(enumPtr ptr);
-void removeProtocolList(protocolPtr ptr);
-void removeUnitList(unitPtr ptr);
-void removeMacroList(macroPtr ptr);
-void removeCommandList(commandPtr ptr);
-void removeDeviceList(devicePtr ptr);
-void removeIcmdList(icmdPtr ptr);
-void removeAllowList(allowPtr ptr);
-void removeEnumList(enumPtr ptr);
-void freeAllLists();
+static protocolPtr newProtocolNode(protocolPtr ptr);
+static char *getPropertyNode(xmlAttrPtr cur, xmlChar *name);
+static enumPtr newEnumNode(enumPtr ptr);
+static void removeProtocolList(protocolPtr ptr);
+static void removeUnitList(unitPtr ptr);
+static void removeMacroList(macroPtr ptr);
+static void removeCommandList(commandPtr ptr);
+static void removeDeviceList(devicePtr ptr);
+static void removeIcmdList(icmdPtr ptr);
+static void removeAllowList(allowPtr ptr);
+static void removeEnumList(enumPtr ptr);
+static void freeAllLists();
 
-// Global variables
-protocolPtr protoPtr = NULL;
+// Global variables (exported)
 unitPtr uPtr = NULL;
 devicePtr devPtr = NULL;
 configPtr cfgPtr = NULL;
-commandPtr cmdPtr = NULL;
 
-protocolPtr newProtocolNode(protocolPtr ptr)
+// global valiables within this file
+static protocolPtr protoPtr = NULL;
+static commandPtr cmdPtr = NULL;
+
+static protocolPtr newProtocolNode(protocolPtr ptr)
 {
     protocolPtr nptr;
     if (ptr && ptr->next) {
@@ -74,7 +76,7 @@ protocolPtr newProtocolNode(protocolPtr ptr)
     return nptr;
 }
 
-protocolPtr getProtocolNode(protocolPtr ptr, const char *name)
+static protocolPtr getProtocolNode(protocolPtr ptr, const char *name)
 {
     if (! ptr) {
         return NULL;
@@ -87,7 +89,7 @@ protocolPtr getProtocolNode(protocolPtr ptr, const char *name)
     return ptr;
 }
 
-void removeProtocolList(protocolPtr ptr)
+static void removeProtocolList(protocolPtr ptr)
 {
     if (ptr && ptr->next) {
         removeProtocolList(ptr->next);
@@ -100,7 +102,7 @@ void removeProtocolList(protocolPtr ptr)
     }
 }
 
-unitPtr newUnitNode(unitPtr ptr)
+static unitPtr newUnitNode(unitPtr ptr)
 {
     unitPtr nptr;
     if (ptr && ptr->next) {
@@ -134,7 +136,7 @@ unitPtr getUnitNode(unitPtr ptr, const char *name)
     return ptr;
 }
 
-void removeUnitList(unitPtr ptr)
+static void removeUnitList(unitPtr ptr)
 {
     if (ptr && ptr->next) {
         removeUnitList(ptr->next);
@@ -154,7 +156,7 @@ void removeUnitList(unitPtr ptr)
     }
 }
 
-macroPtr newMacroNode(macroPtr ptr)
+static macroPtr newMacroNode(macroPtr ptr)
 {
     macroPtr nptr;
     if (ptr && ptr->next) {
@@ -189,7 +191,7 @@ macroPtr getMacroNode(macroPtr ptr, const char *name)
     return ptr;
 }
 
-void removeMacroList(macroPtr ptr)
+static void removeMacroList(macroPtr ptr)
 {
     if (ptr && ptr->next) {
         removeMacroList(ptr->next);
@@ -250,7 +252,7 @@ commandPtr getCommandNode(commandPtr ptr, const char *name)
     return ptr;
 }
 
-void removeCommandList(commandPtr ptr)
+static void removeCommandList(commandPtr ptr)
 {
     if (ptr && ptr->next) {
         removeCommandList(ptr->next);
@@ -311,7 +313,7 @@ devicePtr newDeviceNode(devicePtr ptr)
     return nptr;
 }
 
-devicePtr getDeviceNode(devicePtr ptr, char *id)
+static devicePtr getDeviceNode(devicePtr ptr, char *id)
 {
     if (! ptr) {
         return NULL;
@@ -324,7 +326,7 @@ devicePtr getDeviceNode(devicePtr ptr, char *id)
     return ptr;
 }
 
-void removeDeviceList(devicePtr ptr)
+static void removeDeviceList(devicePtr ptr)
 {
     if (ptr && ptr->next) {
         removeDeviceList(ptr->next);
@@ -337,7 +339,7 @@ void removeDeviceList(devicePtr ptr)
     }
 }
 
-icmdPtr newIcmdNode(icmdPtr ptr)
+static icmdPtr newIcmdNode(icmdPtr ptr)
 {
     icmdPtr nptr;
     if (ptr && ptr->next) {
@@ -371,7 +373,7 @@ icmdPtr getIcmdNode(icmdPtr ptr, const char *name)
     return ptr;
 }
 
-void removeIcmdList(icmdPtr ptr)
+static void removeIcmdList(icmdPtr ptr)
 {
     if (ptr && ptr->next) {
         removeIcmdList(ptr->next);
@@ -396,7 +398,7 @@ allowPtr getAllowNode(allowPtr ptr, const in_addr_t testIP)
     return getAllowNode(ptr->next, testIP);
 }
 
-allowPtr newAllowNode(allowPtr ptr)
+static allowPtr newAllowNode(allowPtr ptr)
 {
     allowPtr nptr;
     if (ptr && ptr->next) {
@@ -416,7 +418,7 @@ allowPtr newAllowNode(allowPtr ptr)
     return nptr;
 }
 
-void removeAllowList(allowPtr ptr)
+static void removeAllowList(allowPtr ptr)
 {
     if (ptr && ptr->next) {
         removeAllowList(ptr->next);
@@ -428,7 +430,7 @@ void removeAllowList(allowPtr ptr)
     }
 }
 
-enumPtr newEnumNode(enumPtr ptr)
+static enumPtr newEnumNode(enumPtr ptr)
 {
     enumPtr nptr;
     if (ptr && ptr->next) {
@@ -468,7 +470,7 @@ enumPtr getEnumNode(enumPtr ptr, char *search, int len)
     }
 }
 
-void removeEnumList(enumPtr ptr)
+static void removeEnumList(enumPtr ptr)
 {
     if (ptr && ptr->next) {
         removeEnumList(ptr->next);
@@ -481,7 +483,7 @@ void removeEnumList(enumPtr ptr)
     }
 }
 
-void printNode(xmlNodePtr ptr)
+static void printNode(xmlNodePtr ptr)
 {
     static int blanks = 0;
     int n;
@@ -518,7 +520,7 @@ void printNode(xmlNodePtr ptr)
     }
 }
 
-char *getTextNode(xmlNodePtr cur)
+static char *getTextNode(xmlNodePtr cur)
 {
     if ((cur->children) && (cur->children->type == XML_TEXT_NODE)) {
         return (char *)cur->children->content;
@@ -527,7 +529,7 @@ char *getTextNode(xmlNodePtr cur)
     }
 }
 
-char *getPropertyNode(xmlAttrPtr cur, xmlChar *name)
+static char *getPropertyNode(xmlAttrPtr cur, xmlChar *name)
 {
     if ((cur) && (cur->type == XML_ATTRIBUTE_NODE) && strstr((char *)cur->name, (char *)name)) {
         return (char *)getTextNode((xmlNodePtr) cur);
@@ -544,7 +546,7 @@ void nullIT(char **ptr)
     **ptr = '\0';
 }
 
-configPtr parseConfig(xmlNodePtr cur)
+static configPtr parseConfig(xmlNodePtr cur)
 {
     int serialFound = 0;
     int netFound = 0;
@@ -552,7 +554,6 @@ configPtr parseConfig(xmlNodePtr cur)
     configPtr cfgPtr;
     char *chrPtr;
     xmlNodePtr prevPtr;
-    //char string[256];
     allowPtr aPtr;
     char ip[16];
 
@@ -624,12 +625,7 @@ configPtr parseConfig(xmlNodePtr cur)
             in_addr_t mask;
 
             bzero(ip, sizeof(ip));
-            //bzero(string,sizeof(string));
             if ((ptr = strchr(chrPtr, '/'))) {
-#if 0
-                strncpy(string, ptr + 1, sizeof(string) - 1);
-                size = atoi(string);
-#endif
                 size = atoi(ptr + 1);
                 strncpy(ip, chrPtr, ptr - chrPtr);
             } else {
@@ -697,7 +693,7 @@ configPtr parseConfig(xmlNodePtr cur)
     return cfgPtr;
 }
 
-unitPtr parseUnit(xmlNodePtr cur)
+static unitPtr parseUnit(xmlNodePtr cur)
 {
     unitPtr uPtr;
     unitPtr uStartPtr = NULL;
@@ -837,7 +833,6 @@ unitPtr parseUnit(xmlNodePtr cur)
             } else {
                 nullIT(&uPtr->entity);
             }
-            //(cur->next && cur->next->next) ? (cur=cur->next) : (cur=prevPtr->next);
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
@@ -849,7 +844,7 @@ unitPtr parseUnit(xmlNodePtr cur)
     return uStartPtr;
 }
 
-macroPtr parseMacro(xmlNodePtr cur)
+static macroPtr parseMacro(xmlNodePtr cur)
 {
     macroPtr mPtr;
     macroPtr mStartPtr = NULL;
@@ -904,7 +899,7 @@ macroPtr parseMacro(xmlNodePtr cur)
     return mStartPtr;
 }
 
-commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
+static commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
 {
     commandPtr cStartPtr = NULL;
     devicePtr dPtr;
@@ -1270,7 +1265,7 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
     return dStartPtr;
 }
 
-protocolPtr parseProtocol(xmlNodePtr cur)
+static protocolPtr parseProtocol(xmlNodePtr cur)
 {
     int protoFound = 0;
     protocolPtr protoPtr;
@@ -1340,7 +1335,7 @@ protocolPtr parseProtocol(xmlNodePtr cur)
     return protoStartPtr;
 }
 
-void removeComments(xmlNodePtr node)
+static void removeComments(xmlNodePtr node)
 {
     while (node) {
         //printf("type:%d name=%s\n",node->type, node->name);
@@ -1537,7 +1532,7 @@ int parseXMLFile(char *filename)
     return 1;
 }
 
-void freeAllLists()
+static void freeAllLists()
 {
     removeProtocolList(protoPtr);
     removeUnitList(uPtr);

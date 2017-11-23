@@ -65,12 +65,13 @@
 #define SHL 404
 #define SHR 405
 
-int nextToken(char **str, char **c, int *count);
-void  pushBack(char **str, int n);
-float execTerm(char **str, unsigned char *bPtr, float floatV, char *err);
-float execFactor(char **str, unsigned  char *bPtr, float floatV, char *err);
-int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
-int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
+
+static int nextToken(char **str, char **c, int *count);
+static void pushBack(char **str, int n);
+static float execTerm(char **str, unsigned char *bPtr, float floatV, char *err);
+static float execFactor(char **str, unsigned  char *bPtr, float floatV, char *err);
+static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
+static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 
 float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
 {
@@ -137,7 +138,7 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     return term1;
 }
 
-float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
+static float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
 {
     float factor1, factor2;
     int op;
@@ -178,7 +179,7 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
     }
 }
 
-float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
+static float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
 {
     char nstring[100];
     float expression;
@@ -339,7 +340,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     return term1;
 }
 
-int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
+static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
     int factor1, factor2;
     int op;
@@ -414,7 +415,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
     }
 }
 
-int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
+static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
 {
     char nstring[100];
     int expression;
@@ -515,7 +516,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
     }
 }
 
-int nextToken(char **str, char **c, int *count)
+static int nextToken(char **str, char **c, int *count)
 {
     char item;
 
@@ -651,7 +652,7 @@ int nextToken(char **str, char **c, int *count)
     }
 }
 
-void  pushBack(char **str, int count)
+static void pushBack(char **str, int count)
 {
     (*str) -= count;
     //printf("\t<<::%s\n",*str);

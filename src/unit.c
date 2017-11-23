@@ -71,15 +71,18 @@
 
 #include "unit.h"
 
-int getCycleTime(char *recv, int len, char *result);
-int setCycleTime(char *string, char *sendBuf);
-short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
-short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
-int getErrState(enumPtr ePtr, char *recv, int len, char *result);
-int getSysTime(char *recv, int len, char *result);
-int setSysTime(char *input, char *sendBuf, short bufsize);
 
-int getCycleTime(char *recv, int len, char *result)
+// private functions declaration
+static int getCycleTime(char *recv, int len, char *result);
+static int setCycleTime(char *string, char *sendBuf);
+static short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
+static short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
+static int getErrState(enumPtr ePtr, char *recv, int len, char *result);
+static int getSysTime(char *recv, int len, char *result);
+static int setSysTime(char *input, char *sendBuf, short bufsize);
+
+
+static int getCycleTime(char *recv, int len, char *result)
 {
     int i;
     char string[80];
@@ -95,7 +98,7 @@ int getCycleTime(char *recv, int len, char *result)
     for (i = 0; i < len; i += 2) {
         // TODO - vitoopen: Leave output in German.
         // CHANGING THIS WOULD BREAK existing applications.
-        // => maybe we could enable english results later with a build option, 
+        // => maybe we could enable english results later with a build option,
         // but not for the default.
         if (recv[i] == (char)0xff) {
             snprintf(string, sizeof(string), "%d:An:--     Aus:--\n", (i / 2) + 1);
@@ -166,7 +169,7 @@ int setCycleTime(char *input, char *sendBuf)
     return 8;
 }
 
-int getSysTime(char *recv, int len, char *result)
+static int getSysTime(char *recv, int len, char *result)
 {
     char day[3];
 
@@ -214,7 +217,7 @@ int getSysTime(char *recv, int len, char *result)
     return 1;
 }
 
-int setSysTime(char *input, char *sendBuf, short bufsize)
+static int setSysTime(char *input, char *sendBuf, short bufsize)
 {
     char systime[80];
     time_t tt;
@@ -240,7 +243,7 @@ int setSysTime(char *input, char *sendBuf, short bufsize)
     }
 }
 
-int getErrState(enumPtr ePtr, char *recv, int len, char *result)
+static int getErrState(enumPtr ePtr, char *recv, int len, char *result)
 {
     int i;
     char *errtext;
@@ -275,7 +278,7 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
     return 1;
 }
 
-short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
+static short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
 {
     enumPtr ePtr = NULL;
     char string[200];
@@ -302,7 +305,7 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
     }
 }
 
-short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
+static short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
 {
     enumPtr ePtr = NULL;
     char string[200];
@@ -491,7 +494,6 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     char buffer[MAXBUF];
     char input[MAXBUF];
     char *errPtr = error;
-    // short t;
     float erg = 0.0;
     int ergI = 0;
     short count;
@@ -509,6 +511,10 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     int32_t tmpI;
     uint32_t tmpUI;
     uint32_t uintV;
+
+    if (uPtr->type == NULL || strlen(uPtr->type) == 0) {
+        return(-1);
+    }
 
     bzero(errPtr, sizeof(error));
     // Some logging
@@ -541,8 +547,9 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         }
     } else if (strstr(uPtr->type, "enum") == uPtr->type) {
         // enum
-        if (! *input)
-        { return -1; }
+        if (! *input) {
+            return -1;
+        }
         if (!(count = text2Enum(uPtr->ePtr, input, &ptr, sendLen))) {
             sprintf(sendBuf, "Did not find an appropriate enum");
             return -1;

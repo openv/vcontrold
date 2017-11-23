@@ -30,12 +30,12 @@
 
 #include "common.h"
 
-int syslogger = 0;
-int debug = 0;
-FILE *logFD;
-char errMsg[2000];
-int errClass = 99;
-int dbgFD = -1;
+static int syslogger = 0;
+static int debug = 0;
+static FILE *logFD;
+static char errMsg[2000];
+static int errClass = 99;
+static int dbgFD = -1;
 
 int initLog(int useSyslog, char *logfile, int debugSwitch)
 {
@@ -65,7 +65,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
     return 1;
 }
 
-void logIT (int class, char *string, ...)
+void logIT(int class, char *string, ...)
 {
     va_list arguments;
     time_t t;
@@ -81,7 +81,7 @@ void logIT (int class, char *string, ...)
     vasprintf(&print_buffer, string, arguments);
     va_end(arguments);
 
-    if (class <= LOG_ERR)  {
+    if (class <= LOG_ERR) {
         avail = sizeof(errMsg) - strlen(errMsg) - 2;
         if ( avail > 0 ) {
             strncat(errMsg, print_buffer, avail);
@@ -93,7 +93,7 @@ void logIT (int class, char *string, ...)
     }
 
     errClass = class;
-    // Remove control characters
+    // Replace control characters by space
     cPtr = tPtr;
     while (*cPtr) {
         if (iscntrl(*cPtr)) {
@@ -169,16 +169,18 @@ int char2hex(char *outString, const char *charPtr, int len)
 {
     int n;
     char string[MAXBUF];
-    bzero(string, sizeof(string));
-    for (n = 0; n < len; n++) {
-        unsigned char byte = *charPtr++ & 255;
-        snprintf(string, sizeof(string), "%02X ", byte);
-        strcat(outString, string);
+
+    if (len > 0) {
+        bzero(string, sizeof(string));
+        for (n = 0; n < len; n++) {
+            unsigned char byte = *charPtr++ & 255;
+            snprintf(string, sizeof(string), "%02X ", byte);
+            strcat(outString, string);
+        }
+
+        // Remove trailing space
+        outString[strlen(outString) - 1] = '\0';
     }
-
-    // Remove first space
-    outString[strlen(outString) - 1] = '\0';
-
     return len;
 }
 
@@ -188,7 +190,6 @@ short string2chr(char *line, char *buf, short bufsize)
     short count;
 
     count = 0;
-
     sptr = strtok(line, " ");
     do {
         if (*sptr == ' ') {

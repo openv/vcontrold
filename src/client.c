@@ -38,7 +38,7 @@ static jmp_buf  env_alrm;
 static void sig_alrm(int);
 static int sendTrList(int sockfd, trPtr ptr);
 
-trPtr newTrNode(trPtr ptr)
+static trPtr newTrNode(trPtr ptr)
 {
     trPtr nptr;
 
@@ -123,7 +123,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
 // port is never 0, which is a bad number for a tcp port
 int connectServer(char *host, int port)
 {
-    int sockfd;
+    int sockfd = -1;
 
     if (host[0] != '/' ) {
         sockfd = openCliSocket(host, port, 0);
@@ -131,11 +131,10 @@ int connectServer(char *host, int port)
             logIT(LOG_INFO, "Setup connection to %s port %d", host, port);
         } else {
             logIT(LOG_INFO, "Setting up connection to %s port %d failed", host, port);
-            return -1;
+            sockfd = -1;
         }
     } else {
         logIT(LOG_ERR, "Host format: IP|Name:Port");
-        return -1;
     }
     return sockfd;
 }
@@ -241,7 +240,6 @@ static int sendTrList(int sockfd, trPtr ptr)
             return 0;
         }
 
-        //bzero(string,sizeof(string));
         logIT(LOG_INFO, "SEND:%s", ptr->cmd);
         if (recvSync(sockfd, prompt, &sptr) <= 0) {
             free(sptr);

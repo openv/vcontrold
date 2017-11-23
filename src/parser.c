@@ -39,7 +39,7 @@
 
 extern FILE *iniFD; // For creation of the Sim. INI Files
 
-void *getUnit(char *str)
+static void *getUnit(char *str)
 {
     // We parse the input for a known unit and return a pointer to the struct
     return NULL;
@@ -146,8 +146,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     unsigned long etime;
     char out_buff[1024];
     int _len  = 0;
-    //struct timespec t_sLeep;
-    //struct timespec t_sleep_rem;
 
     bzero(simIn, sizeof(simIn));
     bzero(simOut, sizeof(simOut));
@@ -273,7 +271,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
 
                     if (iniFD && *simIn && *simOut) {
                         // We already sent and received, now we output it.
-                        //fprintf(iniFD,"%s= %s ;%s\n",simOut,simIn,result);
                         fprintf(iniFD, "%s= %s \n", simOut, simIn);
                     }
 
@@ -289,12 +286,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             case PAUSE:
                 logIT(LOG_INFO, "Waiting %i ms", cmpPtr->len);
                 usleep(cmpPtr->len * 1000L);
-                /*
-                t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
-                t_sleep.tv_nsec=(long) cmpPtr->len * 1000000;
-                if (nanosleep(&t_sleep,&t_sleep_rem)==-1)
-                    nanosleep(&t_sleep_rem,NULL);
-                */
                 break;
             case BYTES:
                 // We send the forwarded sendBuffer. No converting has been done.
@@ -339,9 +330,7 @@ RETRY:
 
 int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
 {
-    //char string[256];
     char uString[100];
-    //char *uSPtr=uString;
     // We parse the individual lines
     char hex[MAXBUF];
     int token;
@@ -380,7 +369,6 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
         logIT(LOG_INFO, "Recv: %ld ms", etime);
         // If we have a unit (== uPtr), we convert the received value and also return it to uPtr
         return hexlen;
-        break;
     case PAUSE:
         t = (int) hexlen / 1000;
         logIT(LOG_INFO, "Waiting %i s", t);
@@ -388,7 +376,7 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
         break;
     default:
         logIT(LOG_INFO, "Unknown command: %s", cmd);
-
+        break;
     }
 
     return 0;
@@ -432,7 +420,7 @@ void removeCompileList(compilePtr ptr)
     }
 }
 
-int expand(commandPtr cPtr, protocolPtr pPtr)
+static int expand(commandPtr cPtr, protocolPtr pPtr)
 {
     // Recursion
     if (! cPtr) {
@@ -573,7 +561,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     return 1;
 }
 
-compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
+static compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 {
     // Recursion
     if (!cPtr) {

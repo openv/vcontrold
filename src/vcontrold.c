@@ -65,19 +65,18 @@ extern devicePtr devPtr;
 extern configPtr cfgPtr;
 
 // Declarations
-int readCmdFile(char *filename, char *result, int *resultLen, char *device );
-int interactive(int socketfd, char *device);
-void printHelp(int socketfd);
-int rawModus (int socketfd, char *device);
+static int readCmdFile(char *filename, char *result, int *resultLen, char *device );
+static int interactive(int socketfd, char *device);
+static void printHelp(int socketfd);
+static int rawModus (int socketfd, char *device);
 static void sigPipeHandler(int signo);
 static void sigHupHandler(int signo);
-short checkIP(char *ip);
-int reloadConfig();
+static short checkIP(char *ip);
+static int reloadConfig();
 
 void usage()
 {
     //      1       10        20        30        40        50        60        70        80
-
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
     printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
     printf("                 [-n|--nodaemon] [-i|--vsim] [-g|--debug] [-4|--inet4]\n");
@@ -86,7 +85,7 @@ void usage()
     exit(1);
 }
 
-short checkIP(char *ip)
+static short checkIP(char *ip)
 {
     allowPtr aPtr;
 
@@ -99,7 +98,7 @@ short checkIP(char *ip)
     }
 }
 
-int reloadConfig()
+static int reloadConfig()
 {
     if (parseXMLFile(xmlfile)) {
         compileCommand(devPtr, uPtr);
@@ -111,7 +110,7 @@ int reloadConfig()
     }
 }
 
-int readCmdFile(char *filename, char *result, int *resultLen, char *device )
+static int readCmdFile(char *filename, char *result, int *resultLen, char *device )
 {
     FILE *cmdPtr;
     char line[MAXBUF];
@@ -120,9 +119,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
     char *resultPtr = result;
     int fd;
     int count = 0;
-    //void *uPtr;
-    //int maxResLen=*resultLen;
-    *resultLen = 0; // nothing received yet :-)
+    *resultLen = 0;     // no characters received yet
 
     // Open the device only if we have something to do
     vcontrol_semget(); // TODO semjfi
@@ -176,6 +173,8 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
             // timeout
         }
         if (count) {
+            // remove trailing space
+            buffer[strlen(buffer) - 1]='\0';
             logIT(LOG_INFO, "Received: %s", buffer);
         }
 
@@ -186,7 +185,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
     return 1;
 }
 
-void printHelp(int socketfd)
+static void printHelp(int socketfd)
 {
 //      10        20        30        40        50        60        70        80
     char string[] = " \
@@ -204,7 +203,7 @@ quit               Close the session\n";
     Writen(socketfd, string, strlen(string));
 }
 
-int rawModus(int socketfd, char *device)
+static int rawModus(int socketfd, char *device)
 {
     // Here, we write all incoming commands in a temporary file, which is forwarded to readCmdFile
     char readBuf[MAXBUF];
@@ -266,7 +265,7 @@ int rawModus(int socketfd, char *device)
     return 0; // is this correct?
 }
 
-int interactive(int socketfd, char *device )
+static int interactive(int socketfd, char *device )
 {
     char readBuf[1000];
     char *readPtr;
@@ -294,7 +293,6 @@ int interactive(int socketfd, char *device )
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
         sendErrMsg(socketfd);
         // Remove control characters
-        //readPtr=readBuf+strlen(readBuf);
         readPtr = readBuf + rcount;
         while (iscntrl(*readPtr)) {
             *readPtr-- = '\0';
@@ -350,15 +348,6 @@ int interactive(int socketfd, char *device )
             snprintf(string, sizeof(string), "%s closed\n", device);
             Writen(socketfd, string, strlen(string));
             fd = -1;
-        /*
-        } else if(strstr(readBuf,"open") == readBuf) {
-            if ((fd < 0) && (fd = openDevice(device)) == -1) {
-                snprintf(string, sizeof(string), "Fehler beim oeffnen %s", device);
-                logIT(LOG_ERR, string);
-            }
-            snprintf(string, sizeof(string), "%s geoeffnet\n", device);
-            Writen(socketfd, string, strlen(string));
-        */
         } else if (strstr(readBuf, "commands") == readBuf) {
             cPtr = cfgPtr->devPtr->cmdPtr;
             while (cPtr) {
@@ -557,7 +546,7 @@ int interactive(int socketfd, char *device )
                 cmpPtr = cPtr->cmpPtr;
                 while (cmpPtr) {
                     if (cmpPtr && cmpPtr->uPtr) {
-                        // Unit gefunden
+                        // Unit found
                         char *gcalc;
                         char *scalc;
                         // We differentiate the calculation by get and setaddr
