@@ -29,12 +29,17 @@
 #include <ctype.h>
 #include <arpa/inet.h>
 
-#ifdef __linux__
+#if defined __linux__ || defined __CYGWIN__
 #include <asm/byteorder.h>
 #endif
 
 #ifdef __CYGWIN__
-#include "byteorder.h"
+#define __le64_to_cpu(x) (x)
+#define __le32_to_cpu(x) (x)
+#define __le16_to_cpu(x) (x)
+#define __cpu_to_le64(x) (x)
+#define __cpu_to_le32(x) (x)
+#define __cpu_to_le16(x) (x)
 #endif
 
 #include "xmlconfig.h"
