@@ -635,14 +635,15 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (tmpI = erg) : (tmpI = ergI);
             intV = __cpu_to_le32(tmpI);
-            memcpy(sendBuf, &intV, 2);
+            memcpy(sendBuf, &intV, 4);
             *sendLen = 4;
         } else if (strstr(uPtr->type, "uint") == uPtr->type) {
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (tmpUI = erg) : (tmpUI = ergI);
             uintV = __cpu_to_le32(tmpUI);
-            memcpy(sendBuf, &uintV, 2);
-        } else if (uPtr->type) {
+            memcpy(sendBuf, &uintV, 4);
+            *sendLen = 4;
+		} else if (uPtr->type) {
             bzero(string, sizeof(string));
             logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
             return -1;
