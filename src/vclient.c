@@ -16,19 +16,18 @@
 
 // Vcontrold client
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
 #include <signal.h>
 #include <syslog.h>
 #include <unistd.h>
-#include <termios.h>
 #include <string.h>
-#include <time.h>
+#include <termios.h>
+//#include <time.h>
 #include <ctype.h>
 #include <getopt.h>
 #include <fcntl.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -39,8 +38,9 @@
 #include "socket.h"
 #include "io.h"
 #include "client.h"
-#include "vclient.h"
 #include "version.h"
+
+#include "vclient.h"
 
 // global variables
 int inetversion = 0;
@@ -413,7 +413,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 lEptr = lptr + 1;
-                // Noew, we search the end of the variables.
+                // Now, we search the end of the variables.
                 while (isalpha(*lEptr) || isdigit(*lEptr)) {
                     lEptr++;
                 }
@@ -474,7 +474,6 @@ int main(int argc, char *argv[])
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "%s:%f", tPtr->cmd, tPtr->result);
-                        //if (tPtr->result)
                         fprintf(ofilePtr, "%f", tPtr->result);
                     } else {
                         logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);

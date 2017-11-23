@@ -17,6 +17,8 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "xmlconfig.h"      // compilePtr, devicePtr
+
 int parseLine(char *lineo, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen);
 int execCmd(char *cmd, int fd, char *result, int resultLen);
 void removeCompileList(compilePtr ptr);

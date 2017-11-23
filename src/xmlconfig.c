@@ -24,13 +24,11 @@
 #include <libxml/xinclude.h>
 #include <arpa/inet.h>
 
-#include "xmlconfig.h"
 #include "common.h"
 #include "parser.h"
 
-#if defined(__FreeBSD__)
-#include <netinet/in.h>
-#endif
+#include "xmlconfig.h"
+
 
 // Declarations
 protocolPtr newProtocolNode(protocolPtr ptr);
@@ -46,7 +44,7 @@ void removeAllowList(allowPtr ptr);
 void removeEnumList(enumPtr ptr);
 void freeAllLists();
 
-// Globale variables
+// Global variables
 protocolPtr protoPtr = NULL;
 unitPtr uPtr = NULL;
 devicePtr devPtr = NULL;

@@ -17,7 +17,7 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 
-#include <arpa/inet.h>
+#include <netinet/in.h>     // in_addr_t
 
 typedef struct config *configPtr;
 typedef struct protocol *protocolPtr;

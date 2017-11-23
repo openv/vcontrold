@@ -21,6 +21,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "arithmetic.h"
+
 #define HEX 8
 #define HEXDIGIT 10
 #define DIGIT 11

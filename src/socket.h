@@ -17,8 +17,6 @@
 #ifndef SOCKET_H
 #define SOCKET_H
 
-#include <arpa/inet.h>
-
 int openSocket(int tcpport);
 int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *));
 int openCliSocket(char *host, int port, int noTCPdelay);

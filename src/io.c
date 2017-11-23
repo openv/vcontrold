@@ -33,9 +33,10 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
-#include "io.h"
 #include "socket.h"
 #include "common.h"
+
+#include "io.h"
 
 #ifdef __CYGWIN__
 // NCC is not defined under cygwin

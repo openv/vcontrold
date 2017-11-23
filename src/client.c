@@ -27,15 +27,16 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#include "client.h"
 #include "prompt.h"
 #include "common.h"
 #include "socket.h"
 
-static void sig_alrm(int);
+#include "client.h"
+
 static jmp_buf  env_alrm;
 
-int sendTrList(int sockfd, trPtr ptr);
+static void sig_alrm(int);
+static int sendTrList(int sockfd, trPtr ptr);
 
 trPtr newTrNode(trPtr ptr)
 {
@@ -219,7 +220,7 @@ trPtr sendCmds(int sockfd, char *commands)
     return startPtr;
 }
 
-int sendTrList(int sockfd, trPtr ptr)
+static int sendTrList(int sockfd, trPtr ptr)
 {
     char string[1000 + 1];
     char prompt[] = PROMPT;

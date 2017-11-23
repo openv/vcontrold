@@ -42,17 +42,11 @@
 #define __cpu_to_le16(x) (x)
 #endif
 
-#include "xmlconfig.h"
-#include "common.h"
-#include "arithmetic.h"
-
 // We need this at procSet ...
 #define FLOAT 1
 #define INT 2
 
 #if defined (__APPLE__)
-// this is needed to emulate the linux API calls
-
 #include <libkern/OSByteOrder.h>
 
 #define __cpu_to_be64(x) OSSwapHostToBigInt64(x)
@@ -70,6 +64,12 @@
 #define __le16_to_cpu(x) OSSwapLittleToHostInt16(x)
 
 #endif
+
+#include "xmlconfig.h"
+#include "common.h"
+#include "arithmetic.h"
+
+#include "unit.h"
 
 int getCycleTime(char *recv, int len, char *result);
 int setCycleTime(char *string, char *sendBuf);

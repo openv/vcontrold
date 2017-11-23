@@ -16,37 +16,33 @@
 
 #define _GNU_SOURCE
 
-#include <sys/time.h>
-#include <time.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
-#include <time.h>
-#include <setjmp.h>
-#include <signal.h>
-#include <unistd.h>
+#include <unistd.h>     // __CYGWIN__
 #include <arpa/inet.h>
-#include <sys/types.h>
+//#include <sys/time.h>
 #include <sys/socket.h>
-#ifndef __CYGWIN__
-// I'm not sure about this cpp defines, can some check tht? -fn-
+
 #ifdef __linux__
-#include <linux/tcp.h> // do we realy need this? Not sure for Linux -fn-
+#include <linux/tcp.h>  // TCP_NODELAY is defined here
 #endif
 #if defined (__FreeBSD__) || defined(__APPLE__)
 #include <netinet/in.h>
 #include <netinet/tcp.h> // TCP_NODELAY is defined there -fn-
 #endif
-#endif
 
-#include "socket.h"
 #include "common.h"
 #include "vclient.h"
+
+#include "socket.h"
+
 
 const int LISTEN_QUEUE = 128;
 

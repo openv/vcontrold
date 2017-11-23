@@ -16,19 +16,18 @@
 
 // Vito control daemon for vito queries
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <errno.h>
-#include <signal.h>
-#include <syslog.h>
-#include <unistd.h>
-#include <termios.h>
-#include <string.h>
-#include <time.h>
+#include <fcntl.h>
 #include <getopt.h>
-
-#include <sys/types.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <syslog.h>
+#include <termios.h>
+#include <unistd.h>
+#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -36,14 +35,14 @@
 #include <sys/ioctl.h>
 #include <arpa/inet.h>
 
-#include "io.h"
 #include "common.h"
-#include "xmlconfig.h"
+#include "framer.h"
 #include "parser.h"
-#include "socket.h"
 #include "prompt.h"
 #include "semaphore.h"
-#include "framer.h"
+#include "socket.h"
+#include "xmlconfig.h"
+#include "version.h"
 
 #ifdef __CYGWIN__
 #define XMLFILE "vcontrold.xml"
@@ -52,8 +51,6 @@
 #define XMLFILE "/etc/vcontrold/vcontrold.xml"
 #define INIOUTFILE "/tmp/sim-%s.ini"
 #endif
-
-#include "version.h"
 
 // Global variables
 char *xmlfile = XMLFILE;

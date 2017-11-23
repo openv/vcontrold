@@ -29,11 +29,13 @@
 #include <ctype.h>
 
 #include "xmlconfig.h"
-#include "parser.h"
 #include "unit.h"
 #include "common.h"
 #include "io.h"
 #include "framer.h"
+
+#include "parser.h"
+
 
 extern FILE *iniFD; // For creation of the Sim. INI Files
 
