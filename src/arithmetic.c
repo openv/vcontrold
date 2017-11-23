@@ -73,6 +73,9 @@ static float execFactor(char **str, unsigned  char *bPtr, float floatV, char *er
 static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 
+// -----------------------------------------------------------------------------
+// Evaluate floatingpoint expressions
+// -----------------------------------------------------------------------------
 float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
 {
     int f = 1;
@@ -135,6 +138,90 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     }
 
     //printf(" Exp=%f\n",term1);
+    return term1;
+}
+
+// -----------------------------------------------------------------------------
+// Evaluate integer expressions
+// -----------------------------------------------------------------------------
+int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
+{
+    int f = 1;
+    int term1, term2;
+    //int exp1, exp2;
+    int op;
+    char *item;
+    unsigned char bPtr[10];
+    int n;
+
+    //printf("execExpression: %s\n", *str);
+
+    // Tweak bPtr bytes 0..9 and copy them to nPtr
+    // We have received characters
+    for (n = 0; n <= 9; n++) {
+        //bPtr[n]=*bInPtr++ & 255;
+        bPtr[n] = *bInPtr++;
+    }
+
+    op = ERROR;
+    switch (nextToken(str, &item, &n)) {
+    case PLUS:
+        op = PLUS;
+        break;
+    case MINUS:
+        op = MINUS;
+        break;
+    case NICHT:
+        op = NICHT;
+        break;
+    default:
+        pushBack(str, n);
+        break;
+    }
+
+    if (op == MINUS) {
+        term1 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
+    } else if (op == NICHT) {
+        term1 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
+    } else {
+        term1 = execITerm(str, bPtr, bitpos, pPtr, err);
+    }
+
+    if (*err) {
+        return 0;
+    }
+
+    int t;
+    op = ERROR;
+    while ((t = nextToken(str, &item, &n)) != END) {
+        f = 1;
+        switch (t) {
+        case PLUS:
+            op = PLUS;
+            break;
+        case MINUS:
+            op = MINUS;
+            break;
+        case NICHT:
+            op = NICHT;
+            break;
+        default:
+            pushBack(str, n);
+            return term1;
+        }
+
+        if (op == MINUS) {
+            term2 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
+        } else if (op == NICHT) {
+            term2 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
+        } else if (op == PLUS) {
+            term2 = execITerm(str, bPtr, bitpos, pPtr, err);
+        } if (*err) {
+            return 0;
+        }
+        term1 += term2;
+    }
+
     return term1;
 }
 
@@ -257,87 +344,6 @@ static float execFactor(char **str, unsigned char *bPtr, float floatV, char *err
         sprintf(err, "expected factor: B0..B9 number ( ) [%c]\n", *item);
         return 0;
     }
-}
-
-int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
-{
-    int f = 1;
-    int term1, term2;
-    //int exp1, exp2;
-    int op;
-    char *item;
-    unsigned char bPtr[10];
-    int n;
-
-    //printf("execExpression: %s\n", *str);
-
-    // Tweak bPtr bytes 0..9 and copy them to nPtr
-    // We have received characters
-    for (n = 0; n <= 9; n++) {
-        //bPtr[n]=*bInPtr++ & 255;
-        bPtr[n] = *bInPtr++;
-    }
-
-    op = ERROR;
-    switch (nextToken(str, &item, &n)) {
-    case PLUS:
-        op = PLUS;
-        break;
-    case MINUS:
-        op = MINUS;
-        break;
-    case NICHT:
-        op = NICHT;
-        break;
-    default:
-        pushBack(str, n);
-        break;
-    }
-
-    if (op == MINUS) {
-        term1 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
-    } else if (op == NICHT) {
-        term1 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
-    } else {
-        term1 = execITerm(str, bPtr, bitpos, pPtr, err);
-    }
-
-    if (*err) {
-        return 0;
-    }
-
-    int t;
-    op = ERROR;
-    while ((t = nextToken(str, &item, &n)) != END) {
-        f = 1;
-        switch (t) {
-        case PLUS:
-            op = PLUS;
-            break;
-        case MINUS:
-            op = MINUS;
-            break;
-        case NICHT:
-            op = NICHT;
-            break;
-        default:
-            pushBack(str, n);
-            return term1;
-        }
-
-        if (op == MINUS) {
-            term2 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
-        } else if (op == NICHT) {
-            term2 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
-        } else if (op == PLUS) {
-            term2 = execITerm(str, bPtr, bitpos, pPtr, err);
-        } if (*err) {
-            return 0;
-        }
-        term1 += term2;
-    }
-
-    return term1;
 }
 
 static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
