@@ -42,10 +42,6 @@
 #define __cpu_to_le16(x) (x)
 #endif
 
-// We need this at procSet ...
-#define FLOAT 1
-#define INT 2
-
 #if defined (__APPLE__)
 #include <libkern/OSByteOrder.h>
 
@@ -87,8 +83,7 @@ static int getCycleTime(char *recv, int len, char *result)
     int i;
     char string[80];
 
-    //if ((len/2)*2 !=len) {
-    if (len % 2) {
+    if (len & 1) {
         sprintf(result, "Byte count not even");
         return 0;
     }
@@ -126,8 +121,7 @@ int setCycleTime(char *input, char *sendBuf)
     cptr = NULL;
 
     // First, we fill the sendBuf with 8 x ff
-    for (count = 0; count < 8; sendBuf[count++] = 0xff);
-    count = 0;
+    memset(sendBuf, 0xff, 8);
 
     do {
         if (sptr < cptr) {
@@ -146,7 +140,7 @@ int setCycleTime(char *input, char *sendBuf)
             sptr = strtok(NULL, " ");
             logIT(LOG_INFO, "Cycle Time: -- -- -> [%02X%02X]", 0xff, 0xff);
         } else {
-            // Is the a : in the string?
+            // Is there a : in the string?
             if (! strchr(sptr, ':')) {
                 sprintf(sendBuf, "Wrong time format: %s", sptr);
                 return 0;
@@ -161,7 +155,7 @@ int setCycleTime(char *input, char *sendBuf)
 
     } while ((sptr = strtok(NULL, " ")) != NULL);
 
-    if ((count / 2) * 2 != count) {
+    if (count & 1) {
         logIT(LOG_WARNING, "Times count odd, ignoring %s", cptr);
         *(bptr - 1) = 0xff;
     }
@@ -335,9 +329,8 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     char error[1000];
     char buffer[MAXBUF];
     char *errPtr = error;
-    //short t;
-    float erg;
-    int ergI;
+    float res;
+    int resI;
     char formatI[20];
     float floatV = 0;
     char *inPtr;
@@ -394,40 +387,36 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         // Conversion to Char 1Byte
         memcpy(&charV, recvBuf, 1);
         floatV = charV; // Implicit type conversion to float for our arithmetic
-        sprintf(formatI, "%%02X %%s");
+        strcpy(formatI, "%02X %s");
     } else if (strstr(uPtr->type, "uchar") == uPtr->type) {
         // Conversion to Unsigned Char 1Byte
         memcpy(&ucharV, recvBuf, 1);
         floatV = ucharV; // Implicit type conversion to float for our arithmetic
-        sprintf(formatI, "%%02X %%s");
+        strcpy(formatI, "%02X %s");
     } else if (strstr(uPtr->type, "short") == uPtr->type) {
         // Conversion to Short 2Byte
         memcpy(&tmpS, recvBuf, 2);
-        // According to the CPU, the conversion is done here
         shortV = __le16_to_cpu(tmpS);
         floatV = shortV; // Implicit type conversion to float for our arithmetic
-        sprintf(formatI, "%%04X %%s");
+        strcpy(formatI, "%04X %s");
     } else if (strstr(uPtr->type, "ushort") == uPtr->type) {
         // Conversion to  Short 2Byte
         memcpy(&tmpUS, recvBuf, 2);
-        // According to the CPU, the conversion is done here
         ushortV = __le16_to_cpu(tmpUS);
         floatV = ushortV; // Implicit type conversion to float for our arithmetic
-        sprintf(formatI, "%%04X %%s");
+        strcpy(formatI, "%04X %s");
     } else if (strstr(uPtr->type, "int") == uPtr->type) {
         // Conversion to Int 4Byte
         memcpy(&tmpI, recvBuf, 4);
-        // According to the CPU, the conversion is done here
         intV = __le32_to_cpu(tmpI);
         floatV = intV; // Implicit type conversion to float for our arithmetic
-        sprintf(formatI, "%%08X %%s");
+        strcpy(formatI, "%08X %s");
     } else if (strstr(uPtr->type, "uint") == uPtr->type) {
         // Conversion to Unsigned Int 4Byte
         memcpy(&tmpUI, recvBuf, 4);
-        // According to the CPU, the conversion is done here
         uintV = __le32_to_cpu(tmpUI);
         floatV = uintV; // Implicit type conversion to float for our arithmetic
-        sprintf(formatI, "%%08X %%s");
+        strcpy(formatI, "%08X %s");
     } else if (uPtr->type) {
         logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
         return -1;
@@ -436,17 +425,15 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     // Some logging
     int n;
     char *ptr;
-    char res;
-
     ptr = recvBuf;
     bzero(buffer, sizeof(buffer));
-    for (n = 0; n <= 9; n++) {
+    for (n = 0; n < 10; n++) {
         // The bytes 0..9 are of interest
         bzero(string, sizeof(string));
         unsigned char byte = *ptr++ & 255;
         snprintf(string, sizeof(string), "B%d:%02X ", n, byte);
         strcat(buffer, string);
-        if (n >= MAXBUF - 3) {
+        if (strlen(buffer) >= MAXBUF - 8) {
             break;
         }
     }
@@ -456,30 +443,29 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         logIT(LOG_INFO, "Typ: %s (in float: %f)", uPtr->type, floatV);
         inPtr = uPtr->gCalc;
         logIT(LOG_INFO, "(FLOAT) Exp: %s [%s]", inPtr, buffer);
-        erg = execExpression(&inPtr, recvBuf, sizeof(recvBuf), floatV, errPtr);
+        res = execExpression(&inPtr, recvBuf, sizeof(recvBuf), floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
             return -1;
         }
-        sprintf(result, "%f %s", erg, uPtr->entity);
+        sprintf(result, "%f %s", res, uPtr->entity);
     } else if (uPtr->gICalc && *uPtr->gICalc) {
         // icalc in XML and get defined within
         inPtr = uPtr->gICalc;
         logIT(LOG_INFO, "(INT) Exp: %s [BP:%d] [%s]", inPtr, bitpos, buffer);
-        ergI = execIExpression(&inPtr, recvBuf, sizeof(recvBuf), bitpos, pRecvPtr, errPtr);
+        resI = execIExpression(&inPtr, recvBuf, sizeof(recvBuf), bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
             return -1;
         }
-        logIT(LOG_INFO, "Res: (Hex max. 4 bytes) %08x", ergI);
-        res = ergI;
-        if ( uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, recvLen)) {
+        logIT(LOG_INFO, "Res: (Hex max. 4 bytes) %08x", resI);
+        if ( uPtr->ePtr && bytes2Enum(uPtr->ePtr, (char *)&resI, &tPtr, recvLen)) {
             strcpy(result, tPtr);
             return 1;
         } else {
-            sprintf(result, formatI, ergI, uPtr->entity);
+            sprintf(result, formatI, resI, uPtr->entity);
             return 1;
         }
         // Probably do the enum search here
@@ -494,10 +480,10 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     char buffer[MAXBUF];
     char input[MAXBUF];
     char *errPtr = error;
-    float erg = 0.0;
-    int ergI = 0;
+    float res = 0.0;
+    int resI = 0;
     short count;
-    char ergType;
+    int isFloat;
     float floatV;
     char *inPtr;
     // Here the types for the <type> tag conversion
@@ -517,10 +503,10 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     }
 
     bzero(errPtr, sizeof(error));
+
     // Some logging
-    int n = 0;
     char *ptr;
-    char dumBuf[10];
+    char dumBuf[100];
     bzero(dumBuf, sizeof(dumBuf));
     bzero(buffer, sizeof(buffer));
     // We copy the sendBuf, as this one is also used for return
@@ -569,13 +555,13 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         floatV = atof(input);
         inPtr = uPtr->sCalc;
         logIT(LOG_INFO, "Send Exp: %s [V=%f]", inPtr, floatV);
-        erg = execExpression(&inPtr, dumBuf, sizeof(dumBuf), floatV, errPtr);
+        res = execExpression(&inPtr, dumBuf, sizeof(dumBuf), floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sCalc, error);
             strcpy(sendBuf, string);
             return -1;
         }
-        ergType = FLOAT;
+        isFloat = 1;
     }
 
     if (uPtr->sICalc && *uPtr->sICalc) {
@@ -594,57 +580,49 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                 bzero(dumBuf, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
                 logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
-                ergI = execIExpression(&inPtr, dumBuf, sizeof(dumBuf), bitpos, pRecvPtr, errPtr);
+                resI = execIExpression(&inPtr, dumBuf, sizeof(dumBuf), bitpos, pRecvPtr, errPtr);
                 if (*errPtr) {
                     logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
                     strcpy(sendBuf, string);
                     return -1;
                 }
-                ergType = INT;
-                snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x", ergI);
+                isFloat = 0;
+                snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x", resI);
             }
         }
     }
 
-    // The result is in erg and has to be converted according to the type
+    // The result is in res and has to be converted according to the type
     if (uPtr->type) {
         if (strstr(uPtr->type, "char") == uPtr->type) {
-            // Conversion to Short 2Byte
-            // According to the CPU, the conversion is done here
-            (ergType == FLOAT) ? (charV = erg) : (charV = ergI);
-            memcpy(sendBuf, &charV, 1);
+            charV = isFloat ? res : resI;
             *sendLen = 1;
+            memcpy(sendBuf, &charV, *sendLen);
         } else if (strstr(uPtr->type, "uchar") == uPtr->type) {
-            // According to the CPU, the conversion is done here
-            (ergType == FLOAT) ? (ucharV = erg) : (ucharV = ergI);
-            memcpy(sendBuf, &ucharV, 1);
+            ucharV = isFloat ? res : resI;
             *sendLen = 1;
+            memcpy(sendBuf, &ucharV, *sendLen);
         } else if (strstr(uPtr->type, "short") == uPtr->type) {
-            // According to the CPU, the conversion is done here
-            (ergType == FLOAT) ? (tmpS = erg) : (tmpS = ergI);
+            tmpS = isFloat ? res : resI;
             shortV = __cpu_to_le16(tmpS);
-            memcpy(sendBuf, &shortV, 2);
             *sendLen = 2;
+            memcpy(sendBuf, &shortV, *sendLen);
         } else if (strstr(uPtr->type, "ushort") == uPtr->type) {
-            // According to the CPU, the conversion is done here
-            (ergType == FLOAT) ? (tmpUS = erg) : (tmpUS = ergI);
+            tmpUS = isFloat ? res : resI;
             ushortV = __cpu_to_le16(tmpUS);
-            memcpy(sendBuf, &ushortV, 2);
             *sendLen = 2;
+            memcpy(sendBuf, &ushortV, *sendLen);
         } else if (strstr(uPtr->type, "int") == uPtr->type) {
-            // According to the CPU, the conversion is done here
-            (ergType == FLOAT) ? (tmpI = erg) : (tmpI = ergI);
+            tmpI = isFloat ? res : resI;
             intV = __cpu_to_le32(tmpI);
-            memcpy(sendBuf, &intV, 4);
             *sendLen = 4;
+            memcpy(sendBuf, &intV, *sendLen);
         } else if (strstr(uPtr->type, "uint") == uPtr->type) {
-            // According to the CPU, the conversion is done here
-            (ergType == FLOAT) ? (tmpUI = erg) : (tmpUI = ergI);
+            tmpUI = isFloat ? res : resI;
             uintV = __cpu_to_le32(tmpUI);
-            memcpy(sendBuf, &uintV, 4);
             *sendLen = 4;
-		} else if (uPtr->type) {
-            bzero(string, sizeof(string));
+            memcpy(sendBuf, &uintV, *sendLen);
+        } else if (uPtr->type) {
             logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
             return -1;
         }
@@ -652,14 +630,15 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         bzero(buffer, sizeof(buffer));
         ptr = sendBuf;
         while (*ptr) {
-            bzero(string, sizeof(string));
             unsigned char byte = *ptr++ & 255;
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);
-            if (n >= MAXBUF - 3) {
-                // FN: Where is 'n' initialized?!
+            if (strlen(buffer) >= MAXBUF - 3) {
                 break;
             }
+        }
+        if (strlen(buffer)) {
+            buffer[strlen(buffer)-1]='\0';  // remove trailing space
         }
 
         logIT(LOG_INFO, "Type: %s (bytes: %s)  ", uPtr->type, buffer);
@@ -668,5 +647,6 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     }
 
     // We should never reach here. But we want to keep the compiler happy.
+    logIT(LOG_ERR, "Failed to set unit");
     return 0;
 }
