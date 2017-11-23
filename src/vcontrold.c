@@ -201,7 +201,7 @@ static int rawModus(int socketfd, char *device)
     char readBuf[MAXBUF];
     char string[256];
 
-    // FIXME: I think we should be using some PID or such instead of "XXXXXX".
+    // mkstemp expects "XXXXXX" in the tmpfile (template) and replaces it to make the filename unique.
 #ifdef __CYGWIN__
     char tmpfile[] = "vitotmp-XXXXXX";
 #else
@@ -211,22 +211,29 @@ static int rawModus(int socketfd, char *device)
     FILE *filePtr;
     char result[MAXBUF];
     int resultLen;
+    int fd;
 
-    if (! mkstemp(tmpfile)) {
+    fd = mkstemp(tmpfile);
+    if (! fd) {
         // Another try
-        if (! mkstemp(tmpfile)) {
-            logIT1(LOG_ERR, "Error creating mkstemp");
+        fd = mkstemp(tmpfile);
+        if (!fd) {
+            logIT1(LOG_ERR, "Error mkstemp failed to create the temporary command file");
             return 0;
         }
     }
 
-    filePtr = fopen(tmpfile, "w+");
+    filePtr = fdopen(fd, "w+");
     if (! filePtr) {
-        logIT(LOG_ERR, "Could not create temp file %s", tmpfile);
+        logIT(LOG_ERR, "Could not open the temp file '%s' for writing", tmpfile);
         return 0;
     }
 
     logIT(LOG_INFO, "Raw mode: Temp file: %s", tmpfile);
+
+    // Call unlink so that whenever the file is closed or the program exits
+    // the temporary file is deleted
+    unlink(tmpfile);
 
     while (Readline(socketfd, readBuf, sizeof(readBuf))) {
         // Here, we parse the particular commands
@@ -242,7 +249,7 @@ static int rawModus(int socketfd, char *device)
                 snprintf(string, sizeof(string), "Result: %s\n", buffer);
                 Writen(socketfd, string, strlen(string));
             }
-            remove(tmpfile);
+            unlink(tmpfile);
             return 1;
         }
         logIT(LOG_INFO, "Raw: Read: %s", readBuf);
