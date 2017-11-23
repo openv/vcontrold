@@ -344,7 +344,7 @@ int framer_send(int fd, char *s_buf, int len)
 }
 
 /*
- * Read a framed framed message in case P300 protocol is indicated
+ * Read a framed message in case P300 protocol is indicated
  *
  * Return 0: Error, else length of written bytes
  * This routine reads the first response byte for success status
