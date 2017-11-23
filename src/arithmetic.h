@@ -19,7 +19,7 @@
 #ifndef ARITHMETIC_H
 #define ARITHMETIC_H
 
-float execExpression(char **str, unsigned char *bPtr, float floatV, char *err);
-int execIExpression(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
+float execExpression(char **str, unsigned char *bufferPtr, int bufferLen, float floatV, char *err);
+int execIExpression(char **str, unsigned char *bufferPtr, int bufferLen, char bitpos, char *pPtr, char *err);
 
 #endif // ARITHMETIC_H

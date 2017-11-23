@@ -456,7 +456,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         logIT(LOG_INFO, "Typ: %s (in float: %f)", uPtr->type, floatV);
         inPtr = uPtr->gCalc;
         logIT(LOG_INFO, "(FLOAT) Exp: %s [%s]", inPtr, buffer);
-        erg = execExpression(&inPtr, recvBuf, floatV, errPtr);
+        erg = execExpression(&inPtr, recvBuf, sizeof(recvBuf), floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
@@ -467,7 +467,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         // icalc in XML and get defined within
         inPtr = uPtr->gICalc;
         logIT(LOG_INFO, "(INT) Exp: %s [BP:%d] [%s]", inPtr, bitpos, buffer);
-        ergI = execIExpression(&inPtr, recvBuf, bitpos, pRecvPtr, errPtr);
+        ergI = execIExpression(&inPtr, recvBuf, sizeof(recvBuf), bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
@@ -569,7 +569,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         floatV = atof(input);
         inPtr = uPtr->sCalc;
         logIT(LOG_INFO, "Send Exp: %s [V=%f]", inPtr, floatV);
-        erg = execExpression(&inPtr, dumBuf, floatV, errPtr);
+        erg = execExpression(&inPtr, dumBuf, sizeof(dumBuf), floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sCalc, error);
             strcpy(sendBuf, string);
@@ -594,7 +594,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                 bzero(dumBuf, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
                 logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
-                ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
+                ergI = execIExpression(&inPtr, dumBuf, sizeof(dumBuf), bitpos, pRecvPtr, errPtr);
                 if (*errPtr) {
                     logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
                     strcpy(sendBuf, string);

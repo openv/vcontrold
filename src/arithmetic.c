@@ -66,33 +66,32 @@
 #define SHR 405
 
 
+// Declaration of internal functions
 static int nextToken(char **str, char **c, int *count);
 static void pushBack(char **str, int n);
-static float execTerm(char **str, unsigned char *bPtr, float floatV, char *err);
-static float execFactor(char **str, unsigned  char *bPtr, float floatV, char *err);
-static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
-static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
+static float execTerm(char **str, unsigned char *bufferPtr, int bufferLen, float floatV,char *err);
+static float execFactor(char **str, unsigned char *bufferPtr, int bufferLen, float floatV, char *err);
+static int execITerm(char **str, unsigned char *bufferPtr, int bufferLen, char bitpos, char *pPtr, char *err);
+static int execIFactor(char **str, unsigned char *bufferPtr, int bufferLen, char bitpos,char *pPtr, char *err);
 
 // -----------------------------------------------------------------------------
 // Evaluate floatingpoint expressions
 // -----------------------------------------------------------------------------
-float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
+float execExpression(char **str, unsigned char *bufferPtr, int bufferLen, float floatV, char *err)
 {
     int f = 1;
-    float term1, term2;
-    //float exp1,exp2;
+    float term1;
+    float term2;
     char *item;
-    //unsigned char bPtr[10];
     unsigned char bPtr[10];
     int n;
 
-    //printf("execExpression: %s\n",*str);
+    //printf("execExpression: %s\n", *str);
 
     // Tweak bPtr Bytes 0..9 and copy them to nPtr
     // We did not receive characters
     for (n = 0; n <= 9; n++) {
-        //bPtr[n]=*bInPtr++ & 255;
-        bPtr[n] = *bInPtr++;
+        bPtr[n] = *bufferPtr++;
     }
 
     switch (nextToken(str, &item, &n)) {
@@ -107,11 +106,11 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
         break;
     }
 
-    term1 = execTerm(str, bPtr, floatV, err) * f;
+    term1 = execTerm(str, bufferPtr, bufferLen, floatV, err) * f;
     if (*err) {
         return 0;
     }
-    //printf(" T1=%f\n",term1);
+    //printf(" T1=%f\n", term1);
 
     int t;
     while ((t = nextToken(str, &item, &n)) != END) {
@@ -129,22 +128,22 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
             return term1;
         }
 
-        term2 = execTerm(str, bPtr, floatV, err);
+        term2 = execTerm(str, bufferPtr, bufferLen, floatV, err);
         if (*err) {
             return 0;
         }
-        //printf(" T2=%f\n",term2);
+        //printf(" T2=%f\n", term2);
         term1 += term2 * f;
     }
 
-    //printf(" Exp=%f\n",term1);
+    //printf(" Exp=%f\n", term1);
     return term1;
 }
 
 // -----------------------------------------------------------------------------
 // Evaluate integer expressions
 // -----------------------------------------------------------------------------
-int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
+int execIExpression(char **str, unsigned char *bufferPtr, int bufferLen, char bitpos, char *pPtr, char *err)
 {
     int f = 1;
     int term1, term2;
@@ -159,8 +158,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     // Tweak bPtr bytes 0..9 and copy them to nPtr
     // We have received characters
     for (n = 0; n <= 9; n++) {
-        //bPtr[n]=*bInPtr++ & 255;
-        bPtr[n] = *bInPtr++;
+        bPtr[n] = *bufferPtr++;
     }
 
     op = ERROR;
@@ -180,11 +178,11 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     }
 
     if (op == MINUS) {
-        term1 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
+        term1 = -execITerm(str, bufferPtr, bufferLen, bitpos, pPtr, err);
     } else if (op == NICHT) {
-        term1 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
+        term1 = ~execITerm(str, bufferPtr, bufferLen, bitpos, pPtr, err);
     } else {
-        term1 = execITerm(str, bPtr, bitpos, pPtr, err);
+        term1 = execITerm(str, bufferPtr, bufferLen, bitpos, pPtr, err);
     }
 
     if (*err) {
@@ -211,11 +209,11 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
         }
 
         if (op == MINUS) {
-            term2 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
+            term2 = -execITerm(str, bufferPtr, bufferLen, bitpos, pPtr, err);
         } else if (op == NICHT) {
-            term2 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
+            term2 = ~execITerm(str, bufferPtr, bufferLen, bitpos, pPtr, err);
         } else if (op == PLUS) {
-            term2 = execITerm(str, bPtr, bitpos, pPtr, err);
+            term2 = execITerm(str, bufferPtr, bufferLen, bitpos, pPtr, err);
         } if (*err) {
             return 0;
         }
@@ -225,21 +223,22 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     return term1;
 }
 
-static float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
+static float execTerm(char **str, unsigned char *bufferPtr, int bufferLen, float floatV,char *err)
 {
-    float factor1, factor2;
+    float factor1;
+    float factor2;
     int op;
     char *item;
     int n;
 
-    //printf("execTerm: %s\n",*str);
+    //printf("execTerm: %s\n", *str);
 
-    factor1 = execFactor(str, bPtr, floatV, err);
+    factor1 = execFactor(str, bufferPtr, bufferLen, floatV, err);
     if (*err) {
         return 0;
     }
 
-    //printf(" F1=%f\n",factor1);
+    //printf(" F1=%f\n", factor1);
     while (1) {
         switch (nextToken(str, &item, &n)) {
         case MAL:
@@ -250,11 +249,11 @@ static float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
             break;
         default:
             pushBack(str, n);
-            //printf("  ret(%f)\n",factor1);
+            //printf("  ret(%f)\n", factor1);
             return factor1;
         }
-        factor2 = execFactor(str, bPtr, floatV, err);
-        //printf(" F2=%f\n",factor2);
+        factor2 = execFactor(str, bufferPtr, bufferLen, floatV, err);
+        //printf(" F2=%f\n", factor2);
         if (*err) {
             return 0;
         }
@@ -266,7 +265,7 @@ static float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
     }
 }
 
-static float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
+static float execFactor(char **str, unsigned char *bufferPtr, int bufferLen, float floatV, char *err)
 {
     char nstring[100];
     float expression;
@@ -276,29 +275,29 @@ static float execFactor(char **str, unsigned char *bPtr, float floatV, char *err
     char token;
     int n;
 
-    //printf("execFactor: %s\n",*str);
+    //printf("execFactor: %s\n", *str);
 
     switch (nextToken(str, &item, &n)) {
     case BYTE0:
-        return bPtr[0];
+        return bufferPtr[0];
     case BYTE1:
-        return bPtr[1];
+        return bufferPtr[1];
     case BYTE2:
-        return bPtr[2];
+        return bufferPtr[2];
     case BYTE3:
-        return bPtr[3];
+        return bufferPtr[3];
     case BYTE4:
-        return bPtr[4];
+        return bufferPtr[4];
     case BYTE5:
-        return bPtr[5];
+        return bufferPtr[5];
     case BYTE6:
-        return bPtr[6];
+        return bufferPtr[6];
     case BYTE7:
-        return bPtr[7];
+        return bufferPtr[7];
     case BYTE8:
-        return bPtr[8];
+        return bufferPtr[8];
     case BYTE9:
-        return bPtr[9];
+        return bufferPtr[9];
     case VALUE:
         return floatV;
     case HEX:
@@ -328,10 +327,10 @@ static float execFactor(char **str, unsigned char *bPtr, float floatV, char *err
         pushBack(str, n);
         *nPtr = '\0';
         factor = atof(nstring);
-        //printf("  Zahl: %s (f:%f)\n",nstring,factor);
+        //printf("  Zahl: %s (f:%f)\n", nstring, factor);
         return factor;
     case KAUF:
-        expression = execExpression(str, bPtr, floatV, err);
+        expression = execExpression(str, bufferPtr, bufferLen, floatV, err);
         if (*err) {
             return 0;
         }
@@ -346,16 +345,16 @@ static float execFactor(char **str, unsigned char *bPtr, float floatV, char *err
     }
 }
 
-static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
+static int execITerm(char **str, unsigned char *bufferPtr, int bufferLen, char bitpos, char *pPtr, char *err)
 {
     int factor1, factor2;
     int op;
     char *item;
     int n;
 
-    //printf("execTerm: %s\n",*str);
+    //printf("execTerm: %s\n", *str);
 
-    factor1 = execIFactor(str, bPtr, bitpos, pPtr, err);
+    factor1 = execIFactor(str, bufferPtr, bufferLen, bitpos, pPtr, err);
     if (*err) {
         return 0;
     }
@@ -388,11 +387,11 @@ static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, c
             break;
         default:
             pushBack(str, n);
-            //printf("  ret(%f)\n",factor1);
+            //printf("  ret(%f)\n", factor1);
             return factor1;
         }
 
-        factor2 = execIFactor(str, bPtr, bitpos, pPtr, err);
+        factor2 = execIFactor(str, bufferPtr, bufferLen, bitpos, pPtr, err);
 
         if (*err) {
             return 0;
@@ -421,7 +420,7 @@ static int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, c
     }
 }
 
-static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
+static int execIFactor(char **str, unsigned char *bufferPtr, int bufferLen, char bitpos,char *pPtr, char *err)
 {
     char nstring[100];
     int expression;
@@ -435,47 +434,47 @@ static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr,
 
     switch (nextToken(str, &item, &n)) {
     case BYTE0:
-        return ((int)bPtr[0]) & 0xff;
+        return ((int)bufferPtr[0]) & 0xff;
     case BYTE1:
-        return ((int)bPtr[1]) & 0xff;
+        return ((int)bufferPtr[1]) & 0xff;
     case BYTE2:
-        return ((int)bPtr[2]) & 0xff;
+        return ((int)bufferPtr[2]) & 0xff;
     case BYTE3:
-        return ((int)bPtr[3]) & 0xff;
+        return ((int)bufferPtr[3]) & 0xff;
     case BYTE4:
-        return ((int)bPtr[4]) & 0xff;
+        return ((int)bufferPtr[4]) & 0xff;
     case BYTE5:
-        return ((int)bPtr[5]) & 0xff;
+        return ((int)bufferPtr[5]) & 0xff;
     case BYTE6:
-        return ((int)bPtr[6]) & 0xff;
+        return ((int)bufferPtr[6]) & 0xff;
     case BYTE7:
-        return ((int)bPtr[7]) & 0xff;
+        return ((int)bufferPtr[7]) & 0xff;
     case BYTE8:
-        return ((int)bPtr[8]) & 0xff;
+        return ((int)bufferPtr[8]) & 0xff;
     case BYTE9:
-        return ((int)bPtr[9]) & 0xff;
+        return ((int)bufferPtr[9]) & 0xff;
     case BITPOS:
         return ((int)bitpos) & 0xff;
     case PBYTE0:
-        return ((int)pPtr[0]) & 0xff;
+        return ((int)bufferPtr[0]) & 0xff;
     case PBYTE1:
-        return ((int)pPtr[1]) & 0xff;
+        return ((int)bufferPtr[1]) & 0xff;
     case PBYTE2:
-        return ((int)pPtr[2]) & 0xff;
+        return ((int)bufferPtr[2]) & 0xff;
     case PBYTE3:
-        return ((int)pPtr[3]) & 0xff;
+        return ((int)bufferPtr[3]) & 0xff;
     case PBYTE4:
-        return ((int)pPtr[4]) & 0xff;
+        return ((int)bufferPtr[4]) & 0xff;
     case PBYTE5:
-        return ((int)pPtr[5]) & 0xff;
+        return ((int)bufferPtr[5]) & 0xff;
     case PBYTE6:
-        return ((int)pPtr[6]) & 0xff;
+        return ((int)bufferPtr[6]) & 0xff;
     case PBYTE7:
-        return ((int)pPtr[7]) & 0xff;
+        return ((int)bufferPtr[7]) & 0xff;
     case PBYTE8:
-        return ((int)pPtr[8]) & 0xff;
+        return ((int)bufferPtr[8]) & 0xff;
     case PBYTE9:
-        return ((int)pPtr[9]) & 0xff;
+        return ((int)bufferPtr[9]) & 0xff;
     case HEX:
         nPtr = nstring;
         bzero(nstring, sizeof(nstring));
@@ -505,7 +504,7 @@ static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr,
         factor = atof(nstring);
         return factor;
     case KAUF:
-        expression = execIExpression(str, bPtr, bitpos, pPtr, err);
+        expression = execIExpression(str, bufferPtr, bufferLen, bitpos, pPtr, err);
         if (*err) {
             return 0;
         }
@@ -515,7 +514,7 @@ static int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr,
         }
         return expression;
     case NICHT:
-        return ~execIFactor(str, bPtr, bitpos, pPtr, err);
+        return ~execIFactor(str, bufferPtr, bufferLen, bitpos, pPtr, err);
     default:
         sprintf(err, "expected factor: B0..B9 P0..P9 BP number ( ) [%c]\n", *item);
         return 0;
@@ -526,8 +525,7 @@ static int nextToken(char **str, char **c, int *count)
 {
     char item;
 
-    //printf("\tInput String:%s\n",*str);
-
+    //printf("\tInput String:%s\n", *str);
     item = **str;
     while (isblank(item)) {
         item = *(++*str);
@@ -661,5 +659,5 @@ static int nextToken(char **str, char **c, int *count)
 static void pushBack(char **str, int count)
 {
     (*str) -= count;
-    //printf("\t<<::%s\n",*str);
+    //printf("\t<<::%s\n", *str);
 }
