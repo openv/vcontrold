@@ -29,11 +29,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <arpa/inet.h>
 
 #include "common.h"
 #include "framer.h"
@@ -43,6 +38,7 @@
 #include "socket.h"
 #include "xmlconfig.h"
 #include "version.h"
+
 
 #ifdef __CYGWIN__
 #define XMLFILE "vcontrold.xml"
@@ -57,12 +53,6 @@ char *xmlfile = XMLFILE;
 FILE *iniFD = NULL;
 int makeDaemon = 1;
 int inetversion = 0;
-
-// Defined in xmlconfig.c
-extern protocolPtr protoPtr;
-extern unitPtr uPtr;
-extern devicePtr devPtr;
-extern configPtr cfgPtr;
 
 // Declarations
 static int readCmdFile(char *filename, char *result, int *resultLen, char *device );
@@ -87,9 +77,10 @@ void usage()
 
 static short checkIP(char *ip)
 {
+    // TODO: redesign xmlconfig.getAllowNode to avoid export of allowPtr
     allowPtr aPtr;
 
-    if ((aPtr = getAllowNode(cfgPtr->aPtr, inet_addr(ip)))) {
+    if ((aPtr = getAllowNode(getConfig()->aPtr, inet_addr(ip)))) {
         logIT(LOG_INFO, "%s in allowList (%s)", ip, aPtr->text);
         return 1;
     } else {
@@ -101,7 +92,7 @@ static short checkIP(char *ip)
 static int reloadConfig()
 {
     if (parseXMLFile(xmlfile)) {
-        compileCommand(devPtr, uPtr);
+        compileCommands();
         logIT(LOG_NOTICE, "XML file %s reloaded", xmlfile);
         return 1;
     } else {
@@ -123,7 +114,8 @@ static int readCmdFile(char *filename, char *result, int *resultLen, char *devic
 
     // Open the device only if we have something to do
     vcontrol_semget(); // TODO semjfi
-    if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
+    // TODO: add function xmlconfig.getDeviceId() to avoid '->devPtr->protoPtr->id'
+    if ((fd = framer_openDevice(device, getConfig()->devPtr->protoPtr->id)) == -1) {
         vcontrol_semrelease(); // TODO semjfi
         logIT(LOG_ERR, "Error opening %s", device);
         result = "\0";
@@ -165,7 +157,7 @@ static int readCmdFile(char *filename, char *result, int *resultLen, char *devic
             unsigned char byte = *ptr++ & 255;
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);
-            if (n >= MAXBUF - 3) {
+            if (strlen(buffer) >= MAXBUF - 3) {
                 break;
             }
         }
@@ -254,8 +246,7 @@ static int rawModus(int socketfd, char *device)
             return 1;
         }
         logIT(LOG_INFO, "Raw: Read: %s", readBuf);
-        //int n;
-        //if ((n=fputs(readBuf,filePtr))== 0) {
+
         if (fputs(readBuf, filePtr) == EOF) {
             logIT1(LOG_ERR, "Error writing to temp file");
         } else {
@@ -349,7 +340,8 @@ static int interactive(int socketfd, char *device )
             Writen(socketfd, string, strlen(string));
             fd = -1;
         } else if (strstr(readBuf, "commands") == readBuf) {
-            cPtr = cfgPtr->devPtr->cmdPtr;
+            // TODO: add a function to xmlconfig to get the commands as string[]
+            cPtr = getConfig()->devPtr->cmdPtr;
             while (cPtr) {
                 if (cPtr->addr) {
                     bzero(string, sizeof(string));
@@ -359,14 +351,16 @@ static int interactive(int socketfd, char *device )
                 cPtr = cPtr->next;
             }
         } else if (strstr(readBuf, "protocol") == readBuf) {
+            // TODO: add a function to xmlconfig to get configured protocol
             bzero(string, sizeof(string));
-            snprintf(string, sizeof(string), "%s\n", cfgPtr->devPtr->protoPtr->name);
+            snprintf(string, sizeof(string), "%s\n", getConfig()->devPtr->protoPtr->name);
             Writen(socketfd, string, strlen(string));
         } else if (strstr(readBuf, "device") == readBuf) {
+            // TODO: add functions to xmlconfig to get this information
             bzero(string, sizeof(string));
-            snprintf(string, sizeof(string), "%s (ID=%s) (Protocol=%s)\n", cfgPtr->devPtr->name,
-                     cfgPtr->devPtr->id,
-                     cfgPtr->devPtr->protoPtr->name);
+            snprintf(string, sizeof(string), "%s (ID=%s) (Protocol=%s)\n", getConfig()->devPtr->name,
+                     getConfig()->devPtr->id,
+                     getConfig()->devPtr->protoPtr->name);
             Writen(socketfd, string, strlen(string));
         } else if (strstr(readBuf, "version") == readBuf) {
             bzero(string, sizeof(string));
@@ -374,14 +368,14 @@ static int interactive(int socketfd, char *device )
             Writen(socketfd, string, strlen(string));
         }
         // Is the command defined in XML?
-        //else if(readBuf && (cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cmd))&& (cPtr->addr)) {
-        else if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
+        // TODO: add a function to xmlconfig to validate commands
+        else if ((cPtr = getCommandNode(getConfig()->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
             bzero(string, sizeof(string));
             bzero(recvBuf, sizeof(recvBuf));
             bzero(sendBuf, sizeof(sendBuf));
             bzero(pRecvBuf, sizeof(pRecvBuf));
 
-            // If unit off it set or no unit is defined, we pass the parameters in hex
+            // If unit off or no unit is defined, we pass the parameters in hex
             bzero(sendBuf, sizeof(sendBuf));
             if ((noUnit | !cPtr->unit) && *para) {
                 if ((sendLen = string2chr(para, sendBuf, sizeof(sendBuf))) == -1) {
@@ -420,7 +414,7 @@ static int interactive(int socketfd, char *device )
                  */
                 vcontrol_semget(); // everything on link is a transaction - all commands //todo semjfi
 
-                if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
+                if ((fd = framer_openDevice(device, getConfig()->devPtr->protoPtr->id)) == -1) {
                     logIT(LOG_ERR, "Error opening %s", device);
                     sendErrMsg(socketfd);
                     if (!Writen(socketfd, prompt, strlen(prompt))) {
@@ -434,7 +428,7 @@ static int interactive(int socketfd, char *device )
             }
 
 #if 1 == 2 // TODO semjfi
-            if ((fd < 0) && (fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
+            if ((fd < 0) && (fd = framer_openDevice(device, getConfig()->devPtr->protoPtr->id)) == -1) {
                 logIT(LOG_ERR, "Error opening %s", device);
                 sendErrMsg(socketfd);
                 if (!Writen(socketfd, prompt, strlen(prompt))) {
@@ -448,7 +442,7 @@ static int interactive(int socketfd, char *device )
 #endif
 
             // If there's a pre command, we execute this first
-            if (cPtr->precmd && (pcPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cPtr->precmd))) {
+            if (cPtr->precmd && (pcPtr = getCommandNode(getConfig()->devPtr->cmdPtr, cPtr->precmd))) {
                 logIT(LOG_INFO, "Executing pre command %s", cPtr->precmd);
 
                 if (execByteCode(pcPtr->cmpPtr, fd, pRecvBuf, sizeof(pRecvBuf), sendBuf, sendLen, 1, pcPtr->bit, pcPtr->retry, pRecvBuf, pcPtr->recvTimeout) == -1) {
@@ -490,7 +484,7 @@ static int interactive(int socketfd, char *device )
                     unsigned char byte = *ptr++ & 255;
                     snprintf(string, sizeof(string), "%02X ", byte);
                     strcat(buffer, string);
-                    if (n >= MAXBUF - 3) {
+                    if (strlen(buffer) >= MAXBUF - 3) {
                         break;
                     }
                 }
@@ -509,7 +503,7 @@ static int interactive(int socketfd, char *device )
                 readPtr++;
             }
             // Is the command defined in the XML?
-            if (readPtr && (cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
+            if (readPtr && (cPtr = getCommandNode(getConfig()->devPtr->cmdPtr, readPtr))) {
                 bzero(string, sizeof(string));
                 snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->send);
                 Writen(socketfd, string, strlen(string));
@@ -753,6 +747,8 @@ int main(int argc, char *argv[])
     }
 
     // The global variables cfgPtr and protoPtr have been filled
+    // TODO: add functions in xmlconfig to get the settings
+    configPtr cfgPtr = getConfig();
     if (cfgPtr) {
         if (! tcpport) {
             tcpport = cfgPtr->port;
@@ -796,7 +792,7 @@ int main(int argc, char *argv[])
     }
 
     // The macros are replaced and the strings to send are converted to bytecode
-    compileCommand(devPtr, uPtr);
+    compileCommands();
 
     int fd = 0;
     char result[MAXBUF];

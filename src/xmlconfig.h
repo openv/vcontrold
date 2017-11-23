@@ -31,6 +31,8 @@ typedef struct allow *allowPtr;
 typedef struct enumerate *enumPtr;
 
 int parseXMLFile(char *filename);
+void compileCommands();
+configPtr getConfig();
 macroPtr getMacroNode(macroPtr ptr, const char *name);
 unitPtr getUnitNode(unitPtr ptr, const char *name);
 commandPtr getCommandNode(commandPtr ptr, const char *name);
