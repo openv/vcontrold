@@ -148,31 +148,43 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     bzero(simIn, sizeof(simIn));
     bzero(simOut, sizeof(simOut));
 
-    // First, we convert the bytes to send to be sure not to abort right in the middle of it
+    // First copy or convert the bytes of sendBuf to the BYTES token of cmpPtr
+    // to be sure not to abort right in the middle of it
     cPtr = cmpPtr; // do not change cmpPtr, use local cPtr
-    if (! supressUnit) {
-        while (cPtr) {
-            if (cPtr->token != BYTES) {
-                cPtr = cPtr->next;
-                continue;
-            }
-            if (cPtr->uPtr) {
-                if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
-                    logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
-                    return -1;
-                }
-                if (cPtr->send) {
-                    // We already sent this, the memory is still allocated
-                    free(cPtr->send);
-                    cPtr->send = NULL;
-                }
-                cPtr->send = calloc(len, sizeof(char));
-                cPtr->len = len;
-                sendLen = 0; // We don't send the converted sendBuf
-                memcpy(cPtr->send, sendBuf, len);
-            }
+    while (cPtr) {
+        if (cPtr->token != BYTES) {
             cPtr = cPtr->next;
+            continue;
         }
+        if (supressUnit) {
+            // No unit conversion needed, just copy the bytes
+            if (sendLen != cPtr->len) {
+                // This should never happen!
+                logIT(LOG_ERR,
+                      "Error in length of the hex string (%d) != send length of \
+                      the command (%d), terminating", sendLen, cPtr->len);
+                return -1;
+            }
+            if (cPtr->send) {
+                free(cPtr->send);
+            }
+            cPtr->send = calloc(cPtr->len, sizeof(char));
+            sendLen = 0; // We don't send the converted sendBuf
+            memcpy(cPtr->send, sendBuf, cPtr->len);
+        } else if (cPtr->uPtr) {
+            if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
+                logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
+                return -1;
+            }
+            if (cPtr->send) {
+                free(cPtr->send);
+            }
+            cPtr->send = calloc(len, sizeof(char));
+            cPtr->len = len;
+            sendLen = 0; // We don't send the converted sendBuf
+            memcpy(cPtr->send, sendBuf, len);
+        }
+        cPtr = cPtr->next;
     }
 
     do {
@@ -203,7 +215,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     memcpy(out_buff + out_len, cmpPtr->send, cmpPtr->len);
                     out_len += cmpPtr->len;
 
-                    if (!(cmpPtr->next && cmpPtr->next->token == BYTES)) {
+                    if (! (cmpPtr->next && cmpPtr->next->token == BYTES)) {
                         break;
                     }
                     cmpPtr = cmpPtr->next;
@@ -228,9 +240,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 break;
             case RECV:
                 if (cmpPtr->len > recvLen) {
-                    logIT(LOG_ERR, "Recv buffer too small. Is: %d, should be %d", recvLen, cmpPtr->len);
-                    cmpPtr->len = recvLen;
                     // Hopefully, we don't end up here
+                    logIT(LOG_ERR, "Recv buffer too small. Is: %d, should be %d",
+                          recvLen, cmpPtr->len);
+                    cmpPtr->len = recvLen;
                 }
                 etime = 0;
                 bzero(recvBuf, sizeof(recvBuf));
