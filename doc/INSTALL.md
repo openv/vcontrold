@@ -13,11 +13,11 @@ make
 
 There are three options for the build process with their defaults:
 
-* _MANPAGES=ON_ Build man pages via rst2man
-* _VCLIENT=ON_  Build the vclient helper program (for communication with vcontrold)
-* _VSIM=OFF_ Build the vsim helper program (for development and testing purposes)
+* _MANPAGES=ON_ Build man pages via `rst2man`
+* _VCLIENT=ON_  Build the `vclient` helper program (for communication with vcontrold)
+* _VSIM=OFF_ Build the `vsim` helper program (for development and testing purposes)
 
-Invokation is as follows;
+Invocation is as follows;
 
 ```
 cmake -DVSIM=ON -DMANPAGES=OFF ..
