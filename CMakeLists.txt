@@ -6,7 +6,24 @@ IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 set(CMAKE_INSTALL_PREFIX /usr)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
+option(MANPAGES "Build man pages via rst2man" ON)
+option(VCLIENT "Build the vclient helper program (for communication with vcontrold)" ON)
+option(VSIM "Build the vsim helper program (for development and testing purposes)" OFF)
+
 find_package(LibXml2 REQUIRED)
+
+if(MANPAGES)
+    find_program(RST2MAN NAMES rst2man rst2man.py)
+    if(RST2MAN)
+        message("-- Found rst2man: ${RST2MAN}")
+    else(RST2MAN)
+        message(FATAL_ERROR
+            "Could not find a rst2man executable. Either set the \"MANPAGES\" option to \"OFF\" \
+             (via cmake -DMANPAGES=OFF) or install Python's Docutils \
+             (cf. http://docutils.sourceforge.net/)."
+        )
+    endif(RST2MAN)
+endif(MANPAGES)
 
 add_custom_target(
     UpdateVersion ALL
@@ -52,15 +69,24 @@ add_executable(vcontrold ${vcontrold_SRCS})
 target_link_libraries(vcontrold ${LIBXML2_LIBRARIES})
 add_dependencies(vcontrold UpdateVersion)
 
-add_executable(vclient ${vclient_SRCS})
-add_dependencies(vclient UpdateVersion)
+if(VCLIENT)
+    add_executable(vclient ${vclient_SRCS})
+    add_dependencies(vclient UpdateVersion)
+endif(VCLIENT)
 
-add_executable(vsim ${vsim_SRCS})
-add_dependencies(vsim UpdateVersion)
+if(VSIM)
+    add_executable(vsim ${vsim_SRCS})
+    add_dependencies(vsim UpdateVersion)
+endif(VSIM)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/doc/man)
+if(MANPAGES)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/doc/man)
+endif(MANPAGES)
 
 install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin)
-install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-
+if(VCLIENT)
+    install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+endif(VCLIENT)
+if(VSIM)
+    install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+endif(VSIM)
