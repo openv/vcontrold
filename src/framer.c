@@ -24,7 +24,7 @@
  * with open and close P300 Mode is switched on, there is new xml-tag <pid> with protocol
  * definition which controls the switching of vitotronic to P300 mode.
  * additional assuming PDUs start by P300_LEADIN, else transferred as send by client
- * todo: when PID is set, there is no need for defining a controlling x41 in getaddr etc.
+ * TODO: when PID is set, there is no need for defining a controlling x41 in getaddr etc.
  *
  * semaphore handling in vcontrol.c is changed to cover all from open until close to avoid
  * disturbance by other client trying to do uncoordinated open/close
@@ -336,7 +336,7 @@ int framer_send(int fd, char *s_buf, int len)
         //framer_reset_actaddr();
         framer_set_actaddr(l_buf);
         snprintf(string, sizeof(string), ">FRAMER: Command send");
-        logIT(LOG_ERR, string);
+        logIT(LOG_INFO, string);
 
         return FRAMER_SUCCESS;
     }
