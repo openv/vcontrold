@@ -297,7 +297,6 @@ int interactive(int socketfd, char *device )
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
         sendErrMsg(socketfd);
         // Remove control characters
-        //readPtr=readBuf+strlen(readBuf);
         readPtr = readBuf + rcount;
         while (iscntrl(*readPtr)) {
             *readPtr-- = '\0';
@@ -386,10 +385,8 @@ int interactive(int socketfd, char *device )
             bzero(string, sizeof(string));
             snprintf(string, sizeof(string), "Version: %s\n", VERSION);
             Writen(socketfd, string, strlen(string));
-        }
-        // Is the command defined in XML?
-        //else if(readBuf && (cPtr=getCommandNode(cfgPtr->devPtr->cmdPtr,cmd))&& (cPtr->addr)) {
-        else if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
+        } else if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
+            // The command is defined in XML, so we take care of it ...
             bzero(string, sizeof(string));
             bzero(recvBuf, sizeof(recvBuf));
             bzero(sendBuf, sizeof(sendBuf));
@@ -397,11 +394,11 @@ int interactive(int socketfd, char *device )
 
             // If unit off it set or no unit is defined, we pass the parameters in hex
             bzero(sendBuf, sizeof(sendBuf));
-            if ((noUnit | !cPtr->unit) && *para) {
+            if ((noUnit | ! cPtr->unit) && *para) {
                 if ((sendLen = string2chr(para, sendBuf, sizeof(sendBuf))) == -1) {
                     logIT(LOG_ERR, "No hex string: %s", para);
                     sendErrMsg(socketfd);
-                    if (!Writen(socketfd, prompt, strlen(prompt))) {
+                    if (! Writen(socketfd, prompt, strlen(prompt))) {
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
                         vcontrol_semrelease(); // TODO semjfi
@@ -432,7 +429,8 @@ int interactive(int socketfd, char *device )
                  * one link activity, even more commands are given within.
                  * This is related to a accept/close on a server socket
                  */
-                vcontrol_semget(); // everything on link is a transaction - all commands //todo semjfi
+                // everything on link is a transaction - all commands
+                vcontrol_semget(); // TODO semjfi
 
                 if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                     logIT(LOG_ERR, "Error opening %s", device);
@@ -446,20 +444,6 @@ int interactive(int socketfd, char *device )
                     continue;
                 }
             }
-
-#if 1 == 2 // TODO semjfi
-            if ((fd < 0) && (fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
-                logIT(LOG_ERR, "Error opening %s", device);
-                sendErrMsg(socketfd);
-                if (!Writen(socketfd, prompt, strlen(prompt))) {
-                    sendErrMsg(socketfd);
-                    framer_closeDevice(fd);
-                    return 0;
-                }
-                continue;
-            }
-            vcontrol_semget();
-#endif
 
             // If there's a pre command, we execute this first
             if (cPtr->precmd && (pcPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cPtr->precmd))) {
@@ -647,7 +631,7 @@ static void sigHupHandler(int signo)
     reloadConfig();
 }
 
-static void sigTermHandler (int signo)
+static void sigTermHandler(int signo)
 {
     logIT1(LOG_NOTICE, "Received SIGTERM");
     vcontrol_semfree();

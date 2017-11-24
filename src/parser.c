@@ -140,16 +140,16 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     char simIn[500];
     char simOut[500];
     short len;
-    compilePtr cPtr = cmpPtr;
+    compilePtr cPtr;
     unsigned long etime;
     char out_buff[1024];
-    int _len  = 0;
-    //struct timespec t_sLeep;
-    //struct timespec t_sleep_rem;
+    int out_len;
 
     bzero(simIn, sizeof(simIn));
     bzero(simOut, sizeof(simOut));
+
     // First, we convert the bytes to send to be sure not to abort right in the middle of it
+    cPtr = cmpPtr; // do not change cmpPtr, use local cPtr
     if (! supressUnit) {
         while (cPtr) {
             if (cPtr->token != BYTES) {
@@ -158,7 +158,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             }
             if (cPtr->uPtr) {
                 if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
-                    logIT(LOG_ERR, "Error in unit conversion: %s", sendBuf);
+                    logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
                     return -1;
                 }
                 if (cPtr->send) {
@@ -190,17 +190,26 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 strcat(simIn, " ");
                 break;
             case SEND:
-                _len  = 0;
+                out_len = 0;
                 while (1) {
-                    memcpy(out_buff + _len, cmpPtr->send, cmpPtr->len);
-                    _len += cmpPtr->len;
+                    if (out_len + cmpPtr->len > sizeof(out_buff)) {
+                        // Hopefully, we never end up here
+                        logIT1(LOG_ERR, "Error out_buff buffer overflow, terminating");
+                        return -1;
+                    }
+
+                    // Copy all SEND data and BYTES data to out_buff, that CRC calculation
+                    // works in framer_send()
+                    memcpy(out_buff + out_len, cmpPtr->send, cmpPtr->len);
+                    out_len += cmpPtr->len;
+
                     if (!(cmpPtr->next && cmpPtr->next->token == BYTES)) {
                         break;
                     }
-                    cmpPtr =  cmpPtr->next;
+                    cmpPtr = cmpPtr->next;
                 }
 
-                if (! framer_send(fd, out_buff, _len)) {
+                if (! framer_send(fd, out_buff, out_len)) {
                     logIT1(LOG_ERR, "Error in send, terminating");
                     return -1;
                 }
@@ -213,7 +222,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 }
 
                 bzero(string, sizeof(string));
-                char2hex(string, out_buff, _len);
+                char2hex(string, out_buff, out_len);
                 strcat(simOut, string);
                 strcat(simOut, " ");
                 break;
@@ -264,14 +273,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 if (! supressUnit && cmpPtr->uPtr) {
                     if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
                         <= 0) {
-                        logIT(LOG_ERR, "Error in unit conversion: %s", result);
+                        logIT(LOG_ERR, "Error in unit conversion: %s, terminating", result);
                         return -1;
                     }
                     strncpy(recvBuf, result, recvLen);
 
                     if (iniFD && *simIn && *simOut) {
                         // We already sent and received, now we output it.
-                        //fprintf(iniFD,"%s= %s ;%s\n",simOut,simIn,result);
                         fprintf(iniFD, "%s= %s \n", simOut, simIn);
                     }
 
@@ -287,12 +295,6 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             case PAUSE:
                 logIT(LOG_INFO, "Waiting %i ms", cmpPtr->len);
                 usleep(cmpPtr->len * 1000L);
-                /*
-                t_sleep.tv_sec=(time_t) cmpPtr->len / 1000;
-                t_sleep.tv_nsec=(long) cmpPtr->len * 1000000;
-                if (nanosleep(&t_sleep,&t_sleep_rem)==-1)
-                    nanosleep(&t_sleep_rem,NULL);
-                */
                 break;
             case BYTES:
                 // We send the forwarded sendBuffer. No converting has been done.
@@ -307,7 +309,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 } else if (cmpPtr->len) {
                     // A unit to use is already defined, and we already converted it
                     if (! my_send(fd, cmpPtr->send, cmpPtr->len)) {
-                        logIT1(LOG_ERR, "Errir in send unit bytes, terminating");
+                        logIT1(LOG_ERR, "Error in send unit bytes, terminating");
                         free(cmpPtr->send);
                         cmpPtr->send = NULL;
                         cmpPtr->len = 0;
@@ -317,12 +319,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     char2hex(string, cmpPtr->send, cmpPtr->len);
                     strcat(simOut, string);
                     strcat(simOut, " ");
-                    //free(cmpPtr->send);
-                    //cmpPtr->len=0;
                 }
                 break;
             default:
-                logIT(LOG_ERR, "Unknown token: %d", cmpPtr->token);
+                logIT(LOG_ERR, "Unknown token: %d, terminating", cmpPtr->token);
                 return -1;
             }
             cmpPtr = cmpPtr->next;
@@ -337,9 +337,7 @@ RETRY:
 
 int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
 {
-    //char string[256];
     char uString[100];
-    //char *uSPtr=uString;
     // We parse the individual lines
     char hex[MAXBUF];
     int token;
@@ -426,7 +424,9 @@ void removeCompileList(compilePtr ptr)
 
     if (ptr) {
         free(ptr->send);
+        ptr->send = NULL;
         free(ptr);
+        ptr = NULL;
     }
 }
 
