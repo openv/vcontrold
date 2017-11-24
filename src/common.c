@@ -14,7 +14,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Test program for vito queries
+// Common functions for vcontrold like logging and converting
 
 #define _GNU_SOURCE
 
@@ -169,6 +169,7 @@ int char2hex(char *outString, const char *charPtr, int len)
 {
     int n;
     char string[MAXBUF];
+
     bzero(string, sizeof(string));
     for (n = 0; n < len; n++) {
         unsigned char byte = *charPtr++ & 255;
@@ -176,7 +177,7 @@ int char2hex(char *outString, const char *charPtr, int len)
         strcat(outString, string);
     }
 
-    // Remove first space
+    // Remove last space
     outString[strlen(outString) - 1] = '\0';
 
     return len;
