@@ -203,6 +203,11 @@
         <len>1</len>
         <unit>ST</unit>
       </device>
+      <device ID="20CB">
+        <addr>55D3</addr>
+        <len>1</len>
+        <unit>PR1</unit>
+      </device>
     </command>
     <command name="getBrennerStatus2" protocmd="getaddr">
       <addr>0849</addr>
@@ -1214,7 +1219,7 @@
     </command>
     <!-- KONFIGURATION UND SETZEN -->
     <!-- xxx Heizkreispumpenlogik-Funktion xxx -->
-    <!-- A5:0 Ohne Heizkreispumpenlogik-Funktion Mit Heizkreispumpenlogik−Funktion: 
+    <!-- A5:0 Ohne Heizkreispumpenlogik-Funktion Mit Heizkreispumpenlogik−Funktion:
          Heizkreispumpe aus, wenn A5:1 AT > RTSoll + 5 K A5:2 AT > RTSoll + 4 K A5:3
          AT > RTSoll + 3 K A5:4 AT > RTSoll + 2 K A5:5 AT > RTSoll + 1 K A5:6 AT =
          RTSoll A5:7 AT > RTSoll -1 K bis A5:15 AT > RTSoll -9 K -->
@@ -1262,7 +1267,7 @@
     </command>
     <!-- xxx Konfiguration A6 Erweiterte Sparschaltung xxx -->
     <!-- KA6_KonfiAbsolutSommersparM2 A6 0x37a6 -->
-    <!-- A6:36 Erweiterte Sparschaltung nicht aktiv A6:5 bis A6:35 Erweiterte 
+    <!-- A6:36 Erweiterte Sparschaltung nicht aktiv A6:5 bis A6:35 Erweiterte
          Sparschaltung aktiv, d.h. bei einem variabel einstellbaren Wert von 5 bis
          35 °C zuzüglich 1°C werden Brenner und Heizkreispumpe ausgeschaltet. Grundlage
          ist die gedämpfte Außentemperatur, die sich aus tatsächlicher Außentemperatur
@@ -1606,7 +1611,7 @@
       <len>2</len>
       <unit>ST</unit>
       <description>Ermittle das Anlagenschema</description>
-      <!-- K00_KonfiAnlagenschemaGWG_W (00) Heizkreis-Warmwasserschema Adresse 
+      <!-- K00_KonfiAnlagenschemaGWG_W (00) Heizkreis-Warmwasserschema Adresse
            7700 1 A1 | 1 2 A1 + WW | 2 3 M2 | 3 4 M2 + WW | 4 5 A1 + M2 | 5 6 A1 + M2
            + WW | 6 -->
     </command>
