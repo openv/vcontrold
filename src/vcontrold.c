@@ -83,8 +83,9 @@ void usage()
 
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
     printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
-    printf("                 [-n|--nodaemon] [-i|--vsim] [-g|--debug] [-4|--inet4]\n");
-    printf("                 [-6|--inet6]\n\n");
+    printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
+    printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
+    printf("                 [-4|--inet4] [-6|--inet6]\n\n");
 
     exit(1);
 }
@@ -664,6 +665,7 @@ int main(int argc, char *argv[])
             {"syslog",      no_argument,       &useSyslog,   1  },
             {"xmlfile",     required_argument, 0,            'x'},
             {"verbose",     no_argument,       &verbose,     1  },
+            {"Version",     no_argument,       0,            0  },
             {"inet4",       no_argument,       &inetversion, 4  },
             {"inet6",       no_argument,       &inetversion, 6  },
             {"help",        no_argument,       0,            0  },
@@ -672,7 +674,7 @@ int main(int argc, char *argv[])
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:np:svx:46",
+        opt = getopt_long (argc, argv, "c:d:gil:np:sx:vV46",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -730,6 +732,10 @@ int main(int argc, char *argv[])
         case 'v':
             puts ("option -v\n");
             verbose = 1;
+            break;
+        case 'V':
+            printf("vcontrold version %s\n", VERSION);
+            exit(1);
             break;
         case 'x':
             xmlfile = optarg;

@@ -75,6 +75,7 @@ void usage()
     printf("    -k|--cacti        Output a Cacti data logger compatible format (units and\n");
     printf("                      error details are discarded)\n");
     printf("    -v|--verbose      Be verbose (for testing purposes)\n");
+    printf("    -V|--version      Print version and exit\n");
     printf("    -4|--inet4        IPv4 is preferred\n");
     printf("    -6|--inet6        IPv6 is preferred\n");
     printf("                      (if none of the two above is set, the system default will\n");
@@ -120,6 +121,7 @@ int main(int argc, char *argv[])
             {"output",      required_argument, 0,            'o'},
             {"execute",     required_argument, 0,            'x'},
             {"verbose",     no_argument,       &verbose,     1  },
+            {"Version",     no_argument,       0,            0  },
             {"munin",       no_argument,       &munin,       1  },
             {"cacti",       no_argument,       &cacti,       1  },
             {"inet4",       no_argument,       &inetversion, 4  },
@@ -129,7 +131,7 @@ int main(int argc, char *argv[])
         };
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long(argc, argv, "c:f:h:kmo:p:s:t:vx:46", long_options, &option_index);
+        opt = getopt_long(argc, argv, "h:p:c:f:s:t:o:x:vVmk46", long_options, &option_index);
 
         // Detect the end of the options.
         if (opt == -1) {
@@ -156,6 +158,10 @@ int main(int argc, char *argv[])
         case 'v':
             puts("option -v\n");
             verbose = 1;
+            break;
+        case 'V':
+            printf("vclient version %s\n", VERSION);
+            exit(1);
             break;
         case 'm':
             if (verbose) {
