@@ -56,7 +56,7 @@ void usage()
 
     printf("or:\n");
     printf("    vclient --host <ip> --port <port> [--command <command1,command2,..>]\n");
-    printf("            [--commandfile <command file>] [--cvsfile <csv fatei>]\n");
+    printf("            [--commandfile <command file>] [--csvfile <csv file>]\n");
     printf("            [--template <template file>] [--output <output file>]\n");
     printf("            [--execute <exec file>] [--cacti] [--munin] [--verbose]\n");
     printf("            [command3 [command4] ...]\n\n");
@@ -81,8 +81,6 @@ void usage()
     printf("                      (if none of the two above is set, the system default will\n");
     printf("                      be used)\n");
     printf("    --help            Display this help message\n\n");
-
-    printf("Version %s\n", VERSION);
 
     exit(1);
 }
