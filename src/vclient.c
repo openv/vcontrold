@@ -75,7 +75,7 @@ void usage()
     printf("    -k|--cacti        Output a Cacti data logger compatible format (units and\n");
     printf("                      error details are discarded)\n");
     printf("    -v|--verbose      Be verbose (for testing purposes)\n");
-    printf("    -V|--version      Print version and exit\n");
+    printf("    -V|--Version      Print version and exit\n");
     printf("    -4|--inet4        IPv4 is preferred\n");
     printf("    -6|--inet6        IPv6 is preferred\n");
     printf("                      (if none of the two above is set, the system default will\n");
