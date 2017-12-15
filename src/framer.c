@@ -238,7 +238,10 @@ static int framer_open_p300(int fd)
             logIT(LOG_ERR, string);
             return FRAMER_ERROR;
         } else if (rbuf == P300_INIT_OK) {
-            framer_set_result(P300_INIT_OK);
+            // hmueller: Replaced framer_set_result(P300_INIT_OK)
+            // by framer_reset_actaddr() to avoid error log
+            // >FRAMER: addr was still active FE06
+            framer_reset_actaddr();
             snprintf(string, sizeof(string), ">FRAMER: opened");
             logIT(LOG_INFO, string);
             return FRAMER_SUCCESS;
@@ -326,14 +329,13 @@ int framer_send(int fd, char *s_buf, int len)
             logIT(LOG_ERR, string);
             return FRAMER_ERROR;
         } else if (*l_buf != P300_INIT_OK) {
-            snprintf(string, sizeof(string), ">FRAMER: Error %02X", *l_buf);
+            snprintf(string, sizeof(string),
+                     ">FRAMER: Error 0x%02X != 0x%02X (P300_INIT_OK)",
+                     *l_buf, P300_INIT_OK);
             logIT(LOG_ERR, string);
             return FRAMER_ERROR;
         }
 
-        // TODO hmueller: can we do a framer_reset_actaddr() here?
-        // If not we get a "addr was still active FE06" message ...
-        //framer_reset_actaddr();
         framer_set_actaddr(l_buf);
         snprintf(string, sizeof(string), ">FRAMER: Command send");
         logIT(LOG_INFO, string);
@@ -343,7 +345,7 @@ int framer_send(int fd, char *s_buf, int len)
 }
 
 /*
- * Read a framed framed message in case P300 protocol is indicated
+ * Read a framed message in case P300 protocol is indicated
  *
  * Return 0: Error, else length of written bytes
  * This routine reads the first response byte for success status
