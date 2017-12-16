@@ -61,7 +61,7 @@ matrix:
 before_script:
   - mkdir build
   - cd build
-  - if [[ "${CROSS_TOOLCHAIN}" == "true" ]]; then
+  - if [[ "${CROSS_TOOLCHAIN}" == "true" ]] ; then
       sudo debootstrap  --foreign --no-check-gpg --variant=minbase --include=libxml2,libxml2-dev --arch=armhf wheezy ${CHROOT_DIR} http://archive.raspbian.org/raspbian;
       sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/ ;
       sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage;
@@ -73,7 +73,7 @@ before_script:
       echo 'SET(CMAKE_SYSROOT ${CHROOT_DIR})' >> Toolchain-rpi.cmake ;
       echo 'SET(CMAKE_FIND_ROOT_PATH ${CHROOT_DIR})' >> Toolchain-rpi.cmake ;
       echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)' >> Toolchain-rpi.cmake ;
-      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> Toolchain-rpi.cmake M
+      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> Toolchain-rpi.cmake ;
       echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)' >> Toolchain-rpi.cmake ;
       echo 'SET(FLAGS "-Wl,-rpath-link,${CHROOT_DIR}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/local/lib")' >> Toolchain-rpi.cmake ;
       echo 'UNSET(CMAKE_C_FLAGS CACHE)' >> Toolchain-rpi.cmake ;
