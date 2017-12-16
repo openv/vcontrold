@@ -1,0 +1,18 @@
+language: c
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    packages:
+    - cmake
+	- libxml2-dev
+    - python3-docutils
+
+before_script:
+  - mkdir build
+  - cd build
+  - cmake ..
+
+script: VERBOSE=1 cmake --build .
