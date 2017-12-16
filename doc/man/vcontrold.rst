@@ -14,7 +14,7 @@ Unix daemon for communication with Viessmann Vito heatings
 SYNOPSIS
 ========
 
-  vcontrold [-x <xml-file>] [-d <device>] [-l <logfile>] [-p <port>] [-s] [-n] [-i] [-g]
+  vcontrold [-x <xml-file>] [-d <device>] [-l <logfile>] [-p <port>] [-s] [-n] [-g] [-v] [-V]
 
 DESCRIPTION
 ===========
@@ -25,36 +25,51 @@ a Viessmann vito heating controller.
 OPTIONS
 =======
 
--x <xml-file>
+-x <xml-file>, \--xmlfile <xml-file>
     location of the main config file
 
--d <serial-device>
+-d <serial-device>, \--device <serial-device>
     serial device to use.
-    This option overrides the device entry
-    in the <xml-file> file.
+    This option overrides corresponding entry in the config file.
 
--p <port>
+-p <port>, \--port <port>
     TCP <port> to use for remote connections.
     The default is 3002 and can be specified
-    in the <xml-file> file.
-    This option overrides the corresponding option in the <xml-file> file.
+    in the config file.
+    This option overrides the corresponding entry in the config file.
 
--s
+-s, \--syslog
     use syslog
 
--l
+-l <logfile>, \--logfile <logfile>
     use <logfile> instead of syslog.
 
--n
+-n, \--nodaemon
     do not fork. This is for testing purpose only. Normaly vcontrold
     will detach from the controlling terminal and put itself into the
     background.
 
--i
+-i, \--vsim
     use a temp file in ``/tmp/sim-devid.ini`` for use with the vsim simulator
+    (developer option)
 
--g
-    enable debug mode.
+-c <command-file>, \--commandfile <command-file>
+    file with lines containing sequences of icmds (WAIT, SEND, RECV, PAUSE)
+    as used in protocol definitions.
+    Lines get executed in order
+    (developer option)
+
+-g, \--debug
+    enable debug mode
+
+-v, \--verbose
+    verbose mode
+
+-V, \--Version
+    print version information, then exit
+
+\--help
+    usage information
 
 FILES
 =====
