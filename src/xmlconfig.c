@@ -1489,7 +1489,7 @@ int parseXMLFile(char *filename)
         }
     }
 
-    // For all commands that have default definitons,
+    // For all commands that have default definitions,
     // we roam all devices and add the particular commands.
     cPtr = TcmdPtr;
     while (cPtr) {
@@ -1524,7 +1524,7 @@ int parseXMLFile(char *filename)
     }
 
     // If we reach here, the loading has been successful.
-    // Noew, we free the old lists and allocate the new ones.
+    // Now we free the old lists and allocate the new ones.
 
     // If we're called repetitive (SIGHUP), everything should be freed.
     freeAllLists();
