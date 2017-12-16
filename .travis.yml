@@ -88,13 +88,15 @@ script:
   - DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}-${TRAVIS_BUILD_NUMBER}_${ARCH}"
 
 after_success:
-  - zip -j ${TRAVIS_BUILD_DIR}/"${DEPLOYFILEPREFIX}.zip" ${TRAVIS_BUILD_DIR}/build/vcontrold ${TRAVIS_BUILD_DIR}/build/vclient ${TRAVIS_BUILD_DIR}/build/doc/man/vcontrold.1.gz ${TRAVIS_BUILD_DIR}/build/doc/man/vclient.1.gz ${TRAVIS_BUILD_DIR}/COPYING ${TRAVIS_BUILD_DIR}/README.md
+  - zip -j ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip ${TRAVIS_BUILD_DIR}/build/vcontrold ${TRAVIS_BUILD_DIR}/build/vclient ${TRAVIS_BUILD_DIR}/build/doc/man/vcontrold.1.gz ${TRAVIS_BUILD_DIR}/build/doc/man/vclient.1.gz ${TRAVIS_BUILD_DIR}/COPYING ${TRAVIS_BUILD_DIR}/README.md
+  - ls -laF ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
+  - unzip -l ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
 
 deploy:
   provider: releases
   api_key:
     secure: dzTS/n6w0WXczRZZ/4lbW+zX79aVgsY223d9EEeOneqSsekll9ilU+akEhY0z2SvZPMdeo4ywdhdtopEK+9q7yjeU7qFPC0hbXUIqDc1c78UqNl7X3/n+est7IR2yLdKUSLcLi6E35D0Wr5QEu1sJo2ktVkozaCb69Ql7VajZggyuL/vykJMHU15EVQ4jWVdY5vWJZ/m2gN93JD0FZl/TEdnJX9NkStCbrUFveM411nwwiG7sjh3aSCKqXIERACy6uK70nstMFKZeF+go48V60TVS46iATD5oq64X6Qa8HpfeVR/+307JhcpXd1cWw1MmfUxmKWjcM8A6nED1AY5K/GRPTOLs004N6NjmY5B4svzC2tWt6PQEX/rvOSvQg8d3lcgOBcTznRVhpOuj3O63U/TjNd9WaD5NPeUogqV9lNVXg8UgZ9hrxMs80qNJGAZyid8x7XfDQ5bVnuuAqpSlUuWsyPKdDolq5RMsOUQ/o/yvZdB45C/EX6gZLUPOeiR+GffnXDnniYQKQYm+wL5UcDjqSKZdLCgZMrKKd7rCVIcSqs0E36y8BubK3CeiLOMUxmjcrbSE7YHmYDcnwohczm6QRUDS/fPbzd/XfIuIRzRkc9mliDVCE2JXaRJQA5U+TINBHUMUfnyVSENLrQaOweg/pi96B5XoJKSs6vl9YE=
-  file: ${DEPLOYFILEPREFIX}.zip
+  file: ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
   skip_cleanup: true
   on:
     repo: openv/vcontrold
