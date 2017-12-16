@@ -43,6 +43,7 @@ include: &toolchain_linux_armhf
     - ARCH="armhf"
     - TARGET="arm-linux-gnueabihf"
     - CC="${TARGET}-gcc"
+    - CHROOT_DIR=/tmp/chroot-raspbian-armhf
     - CMAKE_OPTS="-Wall -DCMAKE_TOOLCHAIN_FILE=Toolchain-rpi.cmake"
 
 env:
@@ -61,25 +62,23 @@ before_script:
   - mkdir build
   - cd build
   - if [[ "${CROSS_TOOLCHAIN}" == "true" ]]; then
-      CHROOT_DIR=/tmp/chroot-raspbian-armhf
-      sudo debootstrap  --foreign --no-check-gpg --variant=minbase --include=libxml2,libxml2-dev --arch=armhf wheezy ${CHROOT_DIR} http://archive.raspbian.org/raspbian
-      sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/
-      sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage
-
-      echo 'SET(CMAKE_SYSTEM_NAME Linux)' > Toolchain-rpi.cmake
-      echo 'SET(CMAKE_SYSTEM_VERSION 1)' >> Toolchain-rpi.cmake
-      echo 'SET(CHROOT_DIR /tmp/chroot-raspbian-armhf)' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_C_COMPILER   arm-linux-gnueabihf-gcc)' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_SYSROOT ${CHROOT_DIR})' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_FIND_ROOT_PATH ${CHROOT_DIR})' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)' >> Toolchain-rpi.cmake
-      echo 'SET(FLAGS "-Wl,-rpath-link,${CHROOT_DIR}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/local/lib")' >> Toolchain-rpi.cmake
-      echo 'UNSET(CMAKE_C_FLAGS CACHE)' >> Toolchain-rpi.cmake
-      echo 'UNSET(CMAKE_CXX_FLAGS CACHE)' >> Toolchain-rpi.cmake
-      echo 'SET(CMAKE_C_FLAGS ${FLAGS} CACHE STRING "" FORCE)' >> Toolchain-rpi.cmake
+      sudo debootstrap  --foreign --no-check-gpg --variant=minbase --include=libxml2,libxml2-dev --arch=armhf wheezy ${CHROOT_DIR} http://archive.raspbian.org/raspbian;
+      sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/ ;
+      sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage;
+      echo 'SET(CMAKE_SYSTEM_NAME Linux)' > Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_SYSTEM_VERSION 1)' >> Toolchain-rpi.cmake ;
+      echo 'SET(CHROOT_DIR /tmp/chroot-raspbian-armhf)' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_C_COMPILER   arm-linux-gnueabihf-gcc)' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_SYSROOT ${CHROOT_DIR})' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_FIND_ROOT_PATH ${CHROOT_DIR})' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)' >> Toolchain-rpi.cmake M
+      echo 'SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)' >> Toolchain-rpi.cmake ;
+      echo 'SET(FLAGS "-Wl,-rpath-link,${CHROOT_DIR}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/local/lib")' >> Toolchain-rpi.cmake ;
+      echo 'UNSET(CMAKE_C_FLAGS CACHE)' >> Toolchain-rpi.cmake ;
+      echo 'UNSET(CMAKE_CXX_FLAGS CACHE)' >> Toolchain-rpi.cmake ;
+      echo 'SET(CMAKE_C_FLAGS ${FLAGS} CACHE STRING "" FORCE)' >> Toolchain-rpi.cmake;
       echo 'SET(CMAKE_CXX_FLAGS ${FLAGS} CACHE STRING "" FORCE)' >> Toolchain-rpi.cmake
     fi
   - cmake ${CMAKE_OPTS} ..
