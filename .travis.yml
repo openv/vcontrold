@@ -7,7 +7,7 @@ addons:
   apt:
     packages:
     - cmake
-	- libxml2-dev
+    - libxml2-dev
     - python3-docutils
 
 before_script:
