@@ -3,6 +3,17 @@ language: c
 compiler:
   - gcc
 
+include: &toolchain_amd64
+  sudo: false
+  addons:
+    apt:
+      packages:
+      - cmake
+      - libxml2-dev
+      - python3-docutils
+      - zip
+      - checkinstall
+
 include: &toolchain_cross
   sudo: required
   addons:
