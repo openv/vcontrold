@@ -9,6 +9,15 @@ if (NOT DEFINED BASE_DIR)
     message (FATAL_ERROR "UpdateVersion.cmake: BASE_DIR not set. Please supply base working directory!")
 endif()
 
+function (createVersionH version)
+    # write version info to a temporary file
+    configure_file (${BASE_DIR}/src/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
+    # update info if changed
+    execute_process (COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/version.h~ ${BASE_DIR}/src/version.h)
+    # make sure info doesn't get stale
+    file (REMOVE ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
+endfunction(createVersionH)
+
 # git or tarball?
 if (EXISTS ${BASE_DIR}/.git)
     # --> git:
@@ -22,12 +31,7 @@ if (EXISTS ${BASE_DIR}/.git)
     endif()
 
     message (STATUS "Updating version information to ${VERSION} ...")
-    # write version info to a temporary file
-    configure_file (${BASE_DIR}/src/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
-    # update info if changed
-    execute_process (COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/version.h~ ${BASE_DIR}/src/version.h)
-    # make sure info doesn't get stale
-    file (REMOVE ${CMAKE_CURRENT_BINARY_DIR}/version.h~)
+    createVersionH(${VERSION})
 
 else()
     # --> tarball
@@ -36,5 +40,6 @@ else()
         message (WARNING "Either, something went wrong when releasing this tarball, or this is some GitHub snapshot.")
         message (WARNING "Generating a dummy version.h.")
         set (VERSION "unknown")
+        createVersionH(${VERSION})
     endif()
 endif()
