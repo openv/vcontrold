@@ -98,6 +98,7 @@ after_success:
       tar --delete -f "${GH_REPO}_${VERSION}.orig.tar" "${GH_REPO}-${VERSION}/.gitignore" "${GH_REPO}-${VERSION}/.travis.yml" ;
       gzip --best "${GH_REPO}_${VERSION}.orig.tar" ;
       ls -laF "${GH_REPO}_${VERSION}.orig.tar.gz" ;
+      tar tzvf "${GH_REPO}_${VERSION}.orig.tar.gz" --force-local ;
     fi
 
 deploy:
