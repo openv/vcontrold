@@ -4,7 +4,7 @@ compiler:
   - gcc
 
 include: &toolchain_amd64
-  sudo: false
+  sudo: required
   addons:
     apt:
       packages:
@@ -85,18 +85,40 @@ script:
   - cmake ${CMAKE_OPTS} ..
   - VERBOSE=1 cmake --build .
   - VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/p' ${TRAVIS_BUILD_DIR}/src/version.h)
-  - DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}-${TRAVIS_BUILD_NUMBER}_${ARCH}"
+  - DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
+  - DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${TRAVIS_BUILD_NUMBER}_${ARCH}"
 
 after_success:
-  - zip -j ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip ${TRAVIS_BUILD_DIR}/build/vcontrold ${TRAVIS_BUILD_DIR}/build/vclient ${TRAVIS_BUILD_DIR}/build/doc/man/vcontrold.1.gz ${TRAVIS_BUILD_DIR}/build/doc/man/vclient.1.gz ${TRAVIS_BUILD_DIR}/COPYING ${TRAVIS_BUILD_DIR}/README.md
-  - ls -laF ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
-  - unzip -l ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
+  - cd ${TRAVIS_BUILD_DIR}
+  - zip -j ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX_BIN}.zip ${TRAVIS_BUILD_DIR}/build/vcontrold ${TRAVIS_BUILD_DIR}/build/vclient ${TRAVIS_BUILD_DIR}/build/doc/man/vcontrold.1.gz ${TRAVIS_BUILD_DIR}/build/doc/man/vclient.1.gz ${TRAVIS_BUILD_DIR}/COPYING ${TRAVIS_BUILD_DIR}/README.md
+  - md5sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.md5sum"
+  - sha256sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.sha256sum"
+  - unzip -l ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX_BIN}.zip
+  - if [[ "${TRAVIS_BUILD_NUMBER}.1" == "${TRAVIS_JOB_NUMBER}" ]] ; then
+      git archive --prefix "${GH_REPO}-${VERSION}/" -o "${DEPLOYFILEPREFIX}.orig.tar" ${TRAVIS_COMMIT} ;
+      tar -rf "${DEPLOYFILEPREFIX}.orig.tar" --owner=root --group=root --transform="s#^#${GH_REPO}-${VERSION}/#" src/version.h ;
+      tar --delete -f "${DEPLOYFILEPREFIX}.orig.tar" "${GH_REPO}-${VERSION}/.gitignore" "${GH_REPO}-${VERSION}/.travis.yml" ;
+      gzip --best "${DEPLOYFILEPREFIX}.orig.tar" ;
+      md5sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.md5sum" ;
+      sha256sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.sha256sum" ;
+      tar tzvf "${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local ;
+    fi
+  - if [[ -n "${TRAVIS_TAG" ]] ; then
+      sudo checkinstall --strip=no --install=no --pkgname="$GH_REPO" --pkgversion="$VERSION" --pkgrelease=$TRAVIS_BUILD_NUMBER --arch="$ARCH" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=${TRAVIS_BUILD_DIR} -D -y cmake --build ./build/ --target install ;
+      sudo chown travis "${DEPLOYFILEPREFIX_BIN}.deb" ;
+      dpkg --info "${DEPLOYFILEPREFIX_BIN}.deb" ;
+      dpkg --contents "${DEPLOYFILEPREFIX_BIN}.deb" ;
+      md5sum "${DEPLOYFILEPREFIX_BIN}.deb" > "${DEPLOYFILEPREFIX_BIN}.deb.md5sum" ;
+      sha256sum "${DEPLOYFILEPREFIX_BIN}.deb" > "${DEPLOYFILEPREFIX_BIN}.deb.sha256sum" ;
+    fi
+  - ls -laF ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}*
 
 deploy:
   provider: releases
   api_key:
     secure: dzTS/n6w0WXczRZZ/4lbW+zX79aVgsY223d9EEeOneqSsekll9ilU+akEhY0z2SvZPMdeo4ywdhdtopEK+9q7yjeU7qFPC0hbXUIqDc1c78UqNl7X3/n+est7IR2yLdKUSLcLi6E35D0Wr5QEu1sJo2ktVkozaCb69Ql7VajZggyuL/vykJMHU15EVQ4jWVdY5vWJZ/m2gN93JD0FZl/TEdnJX9NkStCbrUFveM411nwwiG7sjh3aSCKqXIERACy6uK70nstMFKZeF+go48V60TVS46iATD5oq64X6Qa8HpfeVR/+307JhcpXd1cWw1MmfUxmKWjcM8A6nED1AY5K/GRPTOLs004N6NjmY5B4svzC2tWt6PQEX/rvOSvQg8d3lcgOBcTznRVhpOuj3O63U/TjNd9WaD5NPeUogqV9lNVXg8UgZ9hrxMs80qNJGAZyid8x7XfDQ5bVnuuAqpSlUuWsyPKdDolq5RMsOUQ/o/yvZdB45C/EX6gZLUPOeiR+GffnXDnniYQKQYm+wL5UcDjqSKZdLCgZMrKKd7rCVIcSqs0E36y8BubK3CeiLOMUxmjcrbSE7YHmYDcnwohczm6QRUDS/fPbzd/XfIuIRzRkc9mliDVCE2JXaRJQA5U+TINBHUMUfnyVSENLrQaOweg/pi96B5XoJKSs6vl9YE=
-  file: ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
+  file_glob: true
+  file: ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}*
   skip_cleanup: true
   on:
     repo: openv/vcontrold
