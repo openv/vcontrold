@@ -91,8 +91,8 @@ script:
 after_success:
   - cd ${TRAVIS_BUILD_DIR}
   - zip -j ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX_BIN}.zip ${TRAVIS_BUILD_DIR}/build/vcontrold ${TRAVIS_BUILD_DIR}/build/vclient ${TRAVIS_BUILD_DIR}/build/doc/man/vcontrold.1.gz ${TRAVIS_BUILD_DIR}/build/doc/man/vclient.1.gz ${TRAVIS_BUILD_DIR}/COPYING ${TRAVIS_BUILD_DIR}/README.md
-  - md5sum "${DEPLOYFILEPREFIIX}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.md5sum"
-  - sha256sum "${DEPLOYFILEPREFIIX}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.sha256sum"
+  - md5sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.md5sum"
+  - sha256sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.sha256sum"
   - unzip -l ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX_BIN}.zip
   - if [[ "${TRAVIS_BUILD_NUMBER}.1" == "${TRAVIS_JOB_NUMBER}" ]] ; then
       git archive --prefix "${GH_REPO}-${VERSION}/" -o "${DEPLOYFILEPREFIX}.orig.tar" ${TRAVIS_COMMIT} ;
