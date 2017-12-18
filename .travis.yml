@@ -4,7 +4,7 @@ compiler:
   - gcc
 
 include: &toolchain_amd64
-  sudo: false
+  sudo: required
   addons:
     apt:
       packages:
@@ -102,6 +102,16 @@ after_success:
       md5sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.md5sum" ;
       sha256sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.sha256sum" ;
       tar tzvf "${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local ;
+    fi
+  - if [[ -n "${TRAVIS_BUILD_DIR}" ]] ; then
+      cd ./build/ ;
+      sudo checkinstall --strip=no --install=no --pkgname="$GH_REPO" --pkgversion="$VERSION" --pkgrelease=$TRAVIS_BUILD_NUMBER --arch="$ARCH" --maintainer="${GH_USER}@GitHub" -D -y cmake --build . --target install ;
+      sudo chown travis "${DEPLOYFILEPREFIX_BIN}.deb" ;
+      mv "${DEPLOYFILEPREFIX_BIN}.deb" ${TRAVIS_BUILD_DIR}/ ;
+      cd ${TRAVIS_BUILD_DIR} ;
+      dpkg --info "${DEPLOYFILEPREFIX_BIN}.deb" ;
+      md5sum "${DEPLOYFILEPREFIX_BIN}.deb" > "${DEPLOYFILEPREFIX_BIN}.deb.md5sum" ;
+      sha256sum "${DEPLOYFILEPREFIX_BIN}.deb" > "${DEPLOYFILEPREFIX_BIN}.deb.sha256sum" ;
     fi
   - ls -laF ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}*
 
