@@ -103,7 +103,7 @@ after_success:
       sha256sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.sha256sum" ;
       tar tzvf "${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local ;
     fi
-  - if [[ -n "${TRAVIS_TAG" ]] ; then
+  - if [[ -n "${TRAVIS_TAG}" ]] ; then
       sudo checkinstall --strip=no --install=no --pkgname="$GH_REPO" --pkgversion="$VERSION" --pkgrelease=$TRAVIS_BUILD_NUMBER --arch="$ARCH" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=${TRAVIS_BUILD_DIR} -D -y cmake --build ./build/ --target install ;
       sudo chown travis "${DEPLOYFILEPREFIX_BIN}.deb" ;
       dpkg --info "${DEPLOYFILEPREFIX_BIN}.deb" ;
