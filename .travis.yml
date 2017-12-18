@@ -93,11 +93,11 @@ after_success:
   - ls -laF ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
   - unzip -l ${TRAVIS_BUILD_DIR}/${DEPLOYFILEPREFIX}.zip
   - if [[ "${TRAVIS_BUILD_NUMBER}.1" == "${TRAVIS_JOB_NUMBER}" ]] ; then
-      git archive --prefix "${GH_REPO}-${VERSION}/" -o "${GH_REPO}_${VERSION}.orig.tar" ${TRAVIS_COMMIT}
-      tar -rf "${GH_REPO}_${VERSION}.orig.tar" --owner=root --group=root --transform="s#^#${GH_REPO}-${VERSION}/#" src/version.h
-      tar --delete -f "${GH_REPO}_${VERSION}.orig.tar" "${GH_REPO}-${VERSION}/.gitignore" "${GH_REPO}-${VERSION}/.travis.yml"
-      gzip --best "${GH_REPO}_${VERSION}.orig.tar"
-      ls -laF "${GH_REPO}_${VERSION}.orig.tar.gz"
+      git archive --prefix "${GH_REPO}-${VERSION}/" -o "${GH_REPO}_${VERSION}.orig.tar" ${TRAVIS_COMMIT} ;
+      tar -rf "${GH_REPO}_${VERSION}.orig.tar" --owner=root --group=root --transform="s#^#${GH_REPO}-${VERSION}/#" src/version.h ;
+      tar --delete -f "${GH_REPO}_${VERSION}.orig.tar" "${GH_REPO}-${VERSION}/.gitignore" "${GH_REPO}-${VERSION}/.travis.yml" ;
+      gzip --best "${GH_REPO}_${VERSION}.orig.tar" ;
+      ls -laF "${GH_REPO}_${VERSION}.orig.tar.gz" ;
     fi
 
 deploy:
