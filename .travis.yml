@@ -104,12 +104,13 @@ after_success:
       tar tzvf "${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local ;
     fi
   - if [[ -n "${TRAVIS_BUILD_DIR}" ]] ; then
-      cd ./build/ ;
-      sudo checkinstall --strip=no --install=no --pkgname="$GH_REPO" --pkgversion="$VERSION" --pkgrelease=$TRAVIS_BUILD_NUMBER --arch="$ARCH" --maintainer="${GH_USER}@GitHub" -D -y cmake --build . --target install ;
+      echo cd ./build/ ;
+      sudo checkinstall --strip=no --install=no --pkgname="$GH_REPO" --pkgversion="$VERSION" --pkgrelease=$TRAVIS_BUILD_NUMBER --arch="$ARCH" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=${TRAVIS_BUILD_DIR} -D -y cmake --build ./build/ --target install ;
       sudo chown travis "${DEPLOYFILEPREFIX_BIN}.deb" ;
-      mv "${DEPLOYFILEPREFIX_BIN}.deb" ${TRAVIS_BUILD_DIR}/ ;
+      echo mv "${DEPLOYFILEPREFIX_BIN}.deb" ${TRAVIS_BUILD_DIR}/ ;
       cd ${TRAVIS_BUILD_DIR} ;
       dpkg --info "${DEPLOYFILEPREFIX_BIN}.deb" ;
+      dpkg --contents "${DEPLOYFILEPREFIX_BIN}.deb" ;
       md5sum "${DEPLOYFILEPREFIX_BIN}.deb" > "${DEPLOYFILEPREFIX_BIN}.deb.md5sum" ;
       sha256sum "${DEPLOYFILEPREFIX_BIN}.deb" > "${DEPLOYFILEPREFIX_BIN}.deb.sha256sum" ;
     fi
