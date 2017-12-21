@@ -44,6 +44,16 @@ OPTIONS
 -l <logfile>, \--logfile <logfile>
     use <logfile> instead of syslog.
 
+-U <username>, \--username <username>
+    when started by root, drop privileges to user <username>
+    instead of user nobody
+    If using a serial link, ensure that user or group has access rights to the serial device.
+
+-G <groupname>, \--groupname <groupname>
+    when started by root, drop privileges to group <groupname>
+    instead of group dialout
+    If using a serial link, ensure that user or group has access rights to the serial device.
+
 -n, \--nodaemon
     do not fork. This is for testing purpose only. Normaly vcontrold
     will detach from the controlling terminal and put itself into the
