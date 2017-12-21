@@ -27,6 +27,8 @@
 #include <string.h>
 #include <time.h>
 #include <getopt.h>
+#include <grp.h>
+#include <pwd.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -84,6 +86,7 @@ void usage()
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
     printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
+    printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
     printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
 
@@ -646,6 +649,8 @@ int main(int argc, char *argv[])
     char *device = NULL;
     char *cmdfile = NULL;
     char *logfile = NULL;
+    char *username = NULL;
+    char *groupname = NULL;
     static int useSyslog = 0;
     static int debug = 0;
     static int verbose = 0;
@@ -660,6 +665,8 @@ int main(int argc, char *argv[])
             {"debug",       no_argument,       &debug,       1  },
             {"vsim",        no_argument,       &simuOut,     1  },
             {"logfile",     required_argument, 0,            'l'},
+            {"username",    required_argument, 0,            'l'},
+            {"groupname",   required_argument, 0,            'l'},
             {"nodaemon",    no_argument,       &makeDaemon,  0  },
             {"port",        required_argument, 0,            'p'},
             {"syslog",      no_argument,       &useSyslog,   1  },
@@ -674,7 +681,7 @@ int main(int argc, char *argv[])
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:np:sx:vV46",
+        opt = getopt_long (argc, argv, "c:d:gil:U:G:np:sx:vV46",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -719,6 +726,12 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             logfile = optarg;
+            break;
+        case 'U':
+            username = optarg;
+            break;
+        case 'G':
+            groupname = optarg;
             break;
         case 'n':
             makeDaemon = 0;
@@ -873,6 +886,59 @@ int main(int argc, char *argv[])
         }
 
         listenfd = openSocket(tcpport);
+
+        // Drop privileges after binding
+        if (0 == getuid()) {
+            struct passwd *pw;
+            struct group *grp;
+            struct stat stb;
+
+            if (username == NULL) {
+                username = strdup("nobody");
+            }
+            pw = getpwnam(username);
+            if (pw == NULL) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling getpwnam(\"%s\") failed with errno %d", username, errsv);
+                exit(1);
+            }
+            if (groupname == NULL) {
+                groupname = strdup("dialout");
+            }
+            grp = getgrnam(groupname);
+            if (grp == NULL) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling getgrnam(\"%s\") failed with errno %d", groupname, errsv);
+                exit(1);
+            }
+
+            // Make logfile accessible to the anticipated user/group
+            if (stat(logfile, &stb) == 0) {
+                chmod(logfile, stb.st_mode | S_IRGRP | S_IWGRP);
+                chown(logfile, pw->pw_uid, grp->gr_gid);
+            }
+
+            if (setgroups(0, NULL) != 0) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling setgroups(0, NULL) failed with errno %d", errsv);
+                exit(1);
+            }
+
+            if (setgid(grp->gr_gid) != 0) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling setgid(%d) failed with errno %d", grp->gr_gid, errsv);
+                exit(1);
+            }
+
+            if (setuid(pw->pw_uid) != 0) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling setuid(%d) failed with errno %d", pw->pw_uid, errsv);
+                exit(1);
+            }
+
+            logIT(LOG_INFO, "Dropped privileges, now running with effective user ID %d, group ID %d", geteuid(), getegid());
+        }
+
         while (1) {
             sockfd = listenToSocket(listenfd, makeDaemon, checkP);
             if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
