@@ -44,14 +44,19 @@ OPTIONS
 -l <logfile>, \--logfile <logfile>
     use <logfile> instead of syslog.
 
+-P <pidfile>, \--pidfile <pidfile>
+    write process id to <pidfile> when started as a daemon.
+    When started as root, <pidfile> is written prior to dropping privileges.
+    This overrides the corresponding entry in the config file.
+
 -U <username>, \--username <username>
     when started by root, drop privileges to user <username>
-    instead of user nobody
+    instead of user nobody. This overrides the corresponding entry in the config file.
     If using a serial link, ensure that user or group has access rights to the serial device.
 
 -G <groupname>, \--groupname <groupname>
     when started by root, drop privileges to group <groupname>
-    instead of group dialout
+    instead of group dialout. This overrides the corresponding entry in the config file.
     If using a serial link, ensure that user or group has access rights to the serial device.
 
 -n, \--nodaemon

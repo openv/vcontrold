@@ -649,6 +649,7 @@ int main(int argc, char *argv[])
     char *device = NULL;
     char *cmdfile = NULL;
     char *logfile = NULL;
+    char *pidFile = NULL;
     char *username = NULL;
     char *groupname = NULL;
     static int useSyslog = 0;
@@ -665,6 +666,7 @@ int main(int argc, char *argv[])
             {"debug",       no_argument,       &debug,       1  },
             {"vsim",        no_argument,       &simuOut,     1  },
             {"logfile",     required_argument, 0,            'l'},
+            {"pidfile",     required_argument, 0,            'P'},
             {"username",    required_argument, 0,            'U'},
             {"groupname",   required_argument, 0,            'G'},
             {"nodaemon",    no_argument,       &makeDaemon,  0  },
@@ -681,7 +683,7 @@ int main(int argc, char *argv[])
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:U:G:np:sx:vV46",
+        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:sx:vV46",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -726,6 +728,9 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             logfile = optarg;
+            break;
+        case 'P':
+            pidFile = optarg;
             break;
         case 'U':
             username = optarg;
@@ -780,6 +785,15 @@ int main(int argc, char *argv[])
         if (! logfile) {
             logfile = cfgPtr->logfile;
         }
+        if (! pidFile) {
+            pidFile = cfgPtr->pidfile;
+        }
+        if (! username) {
+            username = cfgPtr->username;
+        }
+        if (! groupname) {
+            groupname = cfgPtr->groupname;
+        }
         if (! useSyslog) {
             useSyslog = cfgPtr->syslog;
         }
@@ -821,7 +835,6 @@ int main(int argc, char *argv[])
     int sid;
     int pidFD = 0;
     char str[10];
-    char *pidFile = "/var/run/vcontrold.pid";
 
     if (tcpport) {
         if (makeDaemon) {
@@ -857,18 +870,21 @@ int main(int argc, char *argv[])
                 logIT1(LOG_ERR, "chdir / failed");
                 exit(1);
             }
-            pidFD = open(pidFile, O_RDWR | O_CREAT, 0600);
-            if (pidFD == -1) {
-                logIT(LOG_ERR, "Could not open PID lock file %s, exiting", pidFile);
-                exit(1);
-            }
-            if (lockf(pidFD, F_TLOCK, 0) == -1) {
-                logIT(LOG_ERR, "Could not lock PID lock file %s, exiting", pidFile);
-                exit(1);
-            }
 
-            sprintf(str, "%d\n", getpid());
-            write(pidFD, str, strlen(str));
+            if (pidFile) {
+                pidFD = open(pidFile, O_RDWR | O_CREAT, 0600);
+                if (pidFD == -1) {
+                    logIT(LOG_ERR, "Could not open PID lock file %s, exiting", pidFile);
+                    exit(1);
+                }
+                if (lockf(pidFD, F_TLOCK, 0) == -1) {
+                    logIT(LOG_ERR, "Could not lock PID lock file %s, exiting", pidFile);
+                    exit(1);
+                }
+
+                sprintf(str, "%d\n", getpid());
+                write(pidFD, str, strlen(str));
+            }
         }
 
         vcontrol_seminit();
@@ -937,6 +953,10 @@ int main(int argc, char *argv[])
             }
 
             logIT(LOG_INFO, "Dropped privileges, now running with effective user ID %d, group ID %d", geteuid(), getegid());
+        } else {
+            if (username || groupname) {
+                logIT1(LOG_INFO, "Not started as root, username/groupname settings ignored");
+            }
         }
 
         while (1) {
@@ -969,7 +989,7 @@ int main(int argc, char *argv[])
     vcontrol_semfree();
 
     close(fd);
-    close(pidFD);
+    if (pidFile) { close(pidFD); };
     logIT1(LOG_LOCAL0, "vcontrold terminated");
 
     return 0;

@@ -58,6 +58,9 @@ struct config {
     char *tty;
     int port;
     char *logfile;
+    char *pidfile;
+    char *username;
+    char *groupname;
     char *devID;
     devicePtr devPtr;
     allowPtr aPtr;

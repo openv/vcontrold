@@ -579,6 +579,45 @@ configPtr parseConfig(xmlNodePtr cur)
             logFound = 1;
             prevPtr = cur;
             cur = cur->children;
+        } else if (strstr((char *)cur->name, "pidfile")) {
+            chrPtr = getTextNode(cur);
+            logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
+                  cur->line, cur->name, cur->type, chrPtr);
+            if (chrPtr) {
+                cfgPtr->pidfile = calloc(strlen(chrPtr) + 1, sizeof(char));
+                strcpy(cfgPtr->pidfile, chrPtr);
+            } else {
+                nullIT(&cfgPtr->pidfile);
+            }
+
+            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                ? (cur = cur->next) : (cur = prevPtr->next);
+        } else if (strstr((char *)cur->name, "username")) {
+            chrPtr = getTextNode(cur);
+            logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
+                  cur->line, cur->name, cur->type, chrPtr);
+            if (chrPtr) {
+                cfgPtr->username= calloc(strlen(chrPtr) + 1, sizeof(char));
+                strcpy(cfgPtr->username, chrPtr);
+            } else {
+                nullIT(&cfgPtr->username);
+            }
+
+            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                ? (cur = cur->next) : (cur = prevPtr->next);
+        } else if (strstr((char *)cur->name, "groupname")) {
+            chrPtr = getTextNode(cur);
+            logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
+                  cur->line, cur->name, cur->type, chrPtr);
+            if (chrPtr) {
+                cfgPtr->groupname= calloc(strlen(chrPtr) + 1, sizeof(char));
+                strcpy(cfgPtr->groupname, chrPtr);
+            } else {
+                nullIT(&cfgPtr->groupname);
+            }
+
+            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                ? (cur = cur->next) : (cur = prevPtr->next);
         } else if (strstr((char *)cur->name, "device"))  {
             chrPtr = getPropertyNode(cur->properties, (xmlChar *)"ID");
             logIT(LOG_INFO, "     Device ID=%s", chrPtr);
