@@ -1012,7 +1012,10 @@ int main(int argc, char *argv[])
     vcontrol_semfree();
 
     close(fd);
-    if (pidFile) { close(pidFD); };
+    if (pidFile) {
+        close(pidFD);
+        unlink(pidFile);
+    };
     logIT1(LOG_LOCAL0, "vcontrold terminated");
 
     return 0;
