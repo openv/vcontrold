@@ -102,7 +102,7 @@ int initsem(key_t key, int nsems)
 }
 
 int semid;
-char tmpfilename[MAXPATHLEN+1];
+char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 
 int vcontrol_seminit()
 {
