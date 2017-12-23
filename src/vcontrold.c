@@ -635,10 +635,21 @@ static void sigHupHandler(int signo)
     reloadConfig();
 }
 
+char *pidFile = NULL;
+
 static void sigTermHandler(int signo)
 {
-    logIT1(LOG_NOTICE, "Received SIGTERM");
+    if (signo == SIGTERM) {
+        logIT1(LOG_NOTICE, "Received SIGTERM");
+    } else if (signo == SIGINT) {
+        logIT1(LOG_NOTICE, "Received SIGINT");
+    } else if (signo == SIGQUIT) {
+        logIT1(LOG_NOTICE, "Received SIGQUIT");
+    } else {
+        logIT(LOG_NOTICE, "Received signal %d", signo);
+    }
     vcontrol_semfree();
+    if (pidFile) { unlink(pidFile); }
     exit(1);
 }
 
@@ -649,7 +660,6 @@ int main(int argc, char *argv[])
     char *device = NULL;
     char *cmdfile = NULL;
     char *logfile = NULL;
-    char *pidFile = NULL;
     char *username = NULL;
     char *groupname = NULL;
     static int useSyslog = 0;
@@ -812,6 +822,14 @@ int main(int argc, char *argv[])
     }
 
     if (signal(SIGQUIT, sigTermHandler) == SIG_ERR) {
+        logIT(LOG_ERR, "Error handling SIGQUIT: %s", strerror(errno));
+        exit(1);
+    }
+    if (signal(SIGINT, sigTermHandler) == SIG_ERR) {
+        logIT(LOG_ERR, "Error handling SIGINT: %s", strerror(errno));
+        exit(1);
+    }
+    if (signal(SIGTERM, sigTermHandler) == SIG_ERR) {
         logIT(LOG_ERR, "Error handling SIGTERM: %s", strerror(errno));
         exit(1);
     }
@@ -887,8 +905,6 @@ int main(int argc, char *argv[])
             }
         }
 
-        vcontrol_seminit();
-
         int sockfd = -1;
         int listenfd = -1;
         // Pointer to the checkIP function
@@ -933,6 +949,11 @@ int main(int argc, char *argv[])
                 chmod(logfile, stb.st_mode | S_IRGRP | S_IWGRP);
                 chown(logfile, pw->pw_uid, grp->gr_gid);
             }
+            // Make lock file accessible to the anticipated user/group
+            if (stat(tmpfilename, &stb) == 0) {
+                chmod(tmpfilename, stb.st_mode | S_IRGRP | S_IWGRP);
+                chown(tmpfilename, pw->pw_uid, grp->gr_gid);
+            }
 
             if (setgroups(0, NULL) != 0) {
                 int errsv = errno;
@@ -958,6 +979,8 @@ int main(int argc, char *argv[])
                 logIT1(LOG_INFO, "Not started as root, username/groupname settings ignored");
             }
         }
+
+        vcontrol_seminit();
 
         while (1) {
             sockfd = listenToSocket(listenfd, makeDaemon, checkP);
