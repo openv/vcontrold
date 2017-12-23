@@ -581,7 +581,7 @@ configPtr parseConfig(xmlNodePtr cur)
             cur = cur->children;
         } else if (strstr((char *)cur->name, "device"))  {
             chrPtr = getPropertyNode(cur->properties, (xmlChar *)"ID");
-            logIT(LOG_INFO, "     Device ID=%s", cfgPtr->devID);
+            logIT(LOG_INFO, "     Device ID=%s", chrPtr);
             if (chrPtr) {
                 cfgPtr->devID = calloc(strlen(chrPtr) + 1, sizeof(char));
                 strcpy(cfgPtr->devID, chrPtr);
@@ -722,7 +722,7 @@ unitPtr parseUnit(xmlNodePtr cur)
         if (strstr((char *)cur->name, "unit")) {
             unit = getPropertyNode(cur->properties, (xmlChar *)"name");
             if (unit) {
-                // neue Unit gelesen
+                // read new unit
                 logIT(LOG_INFO, "New unit: %s", unit);
                 uPtr = newUnitNode(uStartPtr);
                 if (! uStartPtr) {
@@ -1401,7 +1401,7 @@ int parseXMLFile(char *filename)
         xmlFreeDoc(doc);
         return 0;
     }
-    // Run Xinlcude
+    // Run XInclude
     short xc = 0;
     if ((xc = xmlXIncludeProcessFlags(doc, XML_PARSE_XINCLUDE | XML_PARSE_NOXINCNODE)) == 0) {
         logIT(LOG_WARNING, "Didn't perform XInclude");
