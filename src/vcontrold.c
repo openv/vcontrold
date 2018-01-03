@@ -751,6 +751,8 @@ int main(int argc, char *argv[])
 
     initLog(useSyslog, logfile, debug);
 
+    logIT(LOG_NOTICE, "started vcontrold version %s", VERSION);
+
     if (!parseXMLFile(xmlfile)) {
         fprintf(stderr, "Error loading %s, terminating\n", xmlfile);
         exit(1);
