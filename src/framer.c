@@ -101,6 +101,7 @@ static char framer_pid = 0;
 static void framer_set_actaddr(void *pdu)
 {
     char string[100];
+    uint16 framer_old_addr;
 
     if (framer_current_addr != FRAMER_NO_ADDR) {
         snprintf(string, sizeof(string),
@@ -108,11 +109,21 @@ static void framer_set_actaddr(void *pdu)
                  framer_current_addr);
         logIT(LOG_ERR, string);
     }
+    framer_old_addr = framer_current_addr;
     framer_current_addr = *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET);
+    snprintf(string, sizeof(string),
+            ">FRAMER: framer_set_actaddr framer_current_addr = %04X (was %04X)",
+            framer_current_addr, framer_old_addr);
+    logIT(LOG_DEBUG, string);
 }
 
 static void framer_reset_actaddr(void)
 {
+    char string[100];
+    snprintf(string, sizeof(string),
+            ">FRAMER: framer_reset_actaddr framer_current_addr = FRAMER_NO_ADDR (was %04X)",
+            framer_current_addr);
+    logIT(LOG_DEBUG, string);
     framer_current_addr = FRAMER_NO_ADDR;
 }
 
@@ -134,6 +145,11 @@ static int framer_check_actaddr(void *pdu)
 // TODO: could cause trouble on addr containing 0xFE
 static void framer_set_result(char result)
 {
+    char string[100];
+    snprintf(string, sizeof(string),
+            ">FRAMER: framer_reset_actaddr framer_current_addr = FRAMER_LINK_STATUS(%02X) (was %04X)",
+            result, framer_current_addr);
+    logIT(LOG_DEBUG, string);
     framer_current_addr = FRAMER_LINK_STATUS(result);
 }
 
@@ -489,14 +505,6 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
                  l_buf[P300_BUFFER_OFFSET]);
         logIT(LOG_ERR, string);
         return FRAMER_READ_ERROR;
-    } else {
-        if (r_len != l_buf[P300_RESP_LEN_OFFSET]) {
-            framer_reset_actaddr();
-            snprintf(string, sizeof(string), ">FRAMER: unexpected length %d %02X",
-                     l_buf[P300_RESP_LEN_OFFSET], l_buf[P300_RESP_LEN_OFFSET]);
-            logIT(LOG_ERR, string);
-            return FRAMER_READ_ERROR;
-        }
     }
 
     // TODO: could add check for address receive matching address send before
@@ -508,6 +516,15 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
     }
 
     if ((l_buf[P300_FCT_OFFSET] == P300_WRITE_DATA) && (r_len == 1)) {
+        // TODO: could add check for length matching previously requested data length
+        if (r_len != (l_buf[P300_LEN_OFFSET] - 4)) {
+            snprintf(string, sizeof(string),
+                    ">FRAMER: unexpected length r_len=0x%02X != 0x%02X=l_buf[P300_LEN_OFFSET]-4",
+                    r_len, l_buf[P300_LEN_OFFSET] - 4);
+            logIT(LOG_ERR, string);
+            framer_reset_actaddr();
+            return FRAMER_READ_ERROR;
+        }
         // if we have a P300 setaddr we do not get data back ...
         if (l_buf[P300_TYPE_OFFSET] == P300_RESPONSE) {
             // OK
@@ -517,6 +534,14 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
             r_buf[rtmp] = 0x01;
         }
     } else {
+        if (r_len != (l_buf[P300_RESP_LEN_OFFSET])) {
+            snprintf(string, sizeof(string),
+                    ">FRAMER: unexpected length r_len=0x%02X != 0x%02X=l_buf[P300_RESP_LEN_OFFSET]",
+                    r_len, l_buf[P300_RESP_LEN_OFFSET]);
+            logIT(LOG_ERR, string);
+            framer_reset_actaddr();
+            return FRAMER_READ_ERROR;
+        }
         memcpy(r_buf, &l_buf[P300_BUFFER_OFFSET], r_len);
     }
 
