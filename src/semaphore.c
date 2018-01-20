@@ -101,14 +101,8 @@ int initsem(key_t key, int nsems)
     return semid;
 }
 
-#ifdef _CYGWIN__
-#define TMPFILENAME "vcontrol.lockXXXXXX"
-#else
-#define TMPFILENAME "/tmp/vcontrol.lockXXXXXX"
-#endif
-
-char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 int semid;
+char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 
 int vcontrol_seminit()
 {

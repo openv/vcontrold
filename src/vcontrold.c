@@ -27,6 +27,8 @@
 #include <string.h>
 #include <time.h>
 #include <getopt.h>
+#include <grp.h>
+#include <pwd.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -84,6 +86,7 @@ void usage()
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
     printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
+    printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
     printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
 
@@ -632,10 +635,21 @@ static void sigHupHandler(int signo)
     reloadConfig();
 }
 
+char *pidFile = NULL;
+
 static void sigTermHandler(int signo)
 {
-    logIT1(LOG_NOTICE, "Received SIGTERM");
+    if (signo == SIGTERM) {
+        logIT1(LOG_NOTICE, "Received SIGTERM");
+    } else if (signo == SIGINT) {
+        logIT1(LOG_NOTICE, "Received SIGINT");
+    } else if (signo == SIGQUIT) {
+        logIT1(LOG_NOTICE, "Received SIGQUIT");
+    } else {
+        logIT(LOG_NOTICE, "Received signal %d", signo);
+    }
     vcontrol_semfree();
+    if (pidFile) { unlink(pidFile); }
     exit(1);
 }
 
@@ -646,6 +660,8 @@ int main(int argc, char *argv[])
     char *device = NULL;
     char *cmdfile = NULL;
     char *logfile = NULL;
+    char *username = NULL;
+    char *groupname = NULL;
     static int useSyslog = 0;
     static int debug = 0;
     static int verbose = 0;
@@ -660,6 +676,9 @@ int main(int argc, char *argv[])
             {"debug",       no_argument,       &debug,       1  },
             {"vsim",        no_argument,       &simuOut,     1  },
             {"logfile",     required_argument, 0,            'l'},
+            {"pidfile",     required_argument, 0,            'P'},
+            {"username",    required_argument, 0,            'U'},
+            {"groupname",   required_argument, 0,            'G'},
             {"nodaemon",    no_argument,       &makeDaemon,  0  },
             {"port",        required_argument, 0,            'p'},
             {"syslog",      no_argument,       &useSyslog,   1  },
@@ -674,7 +693,7 @@ int main(int argc, char *argv[])
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:np:sx:vV46",
+        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:sx:vV46",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -719,6 +738,15 @@ int main(int argc, char *argv[])
             break;
         case 'l':
             logfile = optarg;
+            break;
+        case 'P':
+            pidFile = optarg;
+            break;
+        case 'U':
+            username = optarg;
+            break;
+        case 'G':
+            groupname = optarg;
             break;
         case 'n':
             makeDaemon = 0;
@@ -769,6 +797,15 @@ int main(int argc, char *argv[])
         if (! logfile) {
             logfile = cfgPtr->logfile;
         }
+        if (! pidFile) {
+            pidFile = cfgPtr->pidfile;
+        }
+        if (! username) {
+            username = cfgPtr->username;
+        }
+        if (! groupname) {
+            groupname = cfgPtr->groupname;
+        }
         if (! useSyslog) {
             useSyslog = cfgPtr->syslog;
         }
@@ -787,6 +824,14 @@ int main(int argc, char *argv[])
     }
 
     if (signal(SIGQUIT, sigTermHandler) == SIG_ERR) {
+        logIT(LOG_ERR, "Error handling SIGQUIT: %s", strerror(errno));
+        exit(1);
+    }
+    if (signal(SIGINT, sigTermHandler) == SIG_ERR) {
+        logIT(LOG_ERR, "Error handling SIGINT: %s", strerror(errno));
+        exit(1);
+    }
+    if (signal(SIGTERM, sigTermHandler) == SIG_ERR) {
         logIT(LOG_ERR, "Error handling SIGTERM: %s", strerror(errno));
         exit(1);
     }
@@ -810,7 +855,6 @@ int main(int argc, char *argv[])
     int sid;
     int pidFD = 0;
     char str[10];
-    char *pidFile = "/var/run/vcontrold.pid";
 
     if (tcpport) {
         if (makeDaemon) {
@@ -846,21 +890,22 @@ int main(int argc, char *argv[])
                 logIT1(LOG_ERR, "chdir / failed");
                 exit(1);
             }
-            pidFD = open(pidFile, O_RDWR | O_CREAT, 0600);
-            if (pidFD == -1) {
-                logIT(LOG_ERR, "Could not open PID lock file %s, exiting", pidFile);
-                exit(1);
-            }
-            if (lockf(pidFD, F_TLOCK, 0) == -1) {
-                logIT(LOG_ERR, "Could not lock PID lock file %s, exiting", pidFile);
-                exit(1);
-            }
 
-            sprintf(str, "%d\n", getpid());
-            write(pidFD, str, strlen(str));
+            if (pidFile) {
+                pidFD = open(pidFile, O_RDWR | O_CREAT, 0600);
+                if (pidFD == -1) {
+                    logIT(LOG_ERR, "Could not open PID lock file %s, exiting", pidFile);
+                    exit(1);
+                }
+                if (lockf(pidFD, F_TLOCK, 0) == -1) {
+                    logIT(LOG_ERR, "Could not lock PID lock file %s, exiting", pidFile);
+                    exit(1);
+                }
+
+                sprintf(str, "%d\n", getpid());
+                write(pidFD, str, strlen(str));
+            }
         }
-
-        vcontrol_seminit();
 
         int sockfd = -1;
         int listenfd = -1;
@@ -875,6 +920,70 @@ int main(int argc, char *argv[])
         }
 
         listenfd = openSocket(tcpport);
+
+        // Drop privileges after binding
+        if (0 == getuid()) {
+            struct passwd *pw;
+            struct group *grp;
+            struct stat stb;
+
+            if (username == NULL) {
+                username = strdup("nobody");
+            }
+            pw = getpwnam(username);
+            if (pw == NULL) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling getpwnam(\"%s\") failed with errno %d", username, errsv);
+                exit(1);
+            }
+            if (groupname == NULL) {
+                groupname = strdup("dialout");
+            }
+            grp = getgrnam(groupname);
+            if (grp == NULL) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling getgrnam(\"%s\") failed with errno %d", groupname, errsv);
+                exit(1);
+            }
+
+            // Make logfile accessible to the anticipated user/group
+            if (stat(logfile, &stb) == 0) {
+                chmod(logfile, stb.st_mode | S_IRGRP | S_IWGRP);
+                chown(logfile, pw->pw_uid, grp->gr_gid);
+            }
+            // Make lock file accessible to the anticipated user/group
+            if (stat(tmpfilename, &stb) == 0) {
+                chmod(tmpfilename, stb.st_mode | S_IRGRP | S_IWGRP);
+                chown(tmpfilename, pw->pw_uid, grp->gr_gid);
+            }
+
+            if (setgroups(0, NULL) != 0) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling setgroups(0, NULL) failed with errno %d", errsv);
+                exit(1);
+            }
+
+            if (setgid(grp->gr_gid) != 0) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling setgid(%d) failed with errno %d", grp->gr_gid, errsv);
+                exit(1);
+            }
+
+            if (setuid(pw->pw_uid) != 0) {
+                int errsv = errno;
+                logIT(LOG_ERR, "Error while dropping privileges: calling setuid(%d) failed with errno %d", pw->pw_uid, errsv);
+                exit(1);
+            }
+
+            logIT(LOG_INFO, "Dropped privileges, now running with effective user ID %d, group ID %d", geteuid(), getegid());
+        } else {
+            if (username || groupname) {
+                logIT1(LOG_INFO, "Not started as root, username/groupname settings ignored");
+            }
+        }
+
+        vcontrol_seminit();
+
         while (1) {
             sockfd = listenToSocket(listenfd, makeDaemon, checkP);
             if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
@@ -905,7 +1014,10 @@ int main(int argc, char *argv[])
     vcontrol_semfree();
 
     close(fd);
-    close(pidFD);
+    if (pidFile) {
+        close(pidFD);
+        unlink(pidFile);
+    };
     logIT1(LOG_LOCAL0, "vcontrold terminated");
 
     return 0;
