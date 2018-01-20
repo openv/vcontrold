@@ -58,6 +58,9 @@ OPTIONS
 -v, \--verbose
     verbose mode
 
+-V, \--Version
+    print version info, then exit
+
 -4, \--inet4
     IPv4 preferred
 
@@ -65,7 +68,7 @@ OPTIONS
     IPv6 preferred. If no option provided, us OS defaults.
 
 \--help
-    this help
+    usage information 
 
 TEMPLATE MODE
 =============

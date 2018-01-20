@@ -118,6 +118,9 @@
       <type>enum</type>
       <enum bytes="00" text="0"/>
       <enum bytes="01" text="1"/>
+      <!-- At least for device 20CB the heating circuit pump returns
+           status 03 when it's on and the heating runs in in night mode -->
+      <enum bytes='03' text='2'/>
       <enum text="NOT OK"/>
     </unit>
     <unit name="BetriebsArt">
@@ -278,7 +281,7 @@
           <command>SEND 00 01</command>
         </macro>
         <macro name="SETADDR">
-          <command>SEND 01 F4</command>
+          <command>SEND 00 02</command>
         </macro>
       </macros>
       <commands>
