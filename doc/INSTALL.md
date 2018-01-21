@@ -17,10 +17,15 @@ There are three options for the build process with their defaults:
 * _VCLIENT=ON_  Build the `vclient` helper program (for communication with vcontrold)
 * _VSIM=OFF_ Build the `vsim` helper program (for development and testing purposes)
 
+The installation path can be altered by
+ 
+ * _CMAKE_INSTALL_PREFIX=`/usr/local`_
+   This directory is prepended onto all install directories. This variable defaults to `/usr/local` on UNIX and `c:/Program Files` on Windows
+
 Invocation is as follows;
 
 ```
-cmake -DVSIM=ON -DMANPAGES=OFF ..
+cmake -DVSIM=ON -DMANPAGES=OFF -DCMAKE_INSTALLATION_PREFIX=/usr/local ...
 ```
 
 ### Installation
@@ -29,11 +34,8 @@ To install the package, execute
 ```
 sudo make install
 ```
-If you want to install the package with another prefix you can either use
+The whole installation can be relocated to a different directory by supplying a `DESTDIR` variable:
 ```
-sudo make DESTDIR=<PREFIX> install
+sudo make DESTDIR=<DESTDIR> install
 ```
-or pass the desired prefix to the `cmake` command before via
-```
-cmake -DCMAKE_INSTALL_PREFIX=<PREFIX> ..
-```
+In this case, the entire package will be installed in a directory with the installation prefix prepended with the `DESTDIR` value, which finally gives `<DESTDIR>/<CMAKE_INSTALL_PREFIX>`.
