@@ -22,7 +22,7 @@ The installation path can be altered by
  * _CMAKE_INSTALL_PREFIX=`/usr/local`_
    This directory is prepended onto all install directories. This variable defaults to `/usr/local` on UNIX and `c:/Program Files` on Windows
 
-Invocation is as follows;
+Invocation is as follows:
 
 ```
 cmake -DVSIM=ON -DMANPAGES=OFF -DCMAKE_INSTALLATION_PREFIX=/usr/local ...
