@@ -2,6 +2,12 @@
 <V-Control xmlns:vcontrol="http://www.openv.de/vcontrol">
   <unix>
     <config>
+      <!-- These are the default settings vcontrold drops privileges to when
+           started as root. Be sure to have the respective user and group. If
+           you use a serial device, be sure to have read and write permissions
+           on the corresponding device file for the user/group -->
+      <username>nobody</username>
+      <groupname>dialout</groupname>
       <serial>
         <tty>/dev/ttySAC1</tty>
       </serial>
