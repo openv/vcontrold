@@ -49,7 +49,7 @@ typedef unsigned short int uint16;
 // general marker of P300 protocol
 #define P300_LEADIN 0x41
 #define P300_RESET  0x04
-#define P300_ENABLE { 0x16, 0x00, 0x00 };
+#define P300_ENABLE { 0x16, 0x00, 0x00 }
 
 // message type
 #define P300_REQUEST      0x00
@@ -181,11 +181,11 @@ static int framer_close_p300(int fd)
     int rlen;
 
     for (i = 0; i < P300X_ATTEMPTS; i++) {
-        if (!my_send(fd, &wbuf, 1)) {
+        if (! my_send(fd, &wbuf, 1)) {
             framer_set_result(P300_ERROR);
             snprintf(string, sizeof(string), ">FRAMER: reset not send");
             logIT(LOG_ERR, string);
-            return FRAMER_ERROR;;
+            return FRAMER_ERROR;
         }
         etime = 0;
         rlen = receive_nb(fd, &rbuf, 1, &etime);
@@ -238,7 +238,7 @@ static int framer_open_p300(int fd)
             framer_set_result(P300_ERROR);
             snprintf(string, sizeof(string), ">FRAMER: enable not send");
             logIT(LOG_ERR, string);
-            return FRAMER_ERROR;;
+            return FRAMER_ERROR;
         }
 
         etime = 0;
@@ -303,7 +303,7 @@ int framer_send(int fd, char *s_buf, int len)
 {
     char string[256];
 
-    if ((len < 1) || (!s_buf)) {
+    if ((len < 1) || (! s_buf)) {
         snprintf(string, sizeof(string), ">FRAMER: invalid buffer %d %p", len, s_buf);
         logIT(LOG_ERR, string);
         return FRAMER_ERROR;
