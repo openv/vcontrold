@@ -439,10 +439,10 @@ int interactive(int socketfd, char *device )
                 if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                     logIT(LOG_ERR, "Error opening %s", device);
                     sendErrMsg(socketfd);
+                    framer_closeDevice(fd);
+                    vcontrol_semrelease();  // TODO semjfi
                     if (!Writen(socketfd, prompt, strlen(prompt))) {
                         sendErrMsg(socketfd);
-                        framer_closeDevice(fd);
-                        vcontrol_semrelease();  // TODO semjfi
                         return 0;
                     }
                     continue;
