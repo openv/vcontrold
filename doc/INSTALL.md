@@ -1,6 +1,10 @@
 # Building via cmake
 
-The Package can be built with the normal cmake procedure. Simply execute the following steps in your source directory:
+The `vcontrold` package depends on `libxml2`.
+
+For the build process on \*nix machines, usually the `libxml2-dev` package is needed. To get the documentation converted from Restructured Text (similar to Markdown) to the format used by `man`, the `rst2man` utility has to be installed.
+
+The package can be built with the normal cmake procedure. Simply execute the following steps in your source directory:
 
 ```
 mkdir build
