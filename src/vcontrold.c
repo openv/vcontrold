@@ -127,14 +127,12 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
     char *resultPtr = result;
     int fd;
     int count = 0;
-    //void *uPtr;
-    //int maxResLen=*resultLen;
     *resultLen = 0; // nothing received yet :-)
 
     // Open the device only if we have something to do
-    vcontrol_semget(); // TODO semjfi
+    vcontrol_semget();
     if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
-        vcontrol_semrelease(); // TODO semjfi
+        vcontrol_semrelease();
         logIT(LOG_ERR, "Error opening %s", device);
         result = "\0";
         *resultLen = 0;
@@ -147,21 +145,17 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
         result = "\0";
         *resultLen = 0;
         framer_closeDevice(fd);
-        vcontrol_semrelease(); // TODO semjfi
+        vcontrol_semrelease();
         return 0;
     }
     logIT(LOG_INFO, "Reading cmd file %s", filename);
     // Empty queue
-    // TODO semjfi vcontrol_semget();
     tcflush(fd, TCIOFLUSH);
-    // TODO semjfi vcontrol_semrelease();
     while (fgets(line, MAXBUF - 1, cmdPtr)) {
         // Remove \n
         line[strlen(line) - 1] = '\0';
         bzero(recvBuf, sizeof(recvBuf));
-        // TODO semjfi vcontrol_semget();
         count = execCmd(line, fd, recvBuf, sizeof(recvBuf));
-        // TODO semjfi vcontrol_semrelease();
         int n;
         char *ptr;
         ptr = recvBuf;
@@ -188,7 +182,7 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device )
 
     }
     framer_closeDevice(fd);
-    vcontrol_semrelease(); // TODO semjfi
+    vcontrol_semrelease();
     fclose(cmdPtr);
     return 1;
 }
@@ -262,8 +256,6 @@ int rawModus(int socketfd, char *device)
             return 1;
         }
         logIT(LOG_INFO, "Raw: Read: %s", readBuf);
-        //int n;
-        //if ((n=fputs(readBuf,filePtr))== 0) {
         if (fputs(readBuf, filePtr) == EOF) {
             logIT1(LOG_ERR, "Error writing to temp file");
         } else {
@@ -277,7 +269,6 @@ int interactive(int socketfd, char *device )
 {
     char readBuf[1000];
     char *readPtr;
-    char prompt[] = PROMPT;
     char bye[] = BYE;
     char string[256];
     commandPtr cPtr;
@@ -295,7 +286,7 @@ int interactive(int socketfd, char *device )
     short sendLen;
     char buffer[MAXBUF];
 
-    Writen(socketfd, prompt, strlen(prompt));
+    Writen(socketfd, PROMPT, strlen(PROMPT));
     bzero(readBuf, sizeof(readBuf));
 
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
@@ -323,7 +314,7 @@ int interactive(int socketfd, char *device )
         } else if (strstr(readBuf, "quit") == readBuf) {
             Writen(socketfd, bye, strlen(bye));
             framer_closeDevice(fd);
-            vcontrol_semrelease(); // TODO semjfi
+            vcontrol_semrelease();
             return 1;
         } else if (strstr(readBuf, "debug on") == readBuf) {
             setDebugFD(socketfd);
@@ -352,19 +343,10 @@ int interactive(int socketfd, char *device )
             rawModus(socketfd, device);
         } else if (strstr(readBuf, "close") == readBuf) {
             framer_closeDevice(fd);
-            vcontrol_semrelease(); // TODO semjfi
+            vcontrol_semrelease();
             snprintf(string, sizeof(string), "%s closed\n", device);
             Writen(socketfd, string, strlen(string));
             fd = -1;
-        /*
-        } else if(strstr(readBuf,"open") == readBuf) {
-            if ((fd < 0) && (fd = openDevice(device)) == -1) {
-                snprintf(string, sizeof(string), "Fehler beim oeffnen %s", device);
-                logIT(LOG_ERR, string);
-            }
-            snprintf(string, sizeof(string), "%s geoeffnet\n", device);
-            Writen(socketfd, string, strlen(string));
-        */
         } else if (strstr(readBuf, "commands") == readBuf) {
             cPtr = cfgPtr->devPtr->cmdPtr;
             while (cPtr) {
@@ -402,10 +384,10 @@ int interactive(int socketfd, char *device )
                 if ((sendLen = string2chr(para, sendBuf, sizeof(sendBuf))) == -1) {
                     logIT(LOG_ERR, "No hex string: %s", para);
                     sendErrMsg(socketfd);
-                    if (! Writen(socketfd, prompt, strlen(prompt))) {
+                    if (! Writen(socketfd, PROMPT, strlen(PROMPT))) {
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
-                        vcontrol_semrelease(); // TODO semjfi
+                        vcontrol_semrelease();
                         return 0;
                     }
                     continue;
@@ -434,14 +416,14 @@ int interactive(int socketfd, char *device )
                  * This is related to a accept/close on a server socket
                  */
                 // everything on link is a transaction - all commands
-                vcontrol_semget(); // TODO semjfi
+                vcontrol_semget();
 
                 if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                     logIT(LOG_ERR, "Error opening %s", device);
                     sendErrMsg(socketfd);
                     framer_closeDevice(fd);
-                    vcontrol_semrelease();  // TODO semjfi
-                    if (!Writen(socketfd, prompt, strlen(prompt))) {
+                    vcontrol_semrelease();
+                    if (!Writen(socketfd, PROMPT, strlen(PROMPT))) {
                         sendErrMsg(socketfd);
                         return 0;
                     }
@@ -454,7 +436,6 @@ int interactive(int socketfd, char *device )
                 logIT(LOG_INFO, "Executing pre command %s", cPtr->precmd);
 
                 if (execByteCode(pcPtr->cmpPtr, fd, pRecvBuf, sizeof(pRecvBuf), sendBuf, sendLen, 1, pcPtr->bit, pcPtr->retry, pRecvBuf, pcPtr->recvTimeout) == -1) {
-                    // TODO semjfi vcontrol_semrelease();
                     logIT(LOG_ERR, "Error executing %s", readBuf);
                     sendErrMsg(socketfd);
                     break;
@@ -470,7 +451,6 @@ int interactive(int socketfd, char *device )
             //  0: Preformatted string
             //  n: raw bytes
             count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf), sendBuf, sendLen, noUnit, cPtr->bit, cPtr->retry, pRecvBuf, cPtr->recvTimeout);
-            // TODO semjfi vcontrol_semrelease();
 
             if (count == -1) {
                 logIT(LOG_ERR, "Error executing %s", readBuf);
@@ -602,24 +582,22 @@ int interactive(int socketfd, char *device )
             if (!Writen(socketfd, UNKNOWN, strlen(UNKNOWN))) {
                 sendErrMsg(socketfd);
                 framer_closeDevice(fd);
-                vcontrol_semrelease(); // TODO semjfi
+                vcontrol_semrelease();
                 return 0;
             }
         }
-        bzero(string, sizeof(string));
         sendErrMsg(socketfd);
-        snprintf(string, sizeof(string), "%s", prompt); //,readBuf);  // is this needed? what does it do?
-        if (!Writen(socketfd, prompt, strlen(prompt))) {
+        if (!Writen(socketfd, PROMPT, strlen(PROMPT))) {
             sendErrMsg(socketfd);
             framer_closeDevice(fd);
-            vcontrol_semrelease(); // TODO semjfi
+            vcontrol_semrelease();
             return 0;
         }
         bzero(readBuf, sizeof(readBuf));
     }
     sendErrMsg(socketfd);
     framer_closeDevice(fd);
-    vcontrol_semrelease(); // TODO semjfi
+    vcontrol_semrelease();
     return 0;
 }
 
