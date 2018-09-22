@@ -70,7 +70,7 @@ extern devicePtr devPtr;
 extern configPtr cfgPtr;
 
 // Declarations
-int readCmdFile(char *filename, char *result, int *resultLen, char *device );
+int readCmdFile(char *filename, char *result, int *resultLen, char *device);
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
@@ -86,6 +86,7 @@ void usage()
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
     printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
+    printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]");
     printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
     printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
@@ -118,7 +119,7 @@ int reloadConfig()
     }
 }
 
-int readCmdFile(char *filename, char *result, int *resultLen, char *device )
+int readCmdFile(char *filename, char *result, int *resultLen, char *device)
 {
     FILE *cmdPtr;
     char line[MAXBUF];
@@ -265,7 +266,7 @@ int rawModus(int socketfd, char *device)
     return 0; // is this correct?
 }
 
-int interactive(int socketfd, char *device )
+int interactive(int socketfd, char *device)
 {
     char readBuf[1000];
     char *readPtr;
@@ -627,7 +628,9 @@ static void sigTermHandler(int signo)
         logIT(LOG_NOTICE, "Received signal %d", signo);
     }
     vcontrol_semfree();
-    if (pidFile) { unlink(pidFile); }
+    if (pidFile) {
+        unlink(pidFile);
+    }
     exit(1);
 }
 

@@ -14,7 +14,9 @@ Unix daemon for communication with Viessmann Vito heatings
 SYNOPSIS
 ========
 
-  vcontrold [-x <xml-file>] [-d <device>] [-l <logfile>] [-p <port>] [-s] [-n] [-g] [-v] [-V]
+  vcontrold [-x <xml-file>] [-d <device>] [-l <logfile>] [-p <port>] [-s] [-n]
+    [-c <command-file>] [-P <pid-file>] [-U <username>] [-G <groupname>]
+    [-i] [-g] [-4] [-6] [-v] [-V] [-?]
 
 DESCRIPTION
 ===========
@@ -28,25 +30,35 @@ OPTIONS
 -x <xml-file>, \--xmlfile <xml-file>
     location of the main config file
 
--d <serial-device>, \--device <serial-device>
+-d <device>, \--device <device>
     serial device to use.
     This option overrides corresponding entry in the config file.
 
+-l <logfile>, \--logfile <logfile>
+    use <logfile> instead of syslog.
+
 -p <port>, \--port <port>
     TCP <port> to use for remote connections.
-    The default is 3002 and can be specified
-    in the config file.
+    The default is 3002 and can be specified in the config file.
     This option overrides the corresponding entry in the config file.
 
 -s, \--syslog
     use syslog
 
--l <logfile>, \--logfile <logfile>
-    use <logfile> instead of syslog.
+-n, \--nodaemon
+    do not fork. This is for testing purpose only. Normaly vcontrold
+    will detach from the controlling terminal and put itself into the
+    background.
 
--P <pidfile>, \--pidfile <pidfile>
-    write process id to <pidfile> when started as a daemon.
-    When started as root, <pidfile> is written prior to dropping privileges.
+-c <command-file>, \--commandfile <command-file>
+    file with lines containing sequences of icmds (WAIT, SEND, RECV, PAUSE)
+    as used in protocol definitions.
+    Lines get executed in order
+    (developer option)
+
+-P <pid-file>, \--pidfile <pid-file>
+    write process id to <pid-file> when started as a daemon.
+    When started as root, <pid-file> is written prior to dropping privileges.
     This overrides the corresponding entry in the config file.
 
 -U <username>, \--username <username>
@@ -59,23 +71,18 @@ OPTIONS
     instead of group dialout. This overrides the corresponding entry in the config file.
     If using a serial link, ensure that user or group has access rights to the serial device.
 
--n, \--nodaemon
-    do not fork. This is for testing purpose only. Normaly vcontrold
-    will detach from the controlling terminal and put itself into the
-    background.
-
 -i, \--vsim
     use a temp file in ``/tmp/sim-devid.ini`` for use with the vsim simulator
     (developer option)
 
--c <command-file>, \--commandfile <command-file>
-    file with lines containing sequences of icmds (WAIT, SEND, RECV, PAUSE)
-    as used in protocol definitions.
-    Lines get executed in order
-    (developer option)
-
 -g, \--debug
     enable debug mode
+
+-4, --inet4
+    use IP v4 socket
+
+-6, --inet6
+    use IP v6 socket
 
 -v, \--verbose
     verbose mode
@@ -83,7 +90,7 @@ OPTIONS
 -V, \--Version
     print version information, then exit
 
-\--help
+-?, \--help
     usage information
 
 FILES
