@@ -170,7 +170,7 @@ static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime)
     return FRAMER_ERROR;
 }
 
-// Synchronization for P300 + switch to P300, back to normal for close -> repeating 05
+// Synchronization for P300 + switch to P300, back to normal for close -> repeating P300X_ATTEMPTS
 static int framer_close_p300(int fd)
 {
     char string[100];
@@ -227,13 +227,13 @@ static int framer_open_p300(int fd)
     unsigned long etime;
     int rlen;
 
-    if (! framer_close_p300(fd)) {
-        snprintf(string, sizeof(string), ">FRAMER: could not set start condition");
-        logIT(LOG_ERR, string);
-        return FRAMER_ERROR;
-    }
-
     for (i = 0; i < P300X_ATTEMPTS; i++) {
+        if (! framer_close_p300(fd)) {
+            snprintf(string, sizeof(string), ">FRAMER: could not set start condition");
+            logIT(LOG_ERR, string);
+            return FRAMER_ERROR;
+        }
+
         if (! my_send(fd, enable, sizeof(enable))) {
             framer_set_result(P300_ERROR);
             snprintf(string, sizeof(string), ">FRAMER: enable not send");
