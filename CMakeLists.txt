@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2.0)
 project(vcontrold C)
-
+set(CMAKE_BUILD_TYPE Debug)
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 # CMAKE_INSTALL_PREFIX defaults to /usr/local, but it should go to /usr
 set(CMAKE_INSTALL_PREFIX /usr)

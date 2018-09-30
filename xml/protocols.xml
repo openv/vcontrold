@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<protocols>
+  <protocol name="P300">
+    <pid>41</pid>
+    <macros>
+      <macro name="GETADDR">
+        <command>SEND 00 01</command>
+      </macro>
+      <macro name="SETADDR">
+        <command>SEND 00 02</command>
+      </macro>
+    </macros>
+    <commands>
+      <command name="getaddr">
+        <send>GETADDR $addr $hexlen;RECV $len $unit</send>
+      </command>
+      <command name="setaddr">
+        <send>SETADDR $addr $hexlen;SEND BYTES $unit;RECV 1 SR</send>
+      </command>
+      <command name="gettestaddr">
+        <send/>
+      </command>
+    </commands>
+  </protocol>
+  <protocol name="KW2">
+    <macros>
+      <macro name="SYNC">
+        <command>SEND 04;WAIT 05</command>
+      </macro>
+      <macro name="GETADDR">
+        <command>SEND 01 F7</command>
+      </macro>
+      <macro name="SETADDR">
+        <command>SEND 01 F4</command>
+      </macro>
+    </macros>
+    <commands>
+      <command name="getaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETADDR $addr $hexlen;RECV $len $unit</send>
+      </command>
+      <command name="setaddr">
+        <send>SYNC;SETADDR $addr $hexlen;SEND BYTES $unit;RECV 1 SR</send>
+      </command>
+      <command name="gettestaddr">
+        <retry>3</retry>
+        <recvTimeout>1500</recvTimeout>
+        <send>SYNC;GETADDR;SEND BYTES;SEND 02;RECV 02</send>
+      </command>
+    </commands>
+  </protocol>
+  <protocol name="GWG">
+    <macros>
+      <macro name="SYNC">
+        <command>SEND 04;WAIT 05</command>
+      </macro>
+      <macro name="GETADDR">
+        <command>SEND 01 CB</command>
+      </macro>
+      <macro name="GETBADDR">
+        <command>SEND 01 9E</command>
+      </macro>
+      <macro name="GETVADDR">
+        <command>SEND 01 C7</command>
+      </macro>
+      <macro name="GETPADDR">
+        <command>SEND 01 6E</command>
+      </macro>
+      <macro name="GETEADDR">
+        <command>SEND 01 AE</command>
+      </macro>
+      <macro name="GETXADDR">
+        <command>SEND 01 C5</command>
+      </macro>
+      <macro name="GETKMADDR">
+        <command>SEND 01 43</command>
+      </macro>
+    </macros>
+    <commands>
+      <command name="enable">
+        <send/>
+      </command>
+      <command name="disable">
+        <send/>
+      </command>
+      <command name="getaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETADDR $addr $hexlen 04;RECV $len $unit</send>
+      </command>
+      <command name="gettestaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="getbaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETBADDR $addr $hexlen 04;RECV $len $unit</send>
+      </command>
+      <command name="getbtestaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETBADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="getpaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETPADDR $addr $hexlen 04;RECV $len $unit</send>
+      </command>
+      <command name="getptestaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETPADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="getvaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETVADDR $addr $hexlen 04;RECV $len $unit</send>
+      </command>
+      <command name="getvtestaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETVADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="geteaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETEADDR $addr $hexlen 04;RECV $len $unit</send>
+      </command>
+      <command name="getetestaddr">
+        <retry>3</retry>
+        <recvTimeout>150</recvTimeout>
+        <send>SYNC;GETEADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="getxaddr">
+        <retry>3</retry>
+        <recvTimeout>150</recvTimeout>
+        <send>SYNC;GETXADDR $addr $hexlen 04;RECV $len $unit</send>
+      </command>
+      <command name="getxtestaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETXADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="getkmaddr">
+        <send>SYNC;GETKMDDR $addr $hexlen 04;RECV $len $unit</send>
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+      </command>
+      <command name="getkmtestaddr">
+        <retry>3</retry>
+        <recvTimeout>4000</recvTimeout>
+        <send>SYNC;GETKMADDR;SEND BYTES;SEND 01 04;RECV 1</send>
+      </command>
+      <command name="init">
+        <send>SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100;SEND 16 00 00;PAUSE 100</send>
+        <retry>3</retry>
+      </command>
+      <command name="setaddr">
+        <send>SYNC;SETADDR $addr $hexlen;SEND BYTES $unit;RECV 1 SR</send>
+      </command>
+    </commands>
+  </protocol>
+</protocols>

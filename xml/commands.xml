@@ -1,24 +1,19 @@
 <?xml version="1.0"?>
-<vito>
-  <devices>
-    <device ID="2098" name="V200KW2" protocol="KW2"/>
-    <device ID="2053" name="GWG_VBEM" protocol="GWG"/>
-    <device ID="20CB" name="VScotHO1" protocol="P300"/>
-    <device ID="2094" name="V200KW1" protocol="KW2"/>
-  </devices>
   <commands>
     <!-- Gerätedaten -->
     <!-- AUSSENTEMPERATUR -->
+    <!-- TODO: remove device tags -->
     <command name="getTempA" protocmd="getaddr">
       <addr>0800</addr>
       <len>2</len>
       <unit>UT</unit>
       <description>Ermittle die Aussentemperatur in Grad C</description>
-      <device ID="2053">
-        <addr>6F</addr>
-        <unit>UT1</unit>
-        <len>1</len>
-      </device>
+    </command>
+    <command name="getTempAGWG" protocmd="getaddr">
+      <description>Ermittle die Aussentemperatur in Grad C</description>
+      <addr>6F</addr>
+      <unit>UT1</unit>
+      <len>1</len>
     </command>
     <command name="getTempAtp" protocmd="getaddr">
       <addr>5525</addr>
@@ -1576,6 +1571,18 @@
       <unit>DT</unit>
       <description>Ermittle Device Typ der Anlage / SystemIdent_SX</description>
     </command>
+    <command name="getDevFam" protocmd="getaddr">
+      <addr>00F8</addr>
+      <len>4</len>
+      <unit>DT</unit>
+      <description>Ermittle Device Familie der Anlage / SystemIdent</description>
+    </command>
+    <command name="getDevID" protocmd="getaddr">
+      <addr>00F8</addr>
+      <len>6</len>
+      <unit>DT</unit>
+      <description>Ermittle Device Familie der Anlage mit Hardware- und Softwarestand</description>
+    </command>
     <command name="getCtrlId" protocmd="getaddr">
       <addr>00F9</addr>
       <len>7</len>
@@ -1749,4 +1756,3 @@
       </device>
     </command>
   </commands>
-</vito>

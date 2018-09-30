@@ -375,6 +375,32 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         } else {
             return -1;
         }
+    } else if (strstr(uPtr->type, "enumsearch") == uPtr->type) {
+        // enumsearch searches through enums and returns longest match
+        int l;
+
+        char* d = NULL;
+        if (bytes2Enum(uPtr->ePtr, recvBuf, &tPtr, -1)) {
+            // save default value for comparison
+            d = calloc(strlen(tPtr) + 1, sizeof(char));
+            strcpy(d, tPtr);
+        }
+
+        for (l = recvLen; l > 0; l--) {
+            if (bytes2Enum(uPtr->ePtr, recvBuf, &tPtr, l) && !strstr(d, tPtr)) {
+                strcpy(result, tPtr);
+                nullIT(&d);
+                return 1;
+            }
+        }
+        if (bytes2Enum(uPtr->ePtr, recvBuf, &tPtr, -1)) {
+            strcpy(result, tPtr);
+            nullIT(&d);
+            return 1;
+        }
+        sprintf(result, "Searched, but didn't find an appropriate enum");
+        nullIT(&d);
+        return -1;
     } else if (strstr(uPtr->type, "enum") == uPtr->type) {
         // enum
         if (bytes2Enum(uPtr->ePtr, recvBuf, &tPtr, recvLen)) {
@@ -385,7 +411,6 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
             return -1;
         }
     }
-
     // Here are all the numeric types
     if (strstr(uPtr->type, "char") == uPtr->type) {
         // Conversion to Char 1Byte

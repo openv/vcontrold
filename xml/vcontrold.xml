@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<vcontrold xmlns:vcontrol="https://github.com/openv/vcontrold/">
+    <config>
+      <!-- These are the default settings vcontrold drops privileges to when
+           started as root. Be sure to have the respective user and group. If
+           you use a serial device, be sure to have read and write permissions
+           on the corresponding device file for the user/group -->
+      <username>nobody</username>
+      <groupname>dialout</groupname>
+      <serial>
+        <tty>/dev/ttyUSB0</tty>
+      </serial>
+      <net>
+        <port>3002</port>
+        <allow ip="127.0.0.1"/>
+        <allow ip="192.168.1.0/24"/>
+      </net>
+      <logging>
+        <file>vcontrold.log</file>
+        <syslog>n</syslog>
+        <debug>n</debug>
+      </logging>
+      <device ID="20CB"/>
+    </config>
+    <!--
+    Attention: the order of the following files (units, protocols, devices, commands) is important!
+    -->
+    <xi:include href="units.xml" parse="xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+    <xi:include href="protocols.xml" parse="xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+    <xi:include href="devices.xml" parse="xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+    <xi:include href="commands.xml" parse="xml" xmlns:xi="http://www.w3.org/2003/XInclude"/>
+</vcontrold>

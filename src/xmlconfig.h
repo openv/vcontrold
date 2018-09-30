@@ -105,6 +105,7 @@ struct macro {
 
 struct command {
     char *name;
+    char *alias;
     char *pcmd;
     char *send;
     char *addr;

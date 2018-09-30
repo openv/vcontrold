@@ -353,7 +353,11 @@ int interactive(int socketfd, char *device)
             while (cPtr) {
                 if (cPtr->addr) {
                     bzero(string, sizeof(string));
-                    snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->description);
+                    if (cPtr->alias) {
+                        snprintf(string, sizeof(string), "%s (%s): %s\n", cPtr->alias, cPtr->name, cPtr->description);
+                    } else {
+                        snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->description);
+                    }
                     Writen(socketfd, string, strlen(string));
                 }
                 cPtr = cPtr->next;

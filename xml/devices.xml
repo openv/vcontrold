@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<devices>
+  <device ID="2098" name="V200KW2" protocol="KW2"/>
+  <device ID="2053" name="GWG_VBEM" protocol="GWG">
+    <command alias="getTempA" name="getTempAGWG" />
+  </device>
+  <device ID="20CB" name="VScotHO1" protocol="P300">
+    <command alias="getTemp" name="getTempA" />
+    <command name="getDevType" />
+    <command name="getDevID" alias="getid" />
+  </device>
+
+  <device ID="2094" name="V200KW1" protocol="KW2"/>
+</devices>

@@ -245,7 +245,8 @@ commandPtr getCommandNode(commandPtr ptr, const char *name)
         return NULL;
     }
 
-    if (ptr->name && name && (strcmp(ptr->name, name) != 0)) {
+    if (ptr->name && name && (strcmp(ptr->name, name) != 0) &&
+        (!ptr->alias || ptr->alias && (strcmp(ptr->alias, name) != 0))) {
         return getCommandNode(ptr->next, name);
     }
 
@@ -283,6 +284,9 @@ void removeCommandList(commandPtr ptr)
                 if (ptr->name) {
                     free(ptr->name);
                 }
+                if (ptr->alias) {
+                    free(ptr->alias);
+                }
                 if (ptr->description) {
                     free(ptr->description);
                 }
@@ -318,11 +322,9 @@ devicePtr getDeviceNode(devicePtr ptr, char *id)
     if (! ptr) {
         return NULL;
     }
-
     if (strcmp(ptr->id, id) != 0) {
         return getDeviceNode(ptr->next, id);
     }
-
     return ptr;
 }
 
@@ -945,10 +947,9 @@ macroPtr parseMacro(xmlNodePtr cur)
     return mStartPtr;
 }
 
-commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
+commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr)
 {
     commandPtr cStartPtr = NULL;
-    devicePtr dPtr;
     char *command;
     char *protocmd;
     char *chrPtr;
@@ -1003,52 +1004,6 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
                 prevPtr = cur;
                 cur = cur->children;
                 continue;
-            }
-        } else if (commandFound && strstr((char *)cur->name, "device")) {
-            id = getPropertyNode(cur->properties, (xmlChar *)"ID");
-            protocmd = getPropertyNode(cur->properties, (xmlChar *)"protocmd");
-            if (id) {
-                // Read new device below command
-                logIT(LOG_INFO, "    New device command: %s", id);
-                // Search device from the list
-                if (! (dPtr = getDeviceNode(dePtr, id))) {
-                    logIT(LOG_ERR, "Device %s is not defined (%d)", id, cur->line);
-                    return NULL;
-                }
-                // We take the description from the command entry
-                strncpy(string, cPtr->description, sizeof(string));
-                // Now again recursively parseCommand for all children
-                ncPtr = newCommandNode(NULL);
-                parseCommand(cur->children, ncPtr, dePtr);
-                if (! dPtr->cmdPtr) {
-                    dPtr->cmdPtr = ncPtr;
-                } else {
-                    addCommandNode(dPtr->cmdPtr, ncPtr);
-                }
-                // Refer to description in new accounts
-                ncPtr->description = cPtr->description;
-                ncPtr->name = cPtr->name;
-                // If no unit has been given, we copy it
-                if (! ncPtr->unit && cPtr->unit) {
-                    ncPtr->unit = calloc(strlen(cPtr->unit) + 1, sizeof(char));
-                    strcpy(ncPtr->unit, cPtr->unit);
-                }
-                // Same for the protocol command
-                if (protocmd) {
-                    ncPtr->pcmd = calloc(strlen(protocmd) + 1, sizeof(char));
-                    strcpy(ncPtr->pcmd, protocmd);
-                } else {
-                    ncPtr->pcmd = calloc(strlen(cPtr->pcmd) + 1, sizeof(char));
-                    strcpy(ncPtr->pcmd, cPtr->pcmd);
-                }
-                ncPtr->nodeType = 2; // 2 == decription, name has been copied
-                if (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next)) {
-                    cur = cur->next;
-                } else if (prevPtr) {
-                    cur = prevPtr->next;
-                } else {
-                    cur = NULL;
-                }
             }
         } else if (commandFound && strstr((char *)cur->name, "addr")) {
             chrPtr = getTextNode(cur);
@@ -1166,6 +1121,15 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
             } else {
                 cur = NULL;
             }
+        } else if (commandFound && strstr((char *)cur->name, "device")) {
+            logIT(LOG_ERR, "Error: device found in command definition, upgrade your config");
+            if (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next)) {
+                cur = cur->next;
+            } else if (prevPtr) {
+                cur = prevPtr->next;
+            } else {
+                cur = NULL;
+            }
         } else {
             logIT(LOG_ERR, "Error parsing command");
             return NULL;
@@ -1196,7 +1160,7 @@ icmdPtr parseICmd(xmlNodePtr cur)
             command = getPropertyNode(cur->properties, (xmlChar *)"name");
             if (command) {
                 // Read new command
-                logIT(LOG_INFO, "New iCommand: %s", command);
+                logIT(LOG_INFO, "New protocmd: %s", command);
                 icPtr = newIcmdNode(icStartPtr);
                 if (! icStartPtr) {
                     icStartPtr = icPtr;
@@ -1255,6 +1219,10 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
     char *name;
     char *id;
     xmlNodePtr prevPtr;
+    int deviceFound = 0;
+    char *cmdname;
+    char *cmdalias;
+    commandPtr cPtr;
 
     while (cur) {
         logIT(LOG_INFO, "DEVICE: (%d) Node::Name=%s Type:%d Content=%s",
@@ -1269,6 +1237,8 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
             name = getPropertyNode(cur->properties, (xmlChar *)"name");
             id = getPropertyNode(cur->properties, (xmlChar *)"ID");
             proto = getPropertyNode(cur->properties, (xmlChar *)"protocol");
+            deviceFound = 1;
+
             if (proto) {
                 // Read new protocol
                 logIT(LOG_INFO, "    Neues Device: name=%s ID=%s proto=%s", name, id, proto);
@@ -1300,8 +1270,43 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
             }
 
             prevPtr = cur;
-            cur = cur->next;
+            if (cur->children) {
+                cur = cur->children;
+            } else {
+                (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                    ? (cur = cur->next) : (cur = prevPtr->next);
+            }
 
+            continue;
+
+        } else if (deviceFound && strstr((char *)cur->name, "command")) {
+            cmdname = getPropertyNode(cur->properties, (xmlChar *)"name");
+            cmdalias = getPropertyNode(cur->properties, (xmlChar *)"alias");
+            logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
+                  cur->line, cur->name, cur->type, cmdalias);
+
+            if (cmdname) {
+                cPtr = newCommandNode(NULL);
+                if (! dPtr->cmdPtr) {
+                    dPtr->cmdPtr = cPtr;
+                } else {
+                    addCommandNode(dPtr->cmdPtr, cPtr);
+                }
+                cPtr->name = calloc(strlen(cmdname) + 1, sizeof(char));
+                strcpy(cPtr->name, cmdname);
+                if (cmdalias) {
+                    cPtr->alias= calloc(strlen(cmdalias) + 1, sizeof(char));
+                    strcpy(cPtr->alias, cmdalias);
+                    logIT(LOG_INFO, "    New device command: %s (alias=%s)", cmdname, cmdalias);
+                } else {
+                    logIT(LOG_INFO, "    New device command: %s", cmdname);
+                }
+                cPtr->nodeType = 2; // 2 == decription, name has been copied
+
+            }
+
+            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
@@ -1407,7 +1412,7 @@ int parseXMLFile(char *filename)
     xmlDocPtr doc;
     xmlNodePtr cur, curStart;
     xmlNodePtr prevPtr;
-    xmlNsPtr ns;
+    // xmlNsPtr ns;
     //char string[256];
     devicePtr dPtr;
     commandPtr cPtr, ncPtr;
@@ -1429,14 +1434,16 @@ int parseXMLFile(char *filename)
         xmlFreeDoc(doc);
         return 0;
     }
-    ns = xmlSearchNsByHref(doc, cur, (const xmlChar *) "http://www.openv.de/vcontrol");
+    /*
+    ns = xmlSearchNsByHref(doc, cur, (const xmlChar *) "https://github.com/openv/vcontrold/");
     if (ns == NULL) {
-        logIT(LOG_ERR, "document of the wrong type, vcontrol Namespace not found");
+        logIT(LOG_ERR, "document of the wrong type, vcontrold Namespace not found");
         xmlFreeDoc(doc);
         return 0;
     }
-    if (xmlStrcmp(cur->name, (const xmlChar *) "V-Control")) {
-        logIT(LOG_ERR, "document of the wrong type, root node != V-Control");
+    */
+    if (xmlStrcmp(cur->name, (const xmlChar *) "vcontrold")) {
+        logIT(LOG_ERR, "document of the wrong type, root node != vcontrold");
         xmlFreeDoc(doc);
         return 0;
     }
@@ -1453,7 +1460,7 @@ int parseXMLFile(char *filename)
 
     removeComments(cur); // now the xml tree is complete --> remove all comments
 
-    int unixFound = 0;
+    int configFound = 0;
     int protocolsFound = 0;
     cur = cur->children;
 
@@ -1466,27 +1473,23 @@ int parseXMLFile(char *filename)
             continue;
         }
 
-        if (strstr((char *)cur->name, "unix"))  {
-            if (unixFound) {
+        if (strstr((char *)cur->name, "config"))  {
+            if (configFound) {
                 // We must not reach here, second pass
                 logIT(LOG_ERR, "Error in XML config");
                 return 0;
             }
-            prevPtr = cur;
-            unixFound = 1;
-            cur = cur->children; // On Unix, config follows. Thus children.
-            continue;
-        }
 
-        if (strstr((char *)cur->name, "extern")) {
-            cur = cur->children;
-            if (cur && strstr((char *)cur->name, "vito"))  {
-                prevPtr = cur;
-                cur = cur->children; // The xinclude stuff can be found at <extern><vito>
-                continue;
-            } else {
-                cur = prevPtr->next;
+            logIT(LOG_INFO, "XML: (%d) Node::Name=%s Type:%d Content=%s",
+                  cur->line, cur->name, cur->type, cur->content);
+
+            prevPtr = cur;
+            if (! (TcfgPtr = parseConfig(cur->children))) {
+                return 0;
             }
+            configFound = 1;
+            cur = cur->next;
+            continue;
         } else if (strstr((char *)cur->name, "protocols")) {
             if (protocolsFound) {
                 // We must not reach here, second pass
@@ -1497,69 +1500,61 @@ int parseXMLFile(char *filename)
             if (! (TprotoPtr = parseProtocol(cur->children))) {
                 return 0;
             }
-            cur = cur->next; // Same level as Unix, proceed
+            cur = cur->next; // Same level as config, proceed
             continue;
         } else if (strstr((char *)cur->name, "units")) {
             if (! (TuPtr = parseUnit(cur->children))) {
                 return 0;
             }
-            cur = cur->next; // Same level as Unix, proceed
-            continue;
-        } else if (strstr((char *)cur->name, "commands")) {
-            if (! (TcmdPtr = parseCommand(cur->children, NULL, TdevPtr))) {
-                return 0;
-            }
-            //(cur->next && cur->next->next) ? (cur=cur->next) : (cur=prevPtr->next);
-            (cur->next) ? (cur = cur->next) : (cur = prevPtr->next);
+            cur = cur->next; // Same level as config, proceed
             continue;
         } else if (strstr((char *)cur->name, "devices")) {
             if (! (TdevPtr = parseDevice(cur->children, TprotoPtr))) {
                 return 0;
             }
-            (cur->next) ? (cur = cur->next) : (cur = prevPtr->next);
+            //(cur->next) ? (cur = cur->next) : (cur = prevPtr->next);
+            cur = cur->next; // Same level as config, proceed
             continue;
-        } else if (strstr((char *)cur->name, "config")) {
-            if (! (TcfgPtr = parseConfig(cur->children))) {
+        } else if (strstr((char *)cur->name, "commands")) {
+            if (! (TcmdPtr = parseCommand(cur->children, NULL))) {
                 return 0;
             }
-            (cur->next && cur->next->next) ? (cur = cur->next) : (cur = prevPtr->next);
+            //(cur->next && cur->next->next) ? (cur=cur->next) : (cur=prevPtr->next);
+            //(cur->next) ? (cur = cur->next) : (cur = prevPtr->next);
+            cur = cur->next; // Same level as config, proceed
+            continue;
         } else {
             cur = cur->next;
         }
-    }
-
-    // For all commands that have default definitions,
-    // we roam all devices and add the particular commands.
-    cPtr = TcmdPtr;
-    while (cPtr) {
-        dPtr = TdevPtr;
-        while (dPtr) {
-            if (! getCommandNode(dPtr->cmdPtr, cPtr->name)) {
-                // We don't know this one and copy the commands
-                logIT(LOG_INFO, "Copying command %s to device %s", cPtr->name, dPtr->id);
-                ncPtr = newCommandNode(dPtr->cmdPtr);
-                if (! dPtr->cmdPtr) {
-                    dPtr->cmdPtr = ncPtr;
-                }
-                ncPtr->name = cPtr->name;
-                ncPtr->pcmd = cPtr->pcmd;
-                ncPtr->addr = cPtr->addr;
-                ncPtr->unit = cPtr->unit;
-                ncPtr->bit = cPtr->bit;
-                ncPtr->errStr = cPtr->errStr;
-                ncPtr->precmd = cPtr->precmd;
-                ncPtr->description = cPtr->description;
-                ncPtr->len = cPtr->len;
-            }
-            dPtr = dPtr->next;
-        }
-        cPtr = cPtr->next;
     }
 
     // We search the default device
     if (! (TcfgPtr->devPtr = getDeviceNode(TdevPtr, TcfgPtr->devID))) {
         logIT(LOG_ERR, "Device %s is not defined\n", TcfgPtr->devID);
         return 0;
+    }
+
+    // For all commands that have default definitions,
+    // we roam all devices and add the particular commands.
+    cPtr = TcmdPtr;
+    dPtr = TcfgPtr->devPtr;
+
+    while (cPtr) {
+        if (ncPtr = getCommandNode(dPtr->cmdPtr, cPtr->name)) {
+            // Device knows this one, so copy the commands
+            logIT(LOG_INFO, "Copying command %s to device %s", cPtr->name, dPtr->id);
+
+            ncPtr->pcmd = cPtr->pcmd;
+            ncPtr->addr = cPtr->addr;
+            ncPtr->unit = cPtr->unit;
+            ncPtr->bit = cPtr->bit;
+            ncPtr->errStr = cPtr->errStr;
+            ncPtr->precmd = cPtr->precmd;
+            ncPtr->description = cPtr->description;
+            ncPtr->len = cPtr->len;
+        }
+
+    cPtr = cPtr->next;
     }
 
     // If we reach here, the loading has been successful.
