@@ -636,7 +636,7 @@ configPtr parseConfig(xmlNodePtr cur)
                 cfgPtr->tty = calloc(strlen(chrPtr) + 1, sizeof(char));
                 strcpy(cfgPtr->tty, chrPtr);
             } else {
-                nullIT(&cfgPtr->devID);
+                nullIT(&cfgPtr->tty);
             }
 
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
@@ -712,7 +712,7 @@ configPtr parseConfig(xmlNodePtr cur)
                 cfgPtr->logfile = calloc(strlen(chrPtr) + 1, sizeof(char));
                 strcpy(cfgPtr->logfile, chrPtr);
             } else {
-                nullIT(&cfgPtr->devID);
+                nullIT(&cfgPtr->logfile);
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
