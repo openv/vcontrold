@@ -95,7 +95,7 @@ int getCycleTime(char *recv, int len, char *result)
     for (i = 0; i < len; i += 2) {
         // TODO - vitoopen: Leave output in German.
         // CHANGING THIS WOULD BREAK existing applications.
-        // => maybe we could enable english results later with a build option, 
+        // => maybe we could enable english results later with a build option,
         // but not for the default.
         if (recv[i] == (char)0xff) {
             snprintf(string, sizeof(string), "%d:An:--     Aus:--\n", (i / 2) + 1);
@@ -148,7 +148,7 @@ int setCycleTime(char *input, char *sendBuf)
                 sprintf(sendBuf, "Wrong time format: %s", sptr);
                 return 0;
             }
-            sscanf(sptr, "%i:%i", &hour, &min);
+            sscanf(sptr, "%u:%u", &hour, &min);
             *bptr = ((hour << 3) + (min / 10)) & 0xff;
             logIT(LOG_INFO, "Cycle Time: %02d:%02d -> [%02X]", hour, min, (unsigned char) *bptr);
         }
