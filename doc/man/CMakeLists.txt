@@ -19,7 +19,6 @@ foreach(MANUAL IN LISTS MANUALS)
     add_custom_command(OUTPUT ${MANPAGE_OUTPUT}
         COMMAND ${RST2MAN} ${RST2MAN_OPTS} ${MANPAGE_SOURCE} ${MANPAGE_OUTPUT}
         DEPENDS ${MANPAGE_SOURCE}
-        BYPRODUCTS ${MANPAGE_OUTPUT}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Converting ${MANUAL}.rst from ReStructuredText into manpage ${MANUAL}.1"
         VERBATIM
