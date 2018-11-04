@@ -51,7 +51,7 @@ void usage()
 
     printf("usage:\n");
     printf("    vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>]\n");
-    printf("            [-s <csv file>] [-t <template file>] [-o <outpout file>]\n");
+    printf("            [-s <csv file>] [-t <template file>] [-o <output file>]\n");
     printf("            [-x <exec file>] [-k] [-m] [-v]\n\n");
 
     printf("or:\n");
