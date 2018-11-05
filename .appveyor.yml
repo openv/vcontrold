@@ -7,10 +7,6 @@ environment:
       CYGWIN: C:\Cygwin64
       CYGSH: C:\Cygwin64\bin\bash -lc
 
-#branches:
-#  only:
-#    - master
-
 init:
   # Set "build version number" to "short-commit-hash" or when tagged to "tag name" (Travis style)
   - ps: >-
@@ -32,11 +28,11 @@ build_script:
 
 after_build:
   - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > $APPVEYOR_BUILD_FOLDER/build/VERSION"'
-  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER/build && cp ../COPYING . && 7z a $APPVEYOR_BUILD_FOLDER/vcontrold.zip *.exe COPYING VERSION"'
+  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER/build && cp ../COPYING . && 7z a $APPVEYOR_BUILD_FOLDER/vcontrold-cygwin_$(echo -n $APPVEYOR_BUILD_VERSION | sed -e s/^v//)_$ARCH.zip *.exe COPYING VERSION"'
 
 artifacts:
-  - name: vcontrold-cygwin
-    path: vcontrold.zip
+  - name: vcontrold-cygwin_$(ARCH)
+    path: '**\*.zip'
     type: zip
 
 deploy:
@@ -48,5 +44,4 @@ deploy:
     auth_token:
       secure: qE6hexTUPfCElvkSDkIo9fflU6YweIcrGZ5x2wbw7qHDR2HIYczkMMiSUwvC5y9+
     on:
-      branch: master                # release from master branch only
       appveyor_repo_tag: true       # deploy on tag push only
