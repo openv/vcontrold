@@ -42,6 +42,7 @@ artifacts:
 deploy:
   - provider: GitHub
     artifact: /.*\.zip/
+    description: '$(APPVEYOR_REPO_COMMIT_MESSAGE)'
     draft: false
     prerelease: false
     auth_token:
