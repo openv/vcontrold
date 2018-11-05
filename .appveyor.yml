@@ -1,0 +1,38 @@
+#version: "cygwin-{build}"
+
+environment:
+  matrix:
+    - ARCH: x86
+      CYGWIN: C:\Cygwin
+      CYGSH: C:\Cygwin\bin\bash -lc
+    - ARCH: x86_64
+      CYGWIN: C:\Cygwin64
+      CYGSH: C:\Cygwin64\bin\bash -lc
+
+init:
+  # Set "build version number" to "short-commit-hash" or when tagged to "tag name" (Travis style)
+  - ps: >-
+      if ($env:APPVEYOR_REPO_TAG -eq "true")
+      {
+        Update-AppveyorBuild -Version "$env:APPVEYOR_REPO_TAG_NAME"
+      }
+      else
+      {
+        Update-AppveyorBuild -Version "$($env:APPVEYOR_REPO_COMMIT.substring(0,7))-dirty"
+      }
+
+install:
+  - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts --upgrade-also -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip"
+  - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
+
+build_script:
+  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF --debug --trace-expand -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
+
+after_build:
+  - '%CYG_BASH% -lc "echo $APPVEYOR_BUILD_VERSION > APPVEYOR_BUILD_FOLDER/build/VERSION"'
+  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER/build && cp ../COPYING . && 7z a $APPVEYOR_BUILD_FOLDER/vcontrold.zip *.exe COPYING VERSION"'
+
+artifacts:
+  - name: vcontrold-cygwin
+    path: vcontrold.zip
+    type: zip
