@@ -7,6 +7,10 @@ environment:
       CYGWIN: C:\Cygwin64
       CYGSH: C:\Cygwin64\bin\bash -lc
 
+#branches:
+#  only:
+#    - master
+
 init:
   # Set "build version number" to "short-commit-hash" or when tagged to "tag name" (Travis style)
   - ps: >-
@@ -34,3 +38,14 @@ artifacts:
   - name: vcontrold-cygwin
     path: vcontrold.zip
     type: zip
+
+deploy:
+  - provider: GitHub
+    artifact: /.*\.zip/
+    draft: false
+    prerelease: false
+    auth_token:
+      secure: qE6hexTUPfCElvkSDkIo9fflU6YweIcrGZ5x2wbw7qHDR2HIYczkMMiSUwvC5y9+
+    on:
+      branch: master                # release from master branch only
+      appveyor_repo_tag: true       # deploy on tag push only
