@@ -20,7 +20,7 @@ init:
       }
 
 install:
-    - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel"
+  - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel"
   - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
 build_script:
