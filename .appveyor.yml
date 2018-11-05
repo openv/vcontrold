@@ -1,5 +1,3 @@
-#version: "cygwin-{build}"
-
 environment:
   matrix:
     - ARCH: x86
@@ -22,15 +20,15 @@ init:
       }
 
 install:
-  - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts --upgrade-also -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip"
-  - '%CYG_ROOT%\bin\cygcheck -dc cygwin'
+  - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip"
+  - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
 build_script:
-  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF --debug --trace-expand -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
+  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF --debug --trace-expand -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
 
 after_build:
-  - '%CYG_BASH% -lc "echo $APPVEYOR_BUILD_VERSION > APPVEYOR_BUILD_FOLDER/build/VERSION"'
-  - '%CYG_BASH% -lc "cd $APPVEYOR_BUILD_FOLDER/build && cp ../COPYING . && 7z a $APPVEYOR_BUILD_FOLDER/vcontrold.zip *.exe COPYING VERSION"'
+  - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > APPVEYOR_BUILD_FOLDER/build/VERSION"'
+  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER/build && cp ../COPYING . && 7z a $APPVEYOR_BUILD_FOLDER/vcontrold.zip *.exe COPYING VERSION"'
 
 artifacts:
   - name: vcontrold-cygwin
