@@ -24,10 +24,10 @@ install:
   - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
 build_script:
-  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF --debug --trace-expand -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
+  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
 
 after_build:
-  - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > APPVEYOR_BUILD_FOLDER/build/VERSION"'
+  - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > $APPVEYOR_BUILD_FOLDER/build/VERSION"'
   - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER/build && cp ../COPYING . && 7z a $APPVEYOR_BUILD_FOLDER/vcontrold.zip *.exe COPYING VERSION"'
 
 artifacts:
