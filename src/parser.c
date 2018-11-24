@@ -307,7 +307,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 break;
             case PAUSE:
                 logIT(LOG_INFO, "Waiting %i ms", cmpPtr->len);
-                usleep(cmpPtr->len * 1000L);
+		struct timespec sleepTime = {
+		    .tv_sec = cmpPtr->len / 1000L,
+		    .tv_nsec = (cmpPtr->len % 1000L) * 1000000L};
+                nanosleep(&sleepTime, NULL);
                 break;
             case BYTES:
                 // We send the forwarded sendBuffer. No converting has been done.
