@@ -155,18 +155,18 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device)
     while (fgets(line, MAXBUF - 1, cmdPtr)) {
         // Remove \n
         line[strlen(line) - 1] = '\0';
-        bzero(recvBuf, sizeof(recvBuf));
+        memset(recvBuf, 0, sizeof(recvBuf));
         count = execCmd(line, fd, recvBuf, sizeof(recvBuf));
         int n;
         char *ptr;
         ptr = recvBuf;
         char buffer[MAXBUF];
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
         for (n = 0; n < count; n++) {
             // We received characters
             *resultPtr++ = *ptr;
             (*resultLen)++;
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             unsigned char byte = *ptr++ & 255;
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);
@@ -248,7 +248,7 @@ int rawModus(int socketfd, char *device)
             if (resultLen) {
                 // Re received characters
                 char buffer[MAXBUF];
-                bzero(buffer, sizeof(buffer));
+                memset(buffer, 0, sizeof(buffer));
                 char2hex(buffer, result, resultLen);
                 snprintf(string, sizeof(string), "Result: %s\n", buffer);
                 Writen(socketfd, string, strlen(string));
@@ -288,7 +288,7 @@ int interactive(int socketfd, char *device)
     char buffer[MAXBUF];
 
     Writen(socketfd, PROMPT, strlen(PROMPT));
-    bzero(readBuf, sizeof(readBuf));
+    memset(readBuf, 0, sizeof(readBuf));
 
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
         sendErrMsg(socketfd);
@@ -300,8 +300,8 @@ int interactive(int socketfd, char *device)
         logIT(LOG_INFO, "Command: %s", readBuf);
 
         // We separate the command and possible options at the first blank
-        bzero(cmd, sizeof(cmd));
-        bzero(para, sizeof(para));
+        memset(cmd, 0, sizeof(cmd));
+        memset(para, 0, sizeof(para));
         if ((ptr = strchr(readBuf, ' '))) {
             strncpy(cmd, readBuf, ptr - readBuf);
             strcpy(para, ptr + 1);
@@ -327,7 +327,7 @@ int interactive(int socketfd, char *device)
             noUnit = 0;
         } else if (strstr(readBuf, "reload") == readBuf) {
             if (reloadConfig()) {
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string), "XML file %s reloaded\n", xmlfile);
                 Writen(socketfd, string, strlen(string));
                 // If we have a parent (daemon mode), it reveives a SIGHUP
@@ -335,7 +335,7 @@ int interactive(int socketfd, char *device)
                     kill(getppid(), SIGHUP);
                 }
             } else {
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string),
                          "Loading of XML file %s failed, using old configuration\n", xmlfile);
                 Writen(socketfd, string, strlen(string));
@@ -352,35 +352,35 @@ int interactive(int socketfd, char *device)
             cPtr = cfgPtr->devPtr->cmdPtr;
             while (cPtr) {
                 if (cPtr->addr) {
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->description);
                     Writen(socketfd, string, strlen(string));
                 }
                 cPtr = cPtr->next;
             }
         } else if (strstr(readBuf, "protocol") == readBuf) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             snprintf(string, sizeof(string), "%s\n", cfgPtr->devPtr->protoPtr->name);
             Writen(socketfd, string, strlen(string));
         } else if (strstr(readBuf, "device") == readBuf) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             snprintf(string, sizeof(string), "%s (ID=%s) (Protocol=%s)\n", cfgPtr->devPtr->name,
                      cfgPtr->devPtr->id,
                      cfgPtr->devPtr->protoPtr->name);
             Writen(socketfd, string, strlen(string));
         } else if (strstr(readBuf, "version") == readBuf) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             snprintf(string, sizeof(string), "Version: %s\n", VERSION);
             Writen(socketfd, string, strlen(string));
         } else if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
             // The command is defined in XML, so we take care of it ...
-            bzero(string, sizeof(string));
-            bzero(recvBuf, sizeof(recvBuf));
-            bzero(sendBuf, sizeof(sendBuf));
-            bzero(pRecvBuf, sizeof(pRecvBuf));
+            memset(string, 0, sizeof(string));
+            memset(recvBuf, 0, sizeof(recvBuf));
+            memset(sendBuf, 0, sizeof(sendBuf));
+            memset(pRecvBuf, 0, sizeof(pRecvBuf));
 
             // If unit off it set or no unit is defined, we pass the parameters in hex
-            bzero(sendBuf, sizeof(sendBuf));
+            memset(sendBuf, 0, sizeof(sendBuf));
             if ((noUnit | ! cPtr->unit) && *para) {
                 if ((sendLen = string2chr(para, sendBuf, sizeof(sendBuf))) == -1) {
                     logIT(LOG_ERR, "No hex string: %s", para);
@@ -441,7 +441,7 @@ int interactive(int socketfd, char *device)
                     sendErrMsg(socketfd);
                     break;
                 } else {
-                    bzero(buffer, sizeof(buffer));
+                    memset(buffer, 0, sizeof(buffer));
                     char2hex(buffer, pRecvBuf, pcPtr->len);
                     logIT(LOG_INFO, "Result of pre command: %s", buffer);
                 }
@@ -466,10 +466,10 @@ int interactive(int socketfd, char *device)
                 char *ptr;
                 ptr = recvBuf;
                 char buffer[MAXBUF];
-                bzero(buffer, sizeof(buffer));
+                memset(buffer, 0, sizeof(buffer));
                 for (n = 0; n < count; n++) {
                     // We received a character
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     unsigned char byte = *ptr++ & 255;
                     snprintf(string, sizeof(string), "%02X ", byte);
                     strcat(buffer, string);
@@ -493,12 +493,12 @@ int interactive(int socketfd, char *device)
             }
             // Is the command defined in the XML?
             if (readPtr && (cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->send);
                 Writen(socketfd, string, strlen(string));
                 // Error String defined
                 char buf[MAXBUF];
-                bzero(buf, sizeof(buf));
+                memset(buf, 0, sizeof(buf));
                 if (cPtr->errStr && char2hex(buf, cPtr->errStr, cPtr->len)) {
                     snprintf(string, sizeof(string), "\tError at (Hex): %s", buf);
                     Writen(socketfd, string, strlen(string));
@@ -559,7 +559,7 @@ int interactive(int socketfd, char *device)
                             ePtr = cmpPtr->uPtr->ePtr;
                             char dummy[20];
                             while (ePtr) {
-                                bzero(dummy, sizeof(dummy));
+                                memset(dummy, 0, sizeof(dummy));
                                 if (!ePtr->bytes) {
                                     strcpy(dummy, "<default>");
                                 } else {
@@ -575,7 +575,7 @@ int interactive(int socketfd, char *device)
                     cmpPtr = cmpPtr->next;
                 }
             } else {
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string), "ERR: command %s unknown\n", readPtr);
                 Writen(socketfd, string, strlen(string));
             }
@@ -594,7 +594,7 @@ int interactive(int socketfd, char *device)
             vcontrol_semrelease();
             return 0;
         }
-        bzero(readBuf, sizeof(readBuf));
+        memset(readBuf, 0, sizeof(readBuf));
     }
     sendErrMsg(socketfd);
     framer_closeDevice(fd);

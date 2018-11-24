@@ -90,7 +90,7 @@ int getCycleTime(char *recv, int len, char *result)
         return 0;
     }
 
-    bzero(string, sizeof(string));
+    memset(string, 0, sizeof(string));
 
     for (i = 0; i < len; i += 2) {
         // TODO - vitoopen: Leave output in German.
@@ -224,7 +224,7 @@ int setSysTime(char *input, char *sendBuf, short bufsize)
     if (!*input) {
         time(&tt);
         t = localtime(&tt);
-        bzero(systime, sizeof(systime));
+        memset(systime, 0, sizeof(systime));
         sprintf(systime, "%04d  %02d %02d %02d %02d %02d %02d",
                 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_wday,
                 t->tm_hour, t->tm_min, t->tm_sec);
@@ -255,8 +255,8 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
 
     for (i = 0; i < len; i += 9) {
         ptr = recv + i;
-        bzero(string, sizeof(string));
-        bzero(systime, sizeof(systime));
+        memset(string, 0, sizeof(string));
+        memset(systime, 0, sizeof(systime));
         // Error code: Byte 0
         if (bytes2Enum(ePtr, ptr, &errtext, 1))
             // Rest SysTime
@@ -291,7 +291,7 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
     }
     if (ePtr) {
         *text = ePtr->text;
-        bzero(string, sizeof(string));
+        memset(string, 0, sizeof(string));
         char2hex(string, bytes, len);
         strcat(string, " -> ");
         strcat(string, ePtr->text);
@@ -315,10 +315,10 @@ short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
 
     *bytes = ePtr->bytes;
     *len = ePtr->len;
-    bzero(string, sizeof(string));
+    memset(string, 0, sizeof(string));
     strncpy(string, text, sizeof(string));
     strcat(string, " -> ");
-    bzero(string2, sizeof(string2));
+    memset(string2, 0, sizeof(string2));
     char2hex(string2, ePtr->bytes, ePtr->len);
     strcat(string, string2);
     logIT1(LOG_INFO, string);
@@ -351,7 +351,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     uint32_t tmpUI;
     uint32_t uintV;
 
-    bzero(errPtr, sizeof(error));
+    memset(errPtr, 0, sizeof(error));
 
     // We tread the different <type> entries
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
@@ -436,10 +436,10 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     char res;
 
     ptr = recvBuf;
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
     for (n = 0; n <= 9; n++) {
         // The bytes 0..9 are of interest
-        bzero(string, sizeof(string));
+        memset(string, 0, sizeof(string));
         unsigned char byte = *ptr++ & 255;
         snprintf(string, sizeof(string), "B%d:%02X ", n, byte);
         strcat(buffer, string);
@@ -510,16 +510,16 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     uint32_t tmpUI;
     uint32_t uintV;
 
-    bzero(errPtr, sizeof(error));
+    memset(errPtr, 0, sizeof(error));
     // Some logging
     int n = 0;
     char *ptr;
     char dumBuf[10];
-    bzero(dumBuf, sizeof(dumBuf));
-    bzero(buffer, sizeof(buffer));
+    memset(dumBuf, 0, sizeof(dumBuf));
+    memset(buffer, 0, sizeof(buffer));
     // We copy the sendBuf, as this one is also used for return
     strncpy(input, sendBuf, sizeof(input));
-    bzero(sendBuf, sizeof(sendBuf));
+    memset(sendBuf, 0, sizeof(sendBuf));
 
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
         // Cycle time
@@ -584,7 +584,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                 sprintf(sendBuf, "Did not find an appropriate enum");
                 return -1;
             } else {
-                bzero(dumBuf, sizeof(dumBuf));
+                memset(dumBuf, 0, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
                 logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
                 ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
@@ -636,15 +636,15 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             uintV = __cpu_to_le32(tmpUI);
             memcpy(sendBuf, &uintV, 2);
         } else if (uPtr->type) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
             return -1;
         }
 
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
         ptr = sendBuf;
         while (*ptr) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             unsigned char byte = *ptr++ & 255;
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);
