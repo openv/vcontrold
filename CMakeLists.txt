@@ -35,6 +35,8 @@ add_custom_target(
     BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h
 )
 
+add_definitions(-D_XOPEN_SOURCE=700)
+
 include_directories(
     ${LIBXML2_INCLUDE_DIR}
 )

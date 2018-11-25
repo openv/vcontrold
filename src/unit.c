@@ -77,14 +77,13 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
 short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
 int getErrState(enumPtr ePtr, char *recv, int len, char *result);
 int getSysTime(char *recv, int len, char *result);
-int setSysTime(char *input, char *sendBuf, short bufsize);
+int setSysTime(char *input, char *sendBuf);
 
 int getCycleTime(char *recv, int len, char *result)
 {
     int i;
     char string[80];
 
-    //if ((len/2)*2 !=len) {
     if (len % 2) {
         sprintf(result, "Byte count not even");
         return 0;
@@ -166,78 +165,65 @@ int setCycleTime(char *input, char *sendBuf)
     return 8;
 }
 
+int bcd2dec(int bcd) {
+    int dec = bcd - ((int)(bcd / 16) * 6);
+    return dec;
+}
+
 int getSysTime(char *recv, int len, char *result)
 {
-    char day[3];
+    struct tm t = {0};
 
     if (len != 8) {
         sprintf(result, "System time: Len <> 8 bytes");
         return 0;
     }
 
-    // TODO: Can this be translated, or is it used as German day abbreviations
-    // when communicating with the heating controller?
-    switch (recv[4]) {
-    case 0:
-        strcpy(day, "So");
-        break;
-    case 1:
-        strcpy(day, "Mo");
-        break;
-    case 2:
-        strcpy(day, "Di");
-        break;
-    case 3:
-        strcpy(day, "Mi");
-        break;
-    case 4:
-        strcpy(day, "Do");
-        break;
-    case 5:
-        strcpy(day, "Fr");
-        break;
-    case 6:
-        strcpy(day, "Sa");
-        break;
-    case 7:
-        strcpy(day, "So");
-        break;
-    default:
-        sprintf(result, "Error day conversion: %02X", recv[4]);
-        return 0;
-    }
+    t.tm_year = bcd2dec(recv[0]) * 100 + bcd2dec(recv[1]) - 1900;
+    t.tm_mon = bcd2dec(recv[2]) - 1;
+    t.tm_mday = bcd2dec(recv[3]);
+    t.tm_wday = bcd2dec(recv[4]) % 7;
+    t.tm_hour = bcd2dec(recv[5]);
+    t.tm_min = bcd2dec(recv[6]);
+    t.tm_sec = bcd2dec(recv[7]);
 
-    sprintf(result, "%s,%02X.%02X.%02X%02X %02x:%02X:%02X", day,
-            recv[3], recv[2], recv[0], recv[1],
-            recv[5], recv[6], recv[7]);
+    // This might break existing applications. But changing the string to some custom format
+    // that is not recognized by strptime for parsing dates has a symmetry impact that the
+    // format for getTime is different from the format required by setTime.
+    // I would consider the command symmetry more important for the future.
+    strftime(result, 48, "%c", &t);
 
     return 1;
 }
 
-int setSysTime(char *input, char *sendBuf, short bufsize)
+int setSysTime(char *input, char *sendBuf)
 {
     char systime[80];
     time_t tt;
     struct tm *t;
 
+    memset(systime, 0, sizeof(systime));
+
     // No parameter, set the current system time
     if (!*input) {
         time(&tt);
         t = localtime(&tt);
-        memset(systime, 0, sizeof(systime));
-        sprintf(systime, "%04d  %02d %02d %02d %02d %02d %02d",
-                t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_wday,
-                t->tm_hour, t->tm_min, t->tm_sec);
-        // We put a blank in the year
-        systime[4] = systime[3];
-        systime[3] = systime[2];
-        systime[2] = ' ';
-        logIT(LOG_INFO, "current system time %s", systime);
-        return string2chr(systime, sendBuf, bufsize);
     } else {
-        logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
-        return 0;
+#ifdef _XOPEN_SOURCE
+	char *parseEnd = strptime(input, "%c", t);
+        // If the string is fully parsed, parseEnd should be the terminating '0' character of the input string.
+        if (!parseEnd || *parseEnd) {
+            logIT(LOG_ERR, "Can not parse time string '%s'. Use the same time format for setting a time as you get when getting a time.", input);
+            return 0;
+        }
+#else
+	logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
+	return 0;
+#endif
     }
+
+    strftime(systime, 24, "%C %y %m %d %w %H %M %S", t);
+    return string2chr(systime, sendBuf, 8);
 }
 
 int getErrState(enumPtr ePtr, char *recv, int len, char *result)
@@ -534,7 +520,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     }
     if (strstr(uPtr->type, "systime") == uPtr->type) {
         // System time
-        if (! (*sendLen = setSysTime(input, sendBuf, *sendLen))) {
+        if (! (*sendLen = setSysTime(input, sendBuf))) {
             return -1;
         } else  {
             return 1;
@@ -662,3 +648,4 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     // We should never reach here. But we want to keep the compiler happy.
     return 0;
 }
+
