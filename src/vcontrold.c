@@ -381,9 +381,9 @@ int interactive(int socketfd, char *device)
             memset(sendBuf, 0, sizeof(sendBuf));
             memset(pRecvBuf, 0, sizeof(pRecvBuf));
 
-            // If unit off it set or no unit is defined, we pass the parameters in hex
+            // If unit off is set or no unit is defined, we pass the parameters in hex
             memset(sendBuf, 0, sizeof(sendBuf));
-            if ((noUnit | ! cPtr->unit) && *para) {
+            if ((noUnit || !cPtr->unit) && *para) {
                 if ((sendLen = string2chr(para, sendBuf, sizeof(sendBuf))) == -1) {
                     logIT(LOG_ERR, "No hex string: %s", para);
                     sendErrMsg(socketfd);
@@ -398,12 +398,11 @@ int interactive(int socketfd, char *device)
                 // If sendLen > len of the command, we use len
                 if (sendLen > cPtr->len) {
                     logIT(LOG_WARNING,
-                          "Length of the hex string > send length of the command, \
-                          sending only %d bytes", cPtr->len);
+                          "Length of the hex string > send length of the command, sending only %d bytes", cPtr->len);
                     sendLen = cPtr->len;
                 }
             } else if (*para) {
-                // We copy the parameter, execbyteCode itself takes care of it
+                // We copy the parameter, execByteCode itself takes care of it
                 strcpy(sendBuf, para);
                 sendLen = strlen(sendBuf);
             }

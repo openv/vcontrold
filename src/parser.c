@@ -161,8 +161,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             if (sendLen != cPtr->len) {
                 // This should never happen!
                 logIT(LOG_ERR,
-                      "Error in length of the hex string (%d) != send length of \
-                      the command (%d), terminating", sendLen, cPtr->len);
+                      "Error in length of the hex string (%d) != send length of the command (%d), terminating", sendLen, cPtr->len);
                 return -1;
             }
             if (cPtr->send) {
