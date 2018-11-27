@@ -132,24 +132,25 @@ int opentty(char *device)
 int my_send(int fd, char *s_buf, int len)
 {
     int i;
-    char string[256];
-
+    int wr;
+    
     // Empty buffer
-    // As tcflush doesn't work correctly, we use nonblocking read
-    fcntl(fd, F_SETFL, O_NONBLOCK);
-    while (readn(fd, string, sizeof(string)) > 0) {
-    }
-    fcntl(fd, F_SETFL, !O_NONBLOCK);
-    tcflush(fd, TCIFLUSH);
+    tcflush(fd, TCIOFLUSH);
 
     // We use the socket fixed variant from socket.c
-    writen(fd, s_buf, len);
+    wr = writen(fd, s_buf, len);
     for (i = 0; i < len; i++) {
         unsigned char byte = s_buf[i] & 255;
         logIT(LOG_INFO, ">SEND: %02X", (int)byte);
     }
 
-    return 1;
+    if (wr = i) {
+        return wr;
+    } 
+    else {
+        logIT(LOG_INFO, ">ERROR: sent %d of %d", wr, len);
+        return 0;
+    }
 }
 
 int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
