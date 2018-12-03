@@ -133,7 +133,6 @@ int my_send(int fd, char *s_buf, int len)
 {
     int i;
     int wr;
-    
     // Empty buffer
     tcflush(fd, TCIOFLUSH);
 
