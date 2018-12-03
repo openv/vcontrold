@@ -14,7 +14,7 @@ tool for getting values from vcontrold
 SYNOPSIS
 ========
 
-    vclient -h <ip:port> [-c <command1,command2,...>] [-f <commandfile>] [-s <csv-file>] [-t <template-file>] [-o <outputfile>] [-x <executablescript>] [-k] [-m] [-v]
+    vclient [-h <ip:port>] [-c <command1,command2,...>] [-f <commandfile>] [-s <csv-file>] [-t <template-file>] [-o <outputfile>] [-x <executablescript>] [-k] [-m] [-v]
 
 DESCRIPTION
 ===========
@@ -26,10 +26,10 @@ OPTIONS
 =======
 
 -h, \--host
-    <IPv4:port> or <IPv6> of vcontrold
+    <IPv4:port> or <IPv6> of vcontrold. Defaults to localhost
 
 -p, \--port
-    <port> of vcontrold when using IPv6
+    <port> of vcontrold when using IPv6. Defaults to 3002 
 
 -c, \--command <commandlist>
     comma-separated list of commands
