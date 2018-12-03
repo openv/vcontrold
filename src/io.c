@@ -148,7 +148,7 @@ int my_send(int fd, char *s_buf, int len)
         return wr;
     } 
     else {
-        logIT(LOG_INFO, ">ERROR: sent %d of %d", wr, len);
+        logIT(LOG_ERR, ">ERROR: sent %d of %d", wr, len);
         return 0;
     }
 }
