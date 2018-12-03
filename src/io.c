@@ -144,7 +144,7 @@ int my_send(int fd, char *s_buf, int len)
         logIT(LOG_INFO, ">SEND: %02X", (int)byte);
     }
 
-    if (wr = i) {
+    if (wr == len) {
         return wr;
     } 
     else {
