@@ -135,7 +135,6 @@ int my_send(int fd, char *s_buf, int len)
     int wr;
     // Empty buffer
     tcflush(fd, TCIOFLUSH);
-
     // We use the socket fixed variant from socket.c
     wr = writen(fd, s_buf, len);
     for (i = 0; i < len; i++) {
