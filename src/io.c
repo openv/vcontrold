@@ -139,14 +139,14 @@ int my_send(int fd, char *s_buf, int len)
     wr = writen(fd, s_buf, len);
     for (i = 0; i < len; i++) {
         unsigned char byte = s_buf[i] & 255;
-        logIT(LOG_INFO, ">SEND: %02X", (int)byte);
+        logIT(LOG_INFO, ">SENT: %02X", (int)byte);
     }
-
+    
     if (wr == len) {
         return wr;
     } 
     else {
-        logIT(LOG_ERR, ">ERROR: sent %d of %d", wr, len);
+        logIT(LOG_ERR, ">ERROR: sent %d of %d bytes", wr, len);
         return 0;
     }
 }
