@@ -144,8 +144,7 @@ int my_send(int fd, char *s_buf, int len)
     
     if (wr == len) {
         return wr;
-    } 
-    else {
+    } else {
         logIT(LOG_ERR, ">ERROR: sent %d of %d bytes", wr, len);
         return 0;
     }
