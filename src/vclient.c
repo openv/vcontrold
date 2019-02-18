@@ -50,12 +50,12 @@ void usage()
     //      1       10        20        30        40        50        60        70        80
 
     printf("usage:\n");
-    printf("    vclient -h <ip:port> [-c <command1,command2,..>] [-f <commandfile>]\n");
+    printf("    vclient [-h <ip:port>] [-c <command1,command2,..>] [-f <commandfile>]\n");
     printf("            [-s <csv file>] [-t <template file>] [-o <output file>]\n");
     printf("            [-x <exec file>] [-k] [-m] [-v]\n\n");
 
     printf("or:\n");
-    printf("    vclient --host <ip> --port <port> [--command <command1,command2,..>]\n");
+    printf("    vclient [--host <ip>] [--port <port>] [--command <command1,command2,..>]\n");
     printf("            [--commandfile <command file>] [--csvfile <csv file>]\n");
     printf("            [--template <template file>] [--output <output file>]\n");
     printf("            [--execute <exec file>] [--cacti] [--munin] [--verbose]\n");
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 {
     // Get the command line options
     char *host;
-    int port = 0;
+    int port = 3002;
     char commands[512] = "";
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
@@ -257,6 +257,13 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (host == NULL) { 
+      host = "localhost";
+    }
+
+    if (verbose) {
+      printf("Host: %s Port: %d\n",host,port);
+    }
     // Collect any remaining command line arguments (not options).
     // and use the as commands like for the -c option.
     if (optind < argc) {
