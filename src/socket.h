@@ -20,7 +20,7 @@
 #include <arpa/inet.h>
 
 int openSocket(int tcpport);
-int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *));
+int listenToSocket(int listenfd, int makeChild);
 int openCliSocket(char *host, int port, int noTCPdelay);
 void closeSocket(int sockfd);
 
