@@ -191,7 +191,7 @@ int getSysTime(char *recv, int len, char *result)
     // that is not recognized by strptime for parsing dates has a symmetry impact that the
     // format for getTime is different from the format required by setTime.
     // I would consider the command symmetry more important for the future.
-    strftime(result, 48, "%c", &t);
+    strftime(result, 48, "%FT%T%z", &t);
 
     return 1;
 }
@@ -200,7 +200,8 @@ int setSysTime(char *input, char *sendBuf)
 {
     char systime[80];
     time_t tt;
-    struct tm *t;
+    struct tm t_in = {0};
+    struct tm *t = &t_in;
 
     memset(systime, 0, sizeof(systime));
 
@@ -210,15 +211,15 @@ int setSysTime(char *input, char *sendBuf)
         t = localtime(&tt);
     } else {
 #ifdef _XOPEN_SOURCE
-	char *parseEnd = strptime(input, "%c", t);
+        char *parseEnd = strptime(input, "%FT%T%z", t);
         // If the string is fully parsed, parseEnd should be the terminating '0' character of the input string.
         if (!parseEnd || *parseEnd) {
-            logIT(LOG_ERR, "Can not parse time string '%s'. Use the same time format for setting a time as you get when getting a time.", input);
+            logIT(LOG_ERR, "Can not parse time string '%s'. Use the same ISO 8601 time format for setting a time as you get when getting a time.", input);
             return 0;
         }
 #else
-	logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
-	return 0;
+        logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
+        return 0;
 #endif
     }
 
@@ -648,4 +649,3 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     // We should never reach here. But we want to keep the compiler happy.
     return 0;
 }
-
