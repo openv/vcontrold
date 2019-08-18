@@ -172,8 +172,7 @@ int bcd2dec(int bcd) {
 
 int getSysTime(char *recv, int len, char *result)
 {
-    struct tm t = {0};
-    struct tm *th;
+    struct tm *t;
     time_t tt;
 
     if (len != 8) {
@@ -181,25 +180,22 @@ int getSysTime(char *recv, int len, char *result)
         return 0;
     }
 
-    t.tm_year = bcd2dec(recv[0]) * 100 + bcd2dec(recv[1]) - 1900;
-    t.tm_mon = bcd2dec(recv[2]) - 1;
-    t.tm_mday = bcd2dec(recv[3]);
-    t.tm_wday = bcd2dec(recv[4]) % 7;
-    t.tm_hour = bcd2dec(recv[5]);
-    t.tm_min = bcd2dec(recv[6]);
-    t.tm_sec = bcd2dec(recv[7]);
-
     // Use timezone information from the host system
     time(&tt);
-    th = localtime(&tt);
-    t.__tm_gmtoff = th->__tm_gmtoff;
-    t.__tm_zone = th->__tm_zone;
+    t = localtime(&tt);
+    t->tm_year = bcd2dec(recv[0]) * 100 + bcd2dec(recv[1]) - 1900;
+    t->tm_mon = bcd2dec(recv[2]) - 1;
+    t->tm_mday = bcd2dec(recv[3]);
+    t->tm_wday = bcd2dec(recv[4]) % 7;
+    t->tm_hour = bcd2dec(recv[5]);
+    t->tm_min = bcd2dec(recv[6]);
+    t->tm_sec = bcd2dec(recv[7]);
 
     // This might break existing applications. But changing the string to some custom format
     // that is not recognized by strptime for parsing dates has a symmetry impact that the
     // format for getTime is different from the format required by setTime.
     // I would consider the command symmetry more important for the future.
-    strftime(result, 48, "%FT%T%z", &t);
+    strftime(result, 48, "%FT%T%z", t);
 
     return 1;
 }
@@ -233,10 +229,18 @@ int setSysTime(char *input, char *sendBuf)
         return 0;
 #endif
 
-        // Recalculate the input time adjusted to the hosts timezone
+        // Recalculate the input time adjusted to the hosts timezone.
+        // It is probably not the best idea to use internal variables, but
+        // there doesn't seem to be an efficient way to transform times
+        // between timezones.
+#ifdef __CYGWIN__
+        t_in.tm_sec += (th->tm_gmtoff - t_in.tm_gmtoff);
+        t_in.tm_gmtoff = th->tm_gmtoff;
+#else
         t_in.tm_sec += (th->__tm_gmtoff - t_in.__tm_gmtoff);
+        t_in.__tm_gmtoff = th->__tm_gmtoff;
+#endif
         t_in.tm_isdst = th->tm_isdst;
-	t_in.__tm_gmtoff = th->__tm_gmtoff;
         mktime(&t_in);
 
         t = &t_in;
