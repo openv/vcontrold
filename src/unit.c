@@ -172,7 +172,8 @@ int bcd2dec(int bcd) {
 
 int getSysTime(char *recv, int len, char *result)
 {
-    struct tm t = {0};
+    struct tm t = {0}, *th;
+    time_t tt;
 
     if (len != 8) {
         sprintf(result, "System time: Len <> 8 bytes");
@@ -186,6 +187,12 @@ int getSysTime(char *recv, int len, char *result)
     t.tm_hour = bcd2dec(recv[5]);
     t.tm_min = bcd2dec(recv[6]);
     t.tm_sec = bcd2dec(recv[7]);
+
+    // Use timezone information from the host system
+    time(&tt);
+    th = localtime(&tt);
+    t.__tm_gmtoff = th->__tm_gmtoff;
+    t.__tm_zone = th->__tm_zone;
 
     // This might break existing applications. But changing the string to some custom format
     // that is not recognized by strptime for parsing dates has a symmetry impact that the
@@ -201,17 +208,20 @@ int setSysTime(char *input, char *sendBuf)
     char systime[80];
     time_t tt;
     struct tm t_in = {0};
-    struct tm *t = &t_in;
+    struct tm *t;
+    struct tm *th;
 
     memset(systime, 0, sizeof(systime));
 
+    time(&tt);
+    th = localtime(&tt);
+
     // No parameter, set the current system time
     if (!*input) {
-        time(&tt);
-        t = localtime(&tt);
+        t = th;
     } else {
 #ifdef _XOPEN_SOURCE
-        char *parseEnd = strptime(input, "%FT%T%z", t);
+        char *parseEnd = strptime(input, "%FT%T%z", &t_in);
         // If the string is fully parsed, parseEnd should be the terminating '0' character of the input string.
         if (!parseEnd || *parseEnd) {
             logIT(LOG_ERR, "Can not parse time string '%s'. Use the same ISO 8601 time format for setting a time as you get when getting a time.", input);
@@ -221,6 +231,14 @@ int setSysTime(char *input, char *sendBuf)
         logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
         return 0;
 #endif
+
+        // Recalculate the input time adjusted to the hosts timezone
+        t_in.tm_sec += (th->__tm_gmtoff - t_in.__tm_gmtoff);
+        t_in.tm_isdst = th->tm_isdst;
+	t_in.__tm_gmtoff = th->__tm_gmtoff;
+        mktime(&t_in);
+
+        t = &t_in;
     }
 
     strftime(systime, 24, "%C %y %m %d %w %H %M %S", t);
