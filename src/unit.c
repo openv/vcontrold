@@ -172,7 +172,8 @@ int bcd2dec(int bcd) {
 
 int getSysTime(char *recv, int len, char *result)
 {
-    struct tm t = {0}, *th;
+    struct tm t = {0};
+    struct tm *th;
     time_t tt;
 
     if (len != 8) {
