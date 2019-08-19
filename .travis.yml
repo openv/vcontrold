@@ -43,6 +43,7 @@ include: &toolchain_linux_armhf
   env:
     - CROSS_TOOLCHAIN="true"
     - ARCH="armhf"
+    - RELEASE="oldstable"
     - TARGET="arm-linux-gnueabihf"
     - CC="${TARGET}-gcc"
     - CMAKE_OPTS="-Wall -DCMAKE_TOOLCHAIN_FILE=${TRAVIS_BUILD_DIR}/cmake/Toolchain-rpi.cmake"
@@ -75,7 +76,7 @@ before_script:
       if  [[ "${CHROOT_DIR}" != "" ]] && find ${CHROOT_DIR} -iname "libxml2.so" 2>/dev/null | grep -q libxml2.so && find ${CHROOT_DIR} -iname "parser.h" 2>/dev/null | grep -q libxml ; then
         echo "Cache found" ;
       else
-        sudo debootstrap  --foreign --no-check-gpg --variant=minbase --include=libxml2,libxml2-dev --arch=armhf stable ${CHROOT_DIR} http://archive.raspbian.org/raspbian ;
+        sudo debootstrap  --foreign --no-check-gpg --variant=minbase --include=libxml2,libxml2-dev --arch=armhf ${RELEASE} ${CHROOT_DIR} http://archive.raspbian.org/raspbian ;
         sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/ ;
         sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage;
       fi
