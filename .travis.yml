@@ -79,6 +79,7 @@ before_script:
         sudo debootstrap  --foreign --no-check-gpg --variant=minbase --include=libxml2,libxml2-dev,libc6-dev --arch=armhf ${RELEASE} ${CHROOT_DIR} http://archive.raspbian.org/raspbian ;
         sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/ ;
         sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage;
+        for FILE in $(find ${CHROOT_DIR} -xtype l) ; do sudo ln -sf $(realpath --relative-to=$(dirname ${FILE}) ${CHROOT_DIR}/$(readlink ${FILE})) ${FILE} ; done;
       fi
     fi
 
