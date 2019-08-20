@@ -65,8 +65,15 @@ set(vsim_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/vsim.c
 )
 
+
+find_package(Threads)
+set(LIBS
+    ${LIBXML2_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 add_executable(vcontrold ${vcontrold_SRCS})
-target_link_libraries(vcontrold ${LIBXML2_LIBRARIES})
+target_link_libraries(vcontrold ${LIBS})
 add_dependencies(vcontrold UpdateVersion)
 
 if(VCLIENT)
