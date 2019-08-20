@@ -186,7 +186,7 @@ trPtr sendCmdFile(int sockfd, const char *filename)
         logIT(LOG_INFO, "Opened command file %s", filename);
     }
 
-    bzero(line, sizeof(line));
+    memset(line, 0, sizeof(line));
     while (fgets(line, MAXBUF - 1, filePtr)) {
         ptr = newTrNode(startPtr);
         if (! startPtr) {
@@ -243,14 +243,14 @@ int sendTrList(int sockfd, trPtr ptr)
     }
 
     while (ptr) {
-        //bzero(string,sizeof(string));
+        //memset(string, 0,sizeof(string));
         snprintf(string, sizeof(string), "%s\n", ptr->cmd);
 
         if (sendServer(sockfd, string, strlen(string)) <= 0) {
             return 0;
         }
 
-        //bzero(string,sizeof(string));
+        //memset(string, 0,sizeof(string));
         logIT(LOG_INFO, "SEND:%s", ptr->cmd);
         if (recvSync(sockfd, prompt, &sptr) <= 0) {
             free(sptr);

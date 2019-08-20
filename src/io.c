@@ -62,7 +62,7 @@ int openDevice(char *device)
         int port;
         port = atoi(dptr + 1);
         // The dptr device gives us the length of the host
-        bzero(host, sizeof(host));
+        memset(host, 0, sizeof(host));
         strncpy(host, device, dptr - device);
         // Third parameter == 1 --> noTCPDelay set
         fd = openCliSocket(host, port, 1);
