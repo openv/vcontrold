@@ -23,6 +23,7 @@ include: &toolchain_cross
       - libxml2-dev
       - python3-docutils
       - gcc-arm-linux-gnueabihf
+      - gcc-multilib-arm-linux-gnueabihf
       - libc6-dev-armhf-cross
       - zip
       - checkinstall
