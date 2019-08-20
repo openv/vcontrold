@@ -22,7 +22,7 @@ SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 
-SET(FLAGS "-Wl,-rpath-link,${CHROOT_DIR}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/local/lib")
+SET(FLAGS "-Wl,-rpath-link,${CHROOT_DIR}/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf -Wl,-rpath-link,${CHROOT_DIR}/usr/local/lib -pthread")
 
 UNSET(CMAKE_C_FLAGS CACHE)
 UNSET(CMAKE_CXX_FLAGS CACHE)
