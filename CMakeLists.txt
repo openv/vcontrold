@@ -68,8 +68,10 @@ set(vsim_SRCS
 
 find_package(Threads)
 set(LIBS
+    ${LIBS}
     ${LIBXML2_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${CMAKE_DL_LIBS}
 )
 
 add_executable(vcontrold ${vcontrold_SRCS})
