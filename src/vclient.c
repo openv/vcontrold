@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
             logIT(LOG_ERR, "Could not create file %s", outfile);
             exit(1);
         }
-        bzero(string, sizeof(string));
+        memset(string, 0, sizeof(string));
         logIT(LOG_INFO, "Output file %s", outfile);
     } else {
         ofilePtr = fdopen(fileno(stdout), "w");
@@ -352,8 +352,8 @@ int main(int argc, char *argv[])
             logIT(LOG_ERR, "Could not create file %s", csvfile);
             exit(1);
         }
-        bzero(string, sizeof(string));
-        bzero(result, sizeof(result));
+        memset(string, 0, sizeof(string));
+        memset(result, 0, sizeof(result));
         while (resPtr) {
             if (resPtr->err) {
                 //fprintf(stderr,"%s:%s\n",resPtr->cmd,resPtr->err);
@@ -362,7 +362,7 @@ int main(int argc, char *argv[])
                 resPtr = resPtr->next;
                 continue;
             }
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             sprintf(string, "%f;", resPtr->result);
             strncat(result, string, sizeof(result) - strlen(result) - 1);
             resPtr = resPtr->next;
@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
             while ((lptr = strchr(lSptr, '$'))) {
                 varReplaced = 0;
                 if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ is masked by a backslash
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     strncpy(string, lSptr, lptr - lSptr - 1);
                     fprintf(ofilePtr, "%s%c", string, *lptr);
                     lSptr = lptr + 1;
@@ -428,12 +428,12 @@ int main(int argc, char *argv[])
                 while (isalpha(*lEptr) || isdigit(*lEptr)) {
                     lEptr++;
                 }
-                bzero(varname, sizeof(varname));
+                memset(varname, 0, sizeof(varname));
                 strncpy(varname, lptr + 1, lEptr - lptr - 1);
                 logIT(LOG_INFO, "    Recognized variable: %s", varname);
 
                 // We output everything up to this
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 strncpy(string, lSptr, lptr - lSptr);
                 fprintf(ofilePtr, "%s", string);
 
@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
                         logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
                     }
                 } else {
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     strncpy(string, lptr, lEptr - lptr);
                     fprintf(ofilePtr, "%s", string);
                 }
@@ -505,7 +505,7 @@ int main(int argc, char *argv[])
         if (outfile && *outfile && execMe) {
             // Make the file executable and start
             fclose(ofilePtr);
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             logIT(LOG_INFO, "Executing file %s", outfile);
             if (chmod(outfile, S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
                 logIT(LOG_ERR, "Error chmod +x %s", outfile);

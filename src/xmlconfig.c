@@ -664,8 +664,8 @@ configPtr parseConfig(xmlNodePtr cur)
             short size;
             in_addr_t mask;
 
-            bzero(ip, sizeof(ip));
-            //bzero(string,sizeof(string));
+            memset(ip, 0, sizeof(ip));
+            //memset(string, 0,sizeof(string));
             if ((ptr = strchr(chrPtr, '/'))) {
 #if 0
                 strncpy(string, ptr + 1, sizeof(string) - 1);
@@ -789,7 +789,7 @@ unitPtr parseUnit(xmlNodePtr cur)
                 if (chrPtr) {
                     logIT(LOG_INFO, "          (%d) Node::Name=%s Type:%d Content=%s (bytes)",
                           cur->line, cur->name, cur->type, chrPtr);
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     ePtr->len = string2chr(chrPtr, string, sizeof(string));
                     ePtr->bytes = calloc(ePtr->len, sizeof(char));
                     memcpy(ePtr->bytes, string, ePtr->len);
@@ -1072,7 +1072,7 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 if ((count = string2chr(chrPtr, string, sizeof(string)))) {
                     cPtr->errStr = calloc(count, sizeof(char));
                     memcpy(cPtr->errStr, string, count);

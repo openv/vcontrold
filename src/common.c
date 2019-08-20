@@ -60,7 +60,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
     }
 
     debug = debugSwitch;
-    bzero(errMsg, sizeof(errMsg));
+    memset(errMsg, 0, sizeof(errMsg));
 
     return 1;
 }
@@ -139,7 +139,7 @@ void sendErrMsg(int fd)
         snprintf(string, sizeof(string), "ERR: %s", errMsg);
         write(fd, string, strlen(string));
         errClass = 99; // Thus it's only displayed once
-        bzero(errMsg, sizeof(errMsg));
+        memset(errMsg, 0, sizeof(errMsg));
     }
 
     *errMsg = '\0';
@@ -170,7 +170,7 @@ int char2hex(char *outString, const char *charPtr, int len)
     int n;
     char string[MAXBUF];
 
-    bzero(string, sizeof(string));
+    memset(string, 0, sizeof(string));
     for (n = 0; n < len; n++) {
         unsigned char byte = *charPtr++ & 255;
         snprintf(string, sizeof(string), "%02X ", byte);
