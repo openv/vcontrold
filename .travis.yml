@@ -80,7 +80,7 @@ before_script:
         sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/ ;
         sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage;
         for FILE in $(find ${CHROOT_DIR} -xtype l) ; do sudo ln -sf $(realpath --relative-to=$(dirname ${FILE}) ${CHROOT_DIR}/$(readlink ${FILE})) ${FILE} ; done;
-      fi
+      fi ;
       echo -e "OUTPUT_FORMAT(elf32-littlearm)\nGROUP ( /lib/arm-linux-gnueabihf/libpthread.so.0 /usr/lib/arm-linux-gnueabihf/libpthread_nonshared.a )" | sudo tee ${CHROOT_DIR}/usr/lib/arm-linux-gnueabihf/libpthread.so ;
     fi
 
