@@ -320,9 +320,10 @@ int main(int argc, char *argv[])
     if (! *commands && !cmdfile) {
         usage();
     }
-     sockfd = connectServer(host, port);
+
+    sockfd = connectServer(host, port);
     if (sockfd < 0) {
-        logIT(LOG_ERR, "No connection to %s", host);
+        logIT(LOG_ERR, "No connection to host %s on port %d", host, port);
         exit(1);
     }
 
