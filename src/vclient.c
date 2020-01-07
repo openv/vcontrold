@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 {
     // Get the command line options
     char *host;
-    int port = 3002;
+    int port = 0;
     char commands[512] = "";
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
@@ -261,9 +261,6 @@ int main(int argc, char *argv[])
       host = "localhost";
     }
 
-    if (verbose) {
-      printf("Host: %s Port: %d\n",host,port);
-    }
     // Collect any remaining command line arguments (not options).
     // and use the as commands like for the -c option.
     if (optind < argc) {
@@ -313,6 +310,13 @@ int main(int argc, char *argv[])
         port = atoi(last_colon + 1);
         //printf(">>> port=%d\n", port);
         *last_colon = '\0';
+    }
+    if (port == 0) {
+        port = DEFAULT_PORT
+    }
+    
+    if (verbose) {
+      printf("Host: %s Port: %d\n",host,port);
     }
 
     sockfd = connectServer(host, port);
