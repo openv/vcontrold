@@ -289,11 +289,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    initLog(0, dummylog, verbose);
-    if (! *commands && !cmdfile) {
-        usage();
-    }
-    /* Check for :<port> if port==0
+   /* Check for :<port> if port==0
        then separate the port number from the host name
        or the IP adsress.
        The IP address could be a plain old IPv4 or a IPv6 one,
@@ -307,19 +303,24 @@ int main(int argc, char *argv[])
         char *last_colon = NULL;
 
         last_colon = strrchr(host, ':');
-        port = atoi(last_colon + 1);
-        //printf(">>> port=%d\n", port);
-        *last_colon = '\0';
+        if (last_colon != NULL) {
+            port = atoi(last_colon + 1);
+            *last_colon = '\0';
+        }
     }
     if (port == 0) {
-        port = DEFAULT_PORT
+        port = DEFAULT_PORT;
     }
     
     if (verbose) {
       printf("Host: %s Port: %d\n",host,port);
     }
 
-    sockfd = connectServer(host, port);
+    initLog(0, dummylog, verbose);
+    if (! *commands && !cmdfile) {
+        usage();
+    }
+     sockfd = connectServer(host, port);
     if (sockfd < 0) {
         logIT(LOG_ERR, "No connection to %s", host);
         exit(1);
