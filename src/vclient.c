@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 {
     // Get the command line options
     char *host;
-    int port = 3002;
+    int port = 0;
     char commands[512] = "";
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
@@ -261,9 +261,6 @@ int main(int argc, char *argv[])
       host = "localhost";
     }
 
-    if (verbose) {
-      printf("Host: %s Port: %d\n",host,port);
-    }
     // Collect any remaining command line arguments (not options).
     // and use the as commands like for the -c option.
     if (optind < argc) {
@@ -292,11 +289,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    initLog(0, dummylog, verbose);
-    if (! *commands && !cmdfile) {
-        usage();
-    }
-    /* Check for :<port> if port==0
+   /* Check for :<port> if port==0
        then separate the port number from the host name
        or the IP adsress.
        The IP address could be a plain old IPv4 or a IPv6 one,
@@ -310,14 +303,27 @@ int main(int argc, char *argv[])
         char *last_colon = NULL;
 
         last_colon = strrchr(host, ':');
-        port = atoi(last_colon + 1);
-        //printf(">>> port=%d\n", port);
-        *last_colon = '\0';
+        if (last_colon != NULL) {
+            port = atoi(last_colon + 1);
+            *last_colon = '\0';
+        }
+    }
+    if (port == 0) {
+        port = DEFAULT_PORT;
+    }
+    
+    if (verbose) {
+      printf("Host: %s Port: %d\n",host,port);
+    }
+
+    initLog(0, dummylog, verbose);
+    if (! *commands && !cmdfile) {
+        usage();
     }
 
     sockfd = connectServer(host, port);
     if (sockfd < 0) {
-        logIT(LOG_ERR, "No connection to %s", host);
+        logIT(LOG_ERR, "No connection to host %s on port %d", host, port);
         exit(1);
     }
 
