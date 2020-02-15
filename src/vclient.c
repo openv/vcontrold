@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "too many commands\n");
                     break;
                 }
-                strncat(commands, ",", 1);
+                strcat(commands, ",");
                 strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
             }
             break;
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
                     optind++;
                     break;
                 }
-                strncat(commands, ",", 1);
+                strcat(commands, ",");
                 strncat(commands, argv[optind], sizeof(commands) - strlen(commands) - 2);
             }
             optind++;
