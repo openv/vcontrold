@@ -20,7 +20,7 @@ find_package(LibXml2 REQUIRED)
 if(MANPAGES)
     find_program(RST2MAN NAMES rst2man rst2man.py)
     if(RST2MAN)
-        message("-- Found rst2man: ${RST2MAN}")
+        message(STATUS "Found rst2man: ${RST2MAN}")
     else(RST2MAN)
         message(FATAL_ERROR
             "Could not find a rst2man executable. Either set the \"MANPAGES\" option to \"OFF\" \
