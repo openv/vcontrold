@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.2.0)
 project(vcontrold C)
 
-IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-# CMAKE_INSTALL_PREFIX defaults to /usr/local, but it should go to /usr
-set(CMAKE_INSTALL_PREFIX /usr)
-ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    # CMAKE_INSTALL_PREFIX defaults to /usr/local, but it should go to /usr
+    set(CMAKE_INSTALL_PREFIX /usr)
+endif()
 
 option(MANPAGES "Build man pages via rst2man" ON)
 option(VCLIENT "Build the vclient helper program (for communication with vcontrold)" ON)
@@ -21,14 +21,12 @@ if(MANPAGES)
     find_program(RST2MAN NAMES rst2man rst2man.py)
     if(RST2MAN)
         message(STATUS "Found rst2man: ${RST2MAN}")
-    else(RST2MAN)
-        message(FATAL_ERROR
-            "Could not find a rst2man executable. Either set the \"MANPAGES\" option to \"OFF\" \
-             (via cmake -DMANPAGES=OFF) or install Python's Docutils \
-             (cf. http://docutils.sourceforge.net/)."
-        )
-    endif(RST2MAN)
-endif(MANPAGES)
+    else()
+        message(FATAL_ERROR "Could not find a rst2man executable. Either set the \"MANPAGES\" "
+                            "option to \"OFF\" (via cmake -DMANPAGES=OFF) or install Python's "
+                            "Docutils (cf. http://docutils.sourceforge.net/).")
+    endif()
+endif()
 
 add_custom_target(
     UpdateVersion ALL
@@ -88,21 +86,21 @@ add_dependencies(vcontrold UpdateVersion)
 if(VCLIENT)
     add_executable(vclient ${vclient_SRCS})
     add_dependencies(vclient UpdateVersion)
-endif(VCLIENT)
+endif()
 
 if(VSIM)
     add_executable(vsim ${vsim_SRCS})
     add_dependencies(vsim UpdateVersion)
-endif(VSIM)
+endif()
 
 if(MANPAGES)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/doc/man)
-endif(MANPAGES)
+endif()
 
 install(TARGETS vcontrold DESTINATION ${CMAKE_INSTALL_PREFIX}/sbin)
 if(VCLIENT)
     install(TARGETS vclient DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-endif(VCLIENT)
+endif()
 if(VSIM)
     install(TARGETS vsim DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
-endif(VSIM)
+endif()
