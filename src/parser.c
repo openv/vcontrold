@@ -171,6 +171,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             sendLen = 0; // We don't send the converted sendBuf
             memcpy(cPtr->send, sendBuf, cPtr->len);
         } else if (cPtr->uPtr) {
+            len = sendLen; // we need this in procSetUnit() to clear sendBuf
             if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
                 logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
                 return -1;
@@ -245,7 +246,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     cmpPtr->len = recvLen;
                 }
                 etime = 0;
-                memset(recvBuf, 0, sizeof(recvBuf));
+                memset(recvBuf, 0, recvLen);
                 if (framer_receive(fd, recvBuf, cmpPtr->len, &etime) <= 0) {
                     logIT1(LOG_ERR, "Error in recv, terminating");
                     return -1;
