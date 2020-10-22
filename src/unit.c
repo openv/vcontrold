@@ -233,7 +233,7 @@ int setSysTime(char *input, char *sendBuf)
         // It is probably not the best idea to use internal variables, but
         // there doesn't seem to be an efficient way to transform times
         // between timezones.
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(__APPLE__)
         t_in.tm_sec += (th->tm_gmtoff - t_in.tm_gmtoff);
         t_in.tm_gmtoff = th->tm_gmtoff;
 #else
@@ -529,7 +529,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     memset(buffer, 0, sizeof(buffer));
     // We copy the sendBuf, as this one is also used for return
     strncpy(input, sendBuf, sizeof(input));
-    memset(sendBuf, 0, sizeof(sendBuf));
+    memset(sendBuf, 0, *sendLen);
 
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
         // Cycle time
