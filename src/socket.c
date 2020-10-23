@@ -33,15 +33,9 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#ifndef __CYGWIN__
-// I'm not sure about this cpp defines, can some check tht? -fn-
-#ifdef __linux__
-#include <linux/tcp.h> // do we realy need this? Not sure for Linux -fn-
-#endif
+#include <netinet/tcp.h> // TCP_NODELAY is defined there -fn-
 #if defined (__FreeBSD__) || defined(__APPLE__)
 #include <netinet/in.h>
-#include <netinet/tcp.h> // TCP_NODELAY is defined there -fn-
-#endif
 #endif
 
 #include "socket.h"
