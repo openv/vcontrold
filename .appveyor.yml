@@ -33,7 +33,6 @@ install:
   - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
 build_script:
-  - '%CYGSH% "printenv"'
   - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER && mkdir build"'
   - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .."'
   - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && cmake --build ."'
