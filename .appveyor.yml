@@ -36,7 +36,7 @@ build_script:
   - '%CYGSH% "printenv"'
   - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER && mkdir build"'
   - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .."'
-  - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && && cmake --build ."'
+  - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && cmake --build ."'
 
 after_build:
   - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > $APPVEYOR_BUILD_FOLDER/build/VERSION"'
