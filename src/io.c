@@ -104,7 +104,7 @@ int opentty(char *device)
         newsb.c_cc[s] = 0;
     }
 #else
-    bzero (&newsb, sizeof(newsb));
+    memset(&newsb, 0, sizeof(newsb));
 #endif
 
     newsb.c_iflag     = IGNBRK | IGNPAR;
@@ -141,7 +141,7 @@ int my_send(int fd, char *s_buf, int len)
         unsigned char byte = s_buf[i] & 255;
         logIT(LOG_INFO, ">SENT: %02X", (int)byte);
     }
-    
+
     if (wr == len) {
         return wr;
     } else {

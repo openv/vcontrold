@@ -15,6 +15,11 @@ if (CMAKE_C_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_GREAT
     set (CMAKE_C_FLAGS "-fcommon ${CMAKE_C_FLAGS}")
 endif ()
 
+# additional define to compile on macOS Catalina by hmueller01
+if (APPLE)
+    set (CMAKE_C_FLAGS "-D_DARWIN_C_SOURCE ${CMAKE_C_FLAGS}")
+endif (APPLE)
+
 find_package(LibXml2 REQUIRED)
 
 if(MANPAGES)
