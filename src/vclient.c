@@ -88,7 +88,7 @@ void usage()
 int main(int argc, char *argv[])
 {
     // Get the command line options
-    char *host;
+    char *host = NULL;
     int port = 0;
     char commands[512] = "";
     const char *cmdfile = NULL;
@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (host == NULL) { 
+    if (host == NULL) {
       host = "localhost";
     }
 
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
     if (port == 0) {
         port = DEFAULT_PORT;
     }
-    
+
     if (verbose) {
       printf("Host: %s Port: %d\n",host,port);
     }
