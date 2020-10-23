@@ -77,20 +77,19 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
 short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
 int getErrState(enumPtr ePtr, char *recv, int len, char *result);
 int getSysTime(char *recv, int len, char *result);
-int setSysTime(char *input, char *sendBuf, short bufsize);
+int setSysTime(char *input, char *sendBuf);
 
 int getCycleTime(char *recv, int len, char *result)
 {
     int i;
     char string[80];
 
-    //if ((len/2)*2 !=len) {
     if (len % 2) {
         sprintf(result, "Byte count not even");
         return 0;
     }
 
-    bzero(string, sizeof(string));
+    memset(string, 0, sizeof(string));
 
     for (i = 0; i < len; i += 2) {
         // TODO - vitoopen: Leave output in German.
@@ -166,78 +165,89 @@ int setCycleTime(char *input, char *sendBuf)
     return 8;
 }
 
+int bcd2dec(int bcd) {
+    int dec = bcd - ((int)(bcd / 16) * 6);
+    return dec;
+}
+
 int getSysTime(char *recv, int len, char *result)
 {
-    char day[3];
+    struct tm *t;
+    time_t tt;
 
     if (len != 8) {
         sprintf(result, "System time: Len <> 8 bytes");
         return 0;
     }
 
-    // TODO: Can this be translated, or is it used as German day abbreviations
-    // when communicating with the heating controller?
-    switch (recv[4]) {
-    case 0:
-        strcpy(day, "So");
-        break;
-    case 1:
-        strcpy(day, "Mo");
-        break;
-    case 2:
-        strcpy(day, "Di");
-        break;
-    case 3:
-        strcpy(day, "Mi");
-        break;
-    case 4:
-        strcpy(day, "Do");
-        break;
-    case 5:
-        strcpy(day, "Fr");
-        break;
-    case 6:
-        strcpy(day, "Sa");
-        break;
-    case 7:
-        strcpy(day, "So");
-        break;
-    default:
-        sprintf(result, "Error day conversion: %02X", recv[4]);
-        return 0;
-    }
+    // Use timezone information from the host system
+    time(&tt);
+    t = localtime(&tt);
+    t->tm_year = bcd2dec(recv[0]) * 100 + bcd2dec(recv[1]) - 1900;
+    t->tm_mon = bcd2dec(recv[2]) - 1;
+    t->tm_mday = bcd2dec(recv[3]);
+    t->tm_wday = bcd2dec(recv[4]) % 7;
+    t->tm_hour = bcd2dec(recv[5]);
+    t->tm_min = bcd2dec(recv[6]);
+    t->tm_sec = bcd2dec(recv[7]);
 
-    sprintf(result, "%s,%02X.%02X.%02X%02X %02x:%02X:%02X", day,
-            recv[3], recv[2], recv[0], recv[1],
-            recv[5], recv[6], recv[7]);
+    // This might break existing applications. But changing the string to some custom format
+    // that is not recognized by strptime for parsing dates has a symmetry impact that the
+    // format for getTime is different from the format required by setTime.
+    // I would consider the command symmetry more important for the future.
+    strftime(result, 48, "%FT%T%z", t);
 
     return 1;
 }
 
-int setSysTime(char *input, char *sendBuf, short bufsize)
+int setSysTime(char *input, char *sendBuf)
 {
     char systime[80];
     time_t tt;
+    struct tm t_in = {0};
     struct tm *t;
+    struct tm *th;
+
+    memset(systime, 0, sizeof(systime));
+
+    time(&tt);
+    th = localtime(&tt);
 
     // No parameter, set the current system time
     if (!*input) {
-        time(&tt);
-        t = localtime(&tt);
-        bzero(systime, sizeof(systime));
-        sprintf(systime, "%04d  %02d %02d %02d %02d %02d %02d",
-                t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_wday,
-                t->tm_hour, t->tm_min, t->tm_sec);
-        // We put a blank in the year
-        systime[4] = systime[3];
-        systime[3] = systime[2];
-        systime[2] = ' ';
-        logIT(LOG_INFO, "current system time %s", systime);
-        return string2chr(systime, sendBuf, bufsize);
+        t = th;
     } else {
+#ifdef _XOPEN_SOURCE
+        char *parseEnd = strptime(input, "%FT%T%z", &t_in);
+        // If the string is fully parsed, parseEnd should be the terminating '0' character of the input string.
+        if (!parseEnd || *parseEnd) {
+            logIT(LOG_ERR, "Can not parse time string '%s'. Use the same ISO 8601 time format for setting a time as you get when getting a time.", input);
+            return 0;
+        }
+#else
         logIT1(LOG_ERR, "Setting an explicit time is not supported yet");
         return 0;
+#endif
+
+        // Recalculate the input time adjusted to the hosts timezone.
+        // It is probably not the best idea to use internal variables, but
+        // there doesn't seem to be an efficient way to transform times
+        // between timezones.
+#if defined(__CYGWIN__) || defined(__APPLE__)
+        t_in.tm_sec += (th->tm_gmtoff - t_in.tm_gmtoff);
+        t_in.tm_gmtoff = th->tm_gmtoff;
+#else
+        t_in.tm_sec += (th->__tm_gmtoff - t_in.__tm_gmtoff);
+        t_in.__tm_gmtoff = th->__tm_gmtoff;
+#endif
+        t_in.tm_isdst = th->tm_isdst;
+        mktime(&t_in);
+
+        t = &t_in;
     }
+
+    strftime(systime, 24, "%C %y %m %d %w %H %M %S", t);
+    return string2chr(systime, sendBuf, 8);
 }
 
 int getErrState(enumPtr ePtr, char *recv, int len, char *result)
@@ -255,8 +265,8 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
 
     for (i = 0; i < len; i += 9) {
         ptr = recv + i;
-        bzero(string, sizeof(string));
-        bzero(systime, sizeof(systime));
+        memset(string, 0, sizeof(string));
+        memset(systime, 0, sizeof(systime));
         // Error code: Byte 0
         if (bytes2Enum(ePtr, ptr, &errtext, 1))
             // Rest SysTime
@@ -291,7 +301,7 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
     }
     if (ePtr) {
         *text = ePtr->text;
-        bzero(string, sizeof(string));
+        memset(string, 0, sizeof(string));
         char2hex(string, bytes, len);
         strcat(string, " -> ");
         strcat(string, ePtr->text);
@@ -315,10 +325,10 @@ short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
 
     *bytes = ePtr->bytes;
     *len = ePtr->len;
-    bzero(string, sizeof(string));
+    memset(string, 0, sizeof(string));
     strncpy(string, text, sizeof(string));
     strcat(string, " -> ");
-    bzero(string2, sizeof(string2));
+    memset(string2, 0, sizeof(string2));
     char2hex(string2, ePtr->bytes, ePtr->len);
     strcat(string, string2);
     logIT1(LOG_INFO, string);
@@ -351,7 +361,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     uint32_t tmpUI;
     uint32_t uintV;
 
-    bzero(errPtr, sizeof(error));
+    memset(errPtr, 0, sizeof(error));
 
     // We tread the different <type> entries
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
@@ -436,10 +446,10 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     char res;
 
     ptr = recvBuf;
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
     for (n = 0; n <= 9; n++) {
         // The bytes 0..9 are of interest
-        bzero(string, sizeof(string));
+        memset(string, 0, sizeof(string));
         unsigned char byte = *ptr++ & 255;
         snprintf(string, sizeof(string), "B%d:%02X ", n, byte);
         strcat(buffer, string);
@@ -510,16 +520,16 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     uint32_t tmpUI;
     uint32_t uintV;
 
-    bzero(errPtr, sizeof(error));
+    memset(errPtr, 0, sizeof(error));
     // Some logging
     int n = 0;
     char *ptr;
     char dumBuf[10];
-    bzero(dumBuf, sizeof(dumBuf));
-    bzero(buffer, sizeof(buffer));
+    memset(dumBuf, 0, sizeof(dumBuf));
+    memset(buffer, 0, sizeof(buffer));
     // We copy the sendBuf, as this one is also used for return
     strncpy(input, sendBuf, sizeof(input));
-    bzero(sendBuf, sizeof(sendBuf));
+    memset(sendBuf, 0, *sendLen);
 
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
         // Cycle time
@@ -534,7 +544,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     }
     if (strstr(uPtr->type, "systime") == uPtr->type) {
         // System time
-        if (! (*sendLen = setSysTime(input, sendBuf, *sendLen))) {
+        if (! (*sendLen = setSysTime(input, sendBuf))) {
             return -1;
         } else  {
             return 1;
@@ -584,7 +594,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                 sprintf(sendBuf, "Did not find an appropriate enum");
                 return -1;
             } else {
-                bzero(dumBuf, sizeof(dumBuf));
+                memset(dumBuf, 0, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
                 logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
                 ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
@@ -636,15 +646,15 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             uintV = __cpu_to_le32(tmpUI);
             memcpy(sendBuf, &uintV, 2);
         } else if (uPtr->type) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             logIT(LOG_ERR, "Unknown type %s in unit %s", uPtr->type, uPtr->name);
             return -1;
         }
 
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
         ptr = sendBuf;
         while (*ptr) {
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             unsigned char byte = *ptr++ & 255;
             snprintf(string, sizeof(string), "%02X ", byte);
             strcat(buffer, string);

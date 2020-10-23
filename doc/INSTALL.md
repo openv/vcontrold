@@ -29,7 +29,7 @@ The installation path can be altered by
 Invocation is as follows:
 
 ```
-cmake -DVSIM=ON -DMANPAGES=OFF -DCMAKE_INSTALLATION_PREFIX=/usr/local ..
+cmake -DVSIM=ON -DMANPAGES=OFF -DCMAKE_INSTALL_PREFIX=/usr/local ..
 ```
 
 ### Installation

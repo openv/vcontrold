@@ -215,7 +215,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         return floatV;
     case HEX:
         nPtr = nstring;
-        bzero(nstring, sizeof(nstring));
+        memset(nstring, 0, sizeof(nstring));
         strcpy(nstring, "0x");
         nPtr += 2;
         token = nextToken(str, &item, &n);
@@ -471,7 +471,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         return ((int)pPtr[9]) & 0xff;
     case HEX:
         nPtr = nstring;
-        bzero(nstring, sizeof(nstring));
+        memset(nstring, 0, sizeof(nstring));
         strcpy(nstring, "0x");
         nPtr += 2;
         token = nextToken(str, &item, &n);

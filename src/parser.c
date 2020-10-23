@@ -145,8 +145,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     char out_buff[1024];
     int out_len;
 
-    bzero(simIn, sizeof(simIn));
-    bzero(simOut, sizeof(simOut));
+    memset(simIn, 0, sizeof(simIn));
+    memset(simOut, 0, sizeof(simOut));
 
     // First copy or convert the bytes of sendBuf to the BYTES token of cmpPtr
     // to be sure not to abort right in the middle of it
@@ -161,8 +161,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             if (sendLen != cPtr->len) {
                 // This should never happen!
                 logIT(LOG_ERR,
-                      "Error in length of the hex string (%d) != send length of \
-                      the command (%d), terminating", sendLen, cPtr->len);
+                      "Error in length of the hex string (%d) != send length of the command (%d), terminating", sendLen, cPtr->len);
                 return -1;
             }
             if (cPtr->send) {
@@ -172,6 +171,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             sendLen = 0; // We don't send the converted sendBuf
             memcpy(cPtr->send, sendBuf, cPtr->len);
         } else if (cPtr->uPtr) {
+            len = sendLen; // we need this in procSetUnit() to clear sendBuf
             if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
                 logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
                 return -1;
@@ -196,7 +196,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     logIT1(LOG_ERR, "Error in wait, terminating");
                     return -1;
                 }
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 char2hex(string, cmpPtr->send, cmpPtr->len);
                 strcat(simIn, string);
                 strcat(simIn, " ");
@@ -229,11 +229,11 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 if (iniFD && *simIn && *simOut) {
                     // We already sent and received something, so we output it
                     fprintf(iniFD, "%s= %s\n", simOut, simIn);
-                    bzero(simOut, sizeof(simOut));
-                    bzero(simIn, sizeof(simIn));
+                    memset(simOut, 0, sizeof(simOut));
+                    memset(simIn, 0, sizeof(simIn));
                 }
 
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 char2hex(string, out_buff, out_len);
                 strcat(simOut, string);
                 strcat(simOut, " ");
@@ -246,7 +246,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     cmpPtr->len = recvLen;
                 }
                 etime = 0;
-                bzero(recvBuf, sizeof(recvBuf));
+                memset(recvBuf, 0, recvLen);
                 if (framer_receive(fd, recvBuf, cmpPtr->len, &etime) <= 0) {
                     logIT1(LOG_ERR, "Error in recv, terminating");
                     return -1;
@@ -275,14 +275,14 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     }
                 }
 
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 char2hex(string, recvBuf, cmpPtr->len);
                 strcat(simIn, string);
                 strcat(simIn, " ");
 
                 // If we have a Unit (== uPtr), we convert the received value and also
                 // return the converted value to uPtr
-                bzero(result, sizeof(result));
+                memset(result, 0, sizeof(result));
                 if (! supressUnit && cmpPtr->uPtr) {
                     if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
                         <= 0) {
@@ -307,7 +307,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 break;
             case PAUSE:
                 logIT(LOG_INFO, "Waiting %i ms", cmpPtr->len);
-                usleep(cmpPtr->len * 1000L);
+		struct timespec sleepTime = {
+		    .tv_sec = cmpPtr->len / 1000L,
+		    .tv_nsec = (cmpPtr->len % 1000L) * 1000000L};
+                nanosleep(&sleepTime, NULL);
                 break;
             case BYTES:
                 // We send the forwarded sendBuffer. No converting has been done.
@@ -328,7 +331,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         cmpPtr->len = 0;
                         return -1;
                     }
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     char2hex(string, cmpPtr->send, cmpPtr->len);
                     strcat(simOut, string);
                     strcat(simOut, " ");
@@ -486,7 +489,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     }
 
     logIT(LOG_INFO, "protocmd line: %s", sendPtr);
-    bzero(eString, sizeof(eString));
+    memset(eString, 0, sizeof(eString));
     cPtr->retry = iPtr->retry; // We take the Retry value from the protocol command
     cPtr->recvTimeout = iPtr->recvTimeout; // Same for the receive timeout
     do {
@@ -505,7 +508,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
         // Don't copy the converted string
         strncpy(ePtr, sendPtr, ptr - sendPtr);
         ePtr += ptr - sendPtr;
-        bzero(var, sizeof(var));
+        memset(var, 0, sizeof(var));
         strncpy(var, ptr + 1, bptr - ptr - 1);
         //snprintf(string, sizeof(string),"   Var: %s",var);
         //logIT(LOG_INFO,string);
@@ -514,7 +517,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
             if (strstr(var, "addr") == var) {
                 // Always two bytes
                 int i;
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 for (i = 0; i < strlen(cPtr->addr) - 1; i += 2) {
                     strncpy(ePtr, cPtr->addr + i, 2);
                     ePtr += 2;
@@ -551,7 +554,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     sendStartPtr = sendPtr;
 
     // We search for words and look if we have them as macros
-    bzero(eString, sizeof(eString));
+    memset(eString, 0, sizeof(eString));
     ePtr = eString;
     do {
         ptr = sendPtr;
@@ -560,7 +563,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
                 break;
             }
         }
-        bzero(name, sizeof(name));
+        memset(name, 0, sizeof(name));
         strncpy(name, sendPtr, ptr - sendPtr);
         if ((mFPtr = getMacroNode(pPtr->mPtr, name))) {
             strncpy(ePtr, mFPtr->command, strlen(mFPtr->command));
@@ -622,7 +625,7 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     }
 
     logIT(LOG_INFO, "BuildByteCode: %s", sendPtr);
-    bzero(eString, sizeof(eString));
+    memset(eString, 0, sizeof(eString));
     do {
         ptr = sendPtr;
         while (*ptr++) {
@@ -630,10 +633,10 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
                 break;
             }
         }
-        bzero(cmd, sizeof(cmd));
+        memset(cmd, 0, sizeof(cmd));
         strncpy(cmd, sendPtr, ptr - sendPtr);
         hexlen = 0;
-        bzero(uSPtr, sizeof(uString));
+        memset(uSPtr, 0, sizeof(uString));
         token = parseLine(cmd, hex, &hexlen, uString, sizeof(uString));
         logIT(LOG_INFO, "        Token: %d Hexlen: %d, Unit: %s", token, hexlen, uSPtr);
         cmpPtr = newCompileNode(cmpStartPtr);

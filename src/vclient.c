@@ -88,8 +88,8 @@ void usage()
 int main(int argc, char *argv[])
 {
     // Get the command line options
-    char *host;
-    int port = 3002;
+    char *host = NULL;
+    int port = 0;
     char commands[512] = "";
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
                     fprintf(stderr, "too many commands\n");
                     break;
                 }
-                strncat(commands, ",", 1);
+                strcat(commands, ",");
                 strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
             }
             break;
@@ -257,13 +257,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (host == NULL) { 
+    if (host == NULL) {
       host = "localhost";
     }
 
-    if (verbose) {
-      printf("Host: %s Port: %d\n",host,port);
-    }
     // Collect any remaining command line arguments (not options).
     // and use the as commands like for the -c option.
     if (optind < argc) {
@@ -282,7 +279,7 @@ int main(int argc, char *argv[])
                     optind++;
                     break;
                 }
-                strncat(commands, ",", 1);
+                strcat(commands, ",");
                 strncat(commands, argv[optind], sizeof(commands) - strlen(commands) - 2);
             }
             optind++;
@@ -292,11 +289,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    initLog(0, dummylog, verbose);
-    if (! *commands && !cmdfile) {
-        usage();
-    }
-    /* Check for :<port> if port==0
+   /* Check for :<port> if port==0
        then separate the port number from the host name
        or the IP adsress.
        The IP address could be a plain old IPv4 or a IPv6 one,
@@ -310,14 +303,27 @@ int main(int argc, char *argv[])
         char *last_colon = NULL;
 
         last_colon = strrchr(host, ':');
-        port = atoi(last_colon + 1);
-        //printf(">>> port=%d\n", port);
-        *last_colon = '\0';
+        if (last_colon != NULL) {
+            port = atoi(last_colon + 1);
+            *last_colon = '\0';
+        }
+    }
+    if (port == 0) {
+        port = DEFAULT_PORT;
+    }
+
+    if (verbose) {
+      printf("Host: %s Port: %d\n",host,port);
+    }
+
+    initLog(0, dummylog, verbose);
+    if (! *commands && !cmdfile) {
+        usage();
     }
 
     sockfd = connectServer(host, port);
     if (sockfd < 0) {
-        logIT(LOG_ERR, "No connection to %s", host);
+        logIT(LOG_ERR, "No connection to host %s on port %d", host, port);
         exit(1);
     }
 
@@ -339,7 +345,7 @@ int main(int argc, char *argv[])
             logIT(LOG_ERR, "Could not create file %s", outfile);
             exit(1);
         }
-        bzero(string, sizeof(string));
+        memset(string, 0, sizeof(string));
         logIT(LOG_INFO, "Output file %s", outfile);
     } else {
         ofilePtr = fdopen(fileno(stdout), "w");
@@ -352,8 +358,8 @@ int main(int argc, char *argv[])
             logIT(LOG_ERR, "Could not create file %s", csvfile);
             exit(1);
         }
-        bzero(string, sizeof(string));
-        bzero(result, sizeof(result));
+        memset(string, 0, sizeof(string));
+        memset(result, 0, sizeof(result));
         while (resPtr) {
             if (resPtr->err) {
                 //fprintf(stderr,"%s:%s\n",resPtr->cmd,resPtr->err);
@@ -362,7 +368,7 @@ int main(int argc, char *argv[])
                 resPtr = resPtr->next;
                 continue;
             }
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             sprintf(string, "%f;", resPtr->result);
             strncat(result, string, sizeof(result) - strlen(result) - 1);
             resPtr = resPtr->next;
@@ -417,7 +423,7 @@ int main(int argc, char *argv[])
             while ((lptr = strchr(lSptr, '$'))) {
                 varReplaced = 0;
                 if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ is masked by a backslash
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     strncpy(string, lSptr, lptr - lSptr - 1);
                     fprintf(ofilePtr, "%s%c", string, *lptr);
                     lSptr = lptr + 1;
@@ -428,12 +434,12 @@ int main(int argc, char *argv[])
                 while (isalpha(*lEptr) || isdigit(*lEptr)) {
                     lEptr++;
                 }
-                bzero(varname, sizeof(varname));
+                memset(varname, 0, sizeof(varname));
                 strncpy(varname, lptr + 1, lEptr - lptr - 1);
                 logIT(LOG_INFO, "    Recognized variable: %s", varname);
 
                 // We output everything up to this
-                bzero(string, sizeof(string));
+                memset(string, 0, sizeof(string));
                 strncpy(string, lSptr, lptr - lSptr);
                 fprintf(ofilePtr, "%s", string);
 
@@ -491,7 +497,7 @@ int main(int argc, char *argv[])
                         logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
                     }
                 } else {
-                    bzero(string, sizeof(string));
+                    memset(string, 0, sizeof(string));
                     strncpy(string, lptr, lEptr - lptr);
                     fprintf(ofilePtr, "%s", string);
                 }
@@ -505,7 +511,7 @@ int main(int argc, char *argv[])
         if (outfile && *outfile && execMe) {
             // Make the file executable and start
             fclose(ofilePtr);
-            bzero(string, sizeof(string));
+            memset(string, 0, sizeof(string));
             logIT(LOG_INFO, "Executing file %s", outfile);
             if (chmod(outfile, S_IXUSR | S_IRUSR | S_IWUSR) != 0) {
                 logIT(LOG_ERR, "Error chmod +x %s", outfile);
