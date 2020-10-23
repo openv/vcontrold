@@ -27,12 +27,11 @@ init:
       }
 
 install:
-  - choco install -y cygwin cyg-get
-  - cyg-get cygwin-devel git gcc-core libxml2 libxml2-devel cmake p7zip libiconv libiconv-devel
+  - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel"
   - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
 build_script:
-  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
+  - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
 
 after_build:
   - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > $APPVEYOR_BUILD_FOLDER/build/VERSION"'
