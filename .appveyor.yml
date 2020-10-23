@@ -27,6 +27,10 @@ init:
       }
 
 install:
+  # Workaround (update CygWin) as described in https://github.com/appveyor/ci/issues/2898
+  - appveyor DownloadFile "http://www.cygwin.com/setup-%Arch%.exe" -FileName C:\%Location%\setup-%Arch%.exe
+  - ps: |
+      cmd /c "C:\$env:Location\setup-$env:Arch.exe -q --no-desktop --no-shortcuts --no-startmenu --upgrade-also"
   - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel"
   - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
