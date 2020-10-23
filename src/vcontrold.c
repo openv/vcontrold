@@ -78,7 +78,6 @@ void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
 static void sigPipeHandler(int signo);
 static void sigHupHandler(int signo);
-short checkIP(char *ip);
 int reloadConfig();
 
 void usage()
@@ -94,19 +93,6 @@ void usage()
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
 
     exit(1);
-}
-
-short checkIP(char *ip)
-{
-    allowPtr aPtr;
-
-    if ((aPtr = getAllowNode(cfgPtr->aPtr, inet_addr(ip)))) {
-        logIT(LOG_INFO, "%s in allowList (%s)", ip, aPtr->text);
-        return 1;
-    } else {
-        logIT(LOG_INFO, "%s not in allowList", ip);
-        return 0;
-    }
 }
 
 int reloadConfig()
@@ -890,18 +876,7 @@ int main(int argc, char *argv[])
         }
 
         int sockfd = -1;
-        int listenfd = -1;
-        // Pointer to the checkIP function
-        short (*checkP)(char *);
-
-        if (cfgPtr->aPtr) {
-            // We have an allow list
-            checkP = checkIP;
-        } else {
-            checkP = NULL;
-        }
-
-        listenfd = openSocket(tcpport);
+        int listenfd = openSocket(tcpport);
 
         // Drop privileges after binding
         if (0 == getuid()) {
@@ -967,7 +942,7 @@ int main(int argc, char *argv[])
         vcontrol_seminit();
 
         while (1) {
-            sockfd = listenToSocket(listenfd, makeDaemon, checkP);
+            sockfd = listenToSocket(listenfd, makeDaemon);
             if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
                 logIT1(LOG_ERR, "Signal error");
                 exit(1);

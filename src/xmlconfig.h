@@ -34,16 +34,8 @@ int parseXMLFile(char *filename);
 macroPtr getMacroNode(macroPtr ptr, const char *name);
 unitPtr getUnitNode(unitPtr ptr, const char *name);
 commandPtr getCommandNode(commandPtr ptr, const char *name);
-allowPtr getAllowNode(allowPtr ptr, in_addr_t testIP);
 enumPtr getEnumNode(enumPtr prt, char *search, int len);
 icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
-
-struct allow {
-    char *text;
-    in_addr_t ip;
-    in_addr_t mask;
-    allowPtr next;
-} Allow;
 
 struct compile {
     int token;
@@ -63,7 +55,6 @@ struct config {
     char *groupname;
     char *devID;
     devicePtr devPtr;
-    allowPtr aPtr;
     int syslog;
     int debug;
 } Config;

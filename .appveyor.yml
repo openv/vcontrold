@@ -1,9 +1,11 @@
 environment:
   matrix:
-    - ARCH: x86
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86
       CYGWIN: C:\Cygwin
       CYGSH: C:\Cygwin\bin\bash -lc
-    - ARCH: x86_64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      ARCH: x86_64
       CYGWIN: C:\Cygwin64
       CYGSH: C:\Cygwin64\bin\bash -lc
 
@@ -27,15 +29,13 @@ init:
       }
 
 install:
-  # Workaround (update CygWin) as described in https://github.com/appveyor/ci/issues/2898
-  - appveyor DownloadFile "http://www.cygwin.com/setup-%Arch%.exe" -FileName C:\%Location%\setup-%Arch%.exe
-  - ps: |
-      cmd /c "C:\$env:Location\setup-$env:Arch.exe -q --no-desktop --no-shortcuts --no-startmenu --upgrade-also"
   - "%CYGWIN%\\setup-%ARCH%.exe -q --no-shortcuts -P cygwin-devel,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel"
   - '%CYGWIN%\bin\cygcheck -dc cygwin'
 
 build_script:
-  - '%CYGSH% "cd $APPVEYOR_BUILD_FOLDER && mkdir build && cd build &&  cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .. && cmake --build ."'
+  - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER && mkdir build"'
+  - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && cmake -DMANPAGES=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .."'
+  - '%CYGSH% ". /etc/profile && cd $APPVEYOR_BUILD_FOLDER/build && cmake --build ."'
 
 after_build:
   - '%CYGSH% "echo $APPVEYOR_BUILD_VERSION > $APPVEYOR_BUILD_FOLDER/build/VERSION"'
