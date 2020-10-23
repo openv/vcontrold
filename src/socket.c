@@ -120,7 +120,7 @@ int openSocket(int tcpport)
     return listenfd;
 }
 
-int listenToSocket(int listenfd, int makeChild, short (*checkP)(char *))
+int listenToSocket(int listenfd, int makeChild)
 {
     int connfd;
     pid_t childpid;

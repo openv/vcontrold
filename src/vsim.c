@@ -41,13 +41,11 @@
 #define SERVERPORT 6578
 int makeDaemon = 0;
 int inetversion = 0;
-short (*checkP)(char *) = NULL;
 int readCmdFile(char *filename, char *result, int *resultLen, char *device );
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
 static void sigPipeHandler(int signo);
-short checkIP(char *ip);
 
 void logIT (int class, char *string, ...)
 {
@@ -158,7 +156,7 @@ int main(int argc, char *argv[])
 
     listenfd = openSocket(SERVERPORT);
     while (1) {
-        sockfd = listenToSocket(listenfd, makeDaemon, checkP);
+        sockfd = listenToSocket(listenfd, makeDaemon);
         if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
             logIT(LOG_ERR, "Signal error");
             exit(1);

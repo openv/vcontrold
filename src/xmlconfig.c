@@ -42,7 +42,6 @@ void removeMacroList(macroPtr ptr);
 void removeCommandList(commandPtr ptr);
 void removeDeviceList(devicePtr ptr);
 void removeIcmdList(icmdPtr ptr);
-void removeAllowList(allowPtr ptr);
 void removeEnumList(enumPtr ptr);
 void freeAllLists();
 
@@ -385,51 +384,6 @@ void removeIcmdList(icmdPtr ptr)
     }
 }
 
-allowPtr getAllowNode(allowPtr ptr, const in_addr_t testIP)
-{
-    if (! ptr) {
-        return NULL;
-    }
-
-    if ((ntohl(ptr->ip) & ptr->mask) == (ntohl(testIP) & ptr->mask)) {
-        return ptr;
-    }
-
-    return getAllowNode(ptr->next, testIP);
-}
-
-allowPtr newAllowNode(allowPtr ptr)
-{
-    allowPtr nptr;
-    if (ptr && ptr->next) {
-        return newAllowNode(ptr->next);
-    }
-
-    nptr = calloc(1, sizeof(Allow));
-    if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
-    }
-
-    if (ptr) {
-        ptr->next = nptr;
-    }
-
-    return nptr;
-}
-
-void removeAllowList(allowPtr ptr)
-{
-    if (ptr && ptr->next) {
-        removeAllowList(ptr->next);
-    }
-
-    if (ptr) {
-        free(ptr->text);
-        free(ptr);
-    }
-}
-
 enumPtr newEnumNode(enumPtr ptr)
 {
     enumPtr nptr;
@@ -555,14 +509,12 @@ configPtr parseConfig(xmlNodePtr cur)
     char *chrPtr;
     xmlNodePtr prevPtr;
     //char string[256];
-    allowPtr aPtr;
     char ip[16];
 
     cfgPtr = calloc(1, sizeof(Config));
     cfgPtr->port = 0;
     cfgPtr->syslog = 0;
     cfgPtr->debug = 0;
-    cfgPtr->aPtr = NULL;
 
     while (cur) {
         logIT(LOG_INFO, "CONFIG:(%d) Node::Name=%s Type:%d Content=%s",
@@ -650,60 +602,6 @@ configPtr parseConfig(xmlNodePtr cur)
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
-        } else if (netFound && strstr((char *)cur->name, "allow"))  {
-            chrPtr = getPropertyNode(cur->properties, (xmlChar *)"ip");
-            logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s", cur->line, cur->name, cur->type, chrPtr);
-
-            // We now disassemble chrPtr to ip/size.
-            // If no mask is given, we assume /32.
-            // Afterwards, we build an inverse mask and put it in mask.
-            // ip == text content ip address mask == bitmask
-
-            char *ptr;
-            short count;
-            short size;
-            in_addr_t mask;
-
-            memset(ip, 0, sizeof(ip));
-            //memset(string, 0,sizeof(string));
-            if ((ptr = strchr(chrPtr, '/'))) {
-#if 0
-                strncpy(string, ptr + 1, sizeof(string) - 1);
-                size = atoi(string);
-#endif
-                size = atoi(ptr + 1);
-                strncpy(ip, chrPtr, ptr - chrPtr);
-            } else {
-                strncpy(ip, chrPtr, sizeof(ip) - 1);
-                size = 32;
-            }
-
-            if (inet_addr(ip) != INADDR_NONE) {
-                aPtr = newAllowNode(cfgPtr->aPtr);
-                aPtr->text = calloc(strlen(chrPtr) + 1, sizeof(char));
-                strcpy(aPtr->text, chrPtr);
-                mask = 0;
-                // We assemble a bitmask
-                if (size) {
-                    mask = 0x80000000;
-                    for (count = 0; count < size - 1; count++) {
-                        mask >>= 1;
-                        mask |= 0x80000000;
-                    }
-                }
-                aPtr->mask = mask;
-                aPtr->ip = inet_addr(ip);
-
-                if (! cfgPtr->aPtr) {
-                    cfgPtr->aPtr = aPtr;
-                }
-
-                logIT(LOG_INFO, "     Allow IP:%s Size:/%d", ip, size);
-            }
-
-            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
-                ? (cur = cur->next) : (cur = prevPtr->next);
-
         } else if (logFound && strstr((char *)cur->name, "file")) {
             chrPtr = getTextNode(cur);
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
@@ -1592,7 +1490,6 @@ void freeAllLists()
         free(cfgPtr->tty);
         free(cfgPtr->logfile);
         free(cfgPtr->devID);
-        removeAllowList(cfgPtr->aPtr);
         free(cfgPtr);
         cfgPtr = NULL;
     }

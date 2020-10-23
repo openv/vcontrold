@@ -7,9 +7,6 @@
 	</serial>
 	<net>
 		<port>3002</port>
-		<allow ip='127.0.0.1'/>
-		<allow ip='192.168.1.0/24'/>
-
 	</net>
 	<logging>
 		<file>/tmp/vcontrold.log</file>
