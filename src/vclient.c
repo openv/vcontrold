@@ -580,19 +580,26 @@ int main(int argc, char *argv[])
         fprintf(ofilePtr, "\n");
 
     } else if (json) {
-        // Output Cacti format
+        // Output JSON format
         int index = 1;
 	fprintf(ofilePtr,"{");
         while (resPtr) {
-            fprintf(ofilePtr, "\"%s\":", resPtr->cmd);
-            fprintf(ofilePtr, "%f ", resPtr->result);
+            fprintf(ofilePtr, "\"%s\": {", resPtr->cmd);
+            fprintf(ofilePtr, "\"value\":%f,", resPtr->result);
+            fprintf(ofilePtr, "\"raw\":\"%s\",", resPtr->raw);
+            if (resPtr->err) {
+                fprintf(ofilePtr, "\"error\":\"%s\"",resPtr->err);
+            } else {
+                fprintf(ofilePtr, "\"error\":\"\"");            
+            }
+            fprintf(ofilePtr,"}");
             index++;
             resPtr = resPtr->next;
             if(resPtr) {
                 fprintf(ofilePtr,",");
             }
         }
-        fprintf(ofilePtr,"}");
+        fprintf(ofilePtr,"}\n");
 
 
     } else {
