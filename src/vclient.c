@@ -53,13 +53,14 @@ void usage()
     printf("usage:\n");
     printf("    vclient [-h <ip:port>] [-c <command1,command2,..>] [-f <commandfile>]\n");
     printf("            [-s <csv file>] [-t <template file>] [-o <output file>]\n");
-    printf("            [-x <exec file>] [-k] [-m] [-v] [-j]\n\n");
+    printf("            [-x <exec file>] [-k] [-m] [-v] [-j] [-J]\n\n");
 
     printf("or:\n");
     printf("    vclient [--host <ip>] [--port <port>] [--command <command1,command2,..>]\n");
     printf("            [--commandfile <command file>] [--csvfile <csv file>]\n");
     printf("            [--template <template file>] [--output <output file>]\n");
-    printf("            [--execute <exec file>] [--cacti] [--munin] [--verbose] [--json]\n");
+    printf("            [--execute <exec file>] [--cacti] [--munin] [--verbose]\n");
+    printf("            [--json-short] [--json-long]\n");
     printf("            [command3 [command4] ...]\n\n");
 
     printf("    -h|--host         <IPv4>:<Port> or <IPv6> of vcontrold\n");
@@ -75,7 +76,8 @@ void usage()
     printf("                      error details are discarded)\n");
     printf("    -k|--cacti        Output a Cacti data logger compatible format (units and\n");
     printf("                      error details are discarded)\n");
-    printf("    -j|--json         Output json data\n");
+    printf("    -j|--json-short   Output json data (short form, just command and value)\n");
+    printf("    -J|--json-long    Output json data (long form including raw and errors)\n");
     printf("    -v|--verbose      Be verbose (for testing purposes)\n");
     printf("    -V|--Version      Print version and exit\n");
     printf("    -4|--inet4        IPv4 is preferred\n");
@@ -105,7 +107,8 @@ int main(int argc, char *argv[])
     static int verbose = 0;
     static int munin = 0;
     static int cacti = 0;
-    static int json = 0;
+    static int json_short = 0;
+    static int json_long = 0;
     short execMe = 0;
     trPtr resPtr;
     FILE *filePtr;
@@ -125,7 +128,8 @@ int main(int argc, char *argv[])
             {"Version",     no_argument,       0,            0  },
             {"munin",       no_argument,       &munin,       1  },
             {"cacti",       no_argument,       &cacti,       1  },
-            {"json",        no_argument,       &json,        1  },
+            {"json-short",  no_argument,       &json_short,  1  },
+            {"json-long",   no_argument,       &json_long,   1  },
             {"inet4",       no_argument,       &inetversion, 4  },
             {"inet6",       no_argument,       &inetversion, 6  },
             {"help",        no_argument,       0,            0  },
@@ -133,7 +137,7 @@ int main(int argc, char *argv[])
         };
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long(argc, argv, "h:p:c:f:s:t:o:x:vVmkj46", long_options, &option_index);
+        opt = getopt_long(argc, argv, "h:p:c:f:s:t:o:x:vVmkjJ46", long_options, &option_index);
 
         // Detect the end of the options.
         if (opt == -1) {
@@ -181,7 +185,13 @@ int main(int argc, char *argv[])
             if (verbose) {
                 puts("option -j\n");
             }
-            json = 1;
+            json_short = 1;
+            break;
+        case 'J':
+            if (verbose) {
+                puts("option -J\n");
+            }
+            json_long = 1;
             break;
         case 'h':
             if (verbose) {
@@ -579,18 +589,34 @@ int main(int argc, char *argv[])
         }
         fprintf(ofilePtr, "\n");
 
-    } else if (json) {
-        // Output JSON format
+    } else if (json_short) {
+        // Output JSON format - object with cmd,value pairs
         int index = 1;
 	fprintf(ofilePtr,"{");
         while (resPtr) {
-            fprintf(ofilePtr, "\"%s\": {", resPtr->cmd);
+            fprintf(ofilePtr, "\"%s\":", resPtr->cmd);
+            fprintf(ofilePtr, "%f", resPtr->result);
+            index++;
+            resPtr = resPtr->next;
+            if(resPtr) {
+                fprintf(ofilePtr,",");
+            }
+        }
+        fprintf(ofilePtr,"}\n");
+
+    } else if (json_long) {
+        // Output JSON format list with with objects in it
+        int index = 1;
+        fprintf(ofilePtr,"[");
+        while (resPtr) {
+            fprintf(ofilePtr, "{", resPtr->cmd);
+            fprintf(ofilePtr, "\"command\":\"%s\",", resPtr->cmd);
             fprintf(ofilePtr, "\"value\":%f,", resPtr->result);
             fprintf(ofilePtr, "\"raw\":\"%s\",", resPtr->raw);
             if (resPtr->err) {
                 fprintf(ofilePtr, "\"error\":\"%s\"",resPtr->err);
             } else {
-                fprintf(ofilePtr, "\"error\":\"\"");            
+                fprintf(ofilePtr, "\"error\":\"\"");
             }
             fprintf(ofilePtr,"}");
             index++;
@@ -599,7 +625,7 @@ int main(int argc, char *argv[])
                 fprintf(ofilePtr,",");
             }
         }
-        fprintf(ofilePtr,"}\n");
+        fprintf(ofilePtr,"]\n");
 
 
     } else {
