@@ -14,7 +14,7 @@ tool for getting values from vcontrold
 SYNOPSIS
 ========
 
-    vclient [-h <ip:port>] [-c <command1,command2,...>] [-f <commandfile>] [-s <csv-file>] [-t <template-file>] [-o <outputfile>] [-x <executablescript>] [-k] [-m] [-v]
+    vclient [-h <ip:port>] [-c <command1,command2,...>] [-f <commandfile>] [-s <csv-file>] [-t <template-file>] [-o <outputfile>] [-x <executablescript>] [-k] [-m] [-v] [-j] [-J]
 
 DESCRIPTION
 ===========
@@ -55,6 +55,12 @@ OPTIONS
 -k, \--cacti
     Cacti datalogger compatible output, omits units and error details
 
+-j, \--json-short
+    JSON output short format (obeject with cmd as key and result as value)
+
+-J, \--json-long
+    JSON output long (list with objects per command, contains cmd, raw, value and error)
+ 
 -v, \--verbose
     verbose mode
 
