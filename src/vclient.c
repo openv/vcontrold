@@ -592,17 +592,17 @@ int main(int argc, char *argv[])
     } else if (json_short) {
         // Output JSON format - object with cmd,value pairs
         int index = 1;
-	fprintf(ofilePtr,"{");
+	fprintf(ofilePtr, "{");
         while (resPtr) {
             fprintf(ofilePtr, "\"%s\":", resPtr->cmd);
             fprintf(ofilePtr, "%f", resPtr->result);
             index++;
             resPtr = resPtr->next;
-            if(resPtr) {
-                fprintf(ofilePtr,",");
+            if (resPtr) {
+                fprintf(ofilePtr, ",");
             }
         }
-        fprintf(ofilePtr,"}\n");
+        fprintf(ofilePtr, "}\n");
 
     } else if (json_long) {
         // Output JSON format list with with objects in it
@@ -614,19 +614,18 @@ int main(int argc, char *argv[])
             fprintf(ofilePtr, "\"value\":%f,", resPtr->result);
             fprintf(ofilePtr, "\"raw\":\"%s\",", resPtr->raw);
             if (resPtr->err) {
-                fprintf(ofilePtr, "\"error\":\"%s\"",resPtr->err);
+                fprintf(ofilePtr, "\"error\":\"%s\"", resPtr->err);
             } else {
                 fprintf(ofilePtr, "\"error\":\"\"");
             }
-            fprintf(ofilePtr,"}");
+            fprintf(ofilePtr, "}");
             index++;
             resPtr = resPtr->next;
-            if(resPtr) {
-                fprintf(ofilePtr,",");
+            if (resPtr) {
+                fprintf(ofilePtr, ",");
             }
         }
-        fprintf(ofilePtr,"]\n");
-
+        fprintf(ofilePtr, "]\n");
 
     } else {
         while (resPtr) {
