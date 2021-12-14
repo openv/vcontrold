@@ -29,7 +29,7 @@ OPTIONS
     <IPv4:port> or <IPv6> of vcontrold. Defaults to localhost
 
 -p, \--port
-    <port> of vcontrold when using IPv6. Defaults to 3002 
+    <port> of vcontrold when using IPv6. Defaults to 3002
 
 -c, \--command <commandlist>
     comma-separated list of commands
@@ -56,11 +56,11 @@ OPTIONS
     Cacti datalogger compatible output, omits units and error details
 
 -j, \--json-short
-    JSON output short format (obeject with cmd as key and result as value)
+    JSON output short format (object with cmd as key and result as value)
 
 -J, \--json-long
     JSON output long (list with objects per command, contains cmd, raw, value and error)
- 
+
 -v, \--verbose
     verbose mode
 
@@ -74,7 +74,7 @@ OPTIONS
     IPv6 preferred. If no option provided, us OS defaults.
 
 \--help
-    usage information 
+    usage information
 
 TEMPLATE MODE
 =============
