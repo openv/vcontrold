@@ -30,23 +30,26 @@ if (EXISTS ${BASE_DIR}/.git)
     message (STATUS "Updating version information to ${VERSION} ...")
 
 else()
-    # --> tarball
-    if (NOT EXISTS ${BASE_DIR}/src/version.h)
-        message (WARNING "The generated file \"version.h\" does not exist!")
-        message (WARNING "Either, something went wrong when releasing this tarball, or this is "
-                         "some GitHub snapshot.")
-        get_filename_component(BASE_DIR_L "${BASE_DIR}" NAME)
-        string(REGEX REPLACE "[^-]+-([0-9]+)\\.([0-9]+)\\.([0-9]+)(.*)" "\\1.\\2.\\3\\4"
-                             VERSION "${BASE_DIR_L}")
-        if ("${VERSION}" STREQUAL "${BASE_DIR_L}")
-            message(WARNING "Could not derive version from name of project directory, set version "
-                            "as \"unknown\".")
-            set (VERSION "unknown")
-        else()
-            message(WARNING "Version guessed from project directory name as \"${VERSION}\".")
-        endif()
-        message (WARNING "Generating a dummy version.h.")
+   # --> tarball
+    if (EXISTS ${BASE_DIR}/src/version.h)
+        # A released version.h file exists, we can exit here
+        message(STATUS "Using the released version.h file")
+        return()
     endif()
+
+    message(WARNING "No \"src/version.h\" file found. Trying to determine the version from the "
+                    "project directory")
+    get_filename_component(BASE_DIR_L "${BASE_DIR}" NAME)
+    string(REGEX REPLACE "[^-]+-([0-9]+)\\.([0-9]+)\\.([0-9]+)(.*)" "\\1.\\2.\\3\\4"
+                         VERSION "${BASE_DIR_L}")
+    if ("${VERSION}" STREQUAL "${BASE_DIR_L}")
+        message(WARNING "Could not derive version from name of project directory. Setting the "
+                        "version to \"unknown\".")
+        set (VERSION "unknown")
+    else()
+        message(WARNING "The Version guessed from project directory is \"${VERSION}\".")
+    endif()
+    message (WARNING "Generating an emergency version.h file.")
 
 endif()
 
