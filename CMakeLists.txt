@@ -42,8 +42,9 @@ add_custom_target(
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/UpdateVersion.cmake
     COMMENT "Updating version header."
-    BYPRODUCTS ${CMAKE_CURRENT_SOURCE_DIR}/src/version.h
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/version.h
 )
+include_directories(${CMAKE_BINARY_DIR})
 
 add_definitions(-D_XOPEN_SOURCE=700)
 
