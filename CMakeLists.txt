@@ -10,8 +10,10 @@ option(MANPAGES "Build man pages via rst2man" ON)
 option(VCLIENT "Build the vclient helper program (for communication with vcontrold)" ON)
 option(VSIM "Build the vsim helper program (for development and testing purposes)" OFF)
 
-# Default to -fcommon for GCC 10
-if (CMAKE_C_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER 10)
+# Default to -fcommon for GCC 10 and clang
+if ((CMAKE_C_COMPILER_ID MATCHES "GNU" AND CMAKE_C_COMPILER_VERSION VERSION_GREATER 10)
+    OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+
     set (CMAKE_C_FLAGS "-fcommon ${CMAKE_C_FLAGS}")
 endif ()
 
