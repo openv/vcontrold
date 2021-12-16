@@ -1,9 +1,7 @@
-# Copyright 2012 Johannes Zarl <johannes@zarl-zierl.at>
+# SPDX-FileCopyrightText: 2017-2021 Tobias Leupold <tl@l3u.de>
+# SPDX-FileCopyrightText: 2012 Johannes Zarl <johannes@zarl-zierl.at>
 #
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-# This file is under the public domain and can be reused without restrictions.
+# SPDX-License-Identifier: BSD-3-Clause
 
 if (NOT DEFINED BASE_DIR)
     message (FATAL_ERROR "UpdateVersion.cmake: BASE_DIR not set. "

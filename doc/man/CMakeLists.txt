@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2017-2021 Tobias Leupold <tl@l3u.de>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 # Generate classic *roff manual pages from ReStructuredText.
 # This requires Python's Docutils (http://docutils.sourceforge.net/)
 

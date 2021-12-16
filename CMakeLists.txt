@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2017-2021 Tobias Leupold <tl@l3u.de>
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
 cmake_minimum_required(VERSION 3.2.0)
 project(vcontrold C)
 
