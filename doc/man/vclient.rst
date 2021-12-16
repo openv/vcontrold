@@ -73,7 +73,7 @@ OPTIONS
     IPv4 preferred
 
 -6, \--inet6
-    IPv6 preferred. If no option provided, us OS defaults.
+    IPv6 preferred. If no option provided, use OS defaults.
 
 \--help
     usage information
