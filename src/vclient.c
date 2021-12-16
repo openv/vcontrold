@@ -609,7 +609,7 @@ int main(int argc, char *argv[])
         int index = 1;
         fprintf(ofilePtr,"[");
         while (resPtr) {
-            fprintf(ofilePtr, "{", resPtr->cmd);
+            fprintf(ofilePtr, "{");
             fprintf(ofilePtr, "\"command\":\"%s\",", resPtr->cmd);
             fprintf(ofilePtr, "\"value\":%f,", resPtr->result);
             fprintf(ofilePtr, "\"raw\":\"%s\",", resPtr->raw);
