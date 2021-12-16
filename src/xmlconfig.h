@@ -16,7 +16,6 @@
 
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
-
 #include <arpa/inet.h>
 
 typedef struct config *configPtr;
@@ -37,7 +36,7 @@ commandPtr getCommandNode(commandPtr ptr, const char *name);
 enumPtr getEnumNode(enumPtr prt, char *search, int len);
 icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
 
-struct compile {
+typedef struct compile {
     int token;
     char *send;
     int len;
@@ -46,7 +45,7 @@ struct compile {
     compilePtr next;
 } Compile;
 
-struct config {
+typedef struct config {
     char *tty;
     int port;
     char *logfile;
@@ -59,7 +58,7 @@ struct config {
     int debug;
 } Config;
 
-struct protocol {
+typedef struct protocol {
     char *name;
     char id;
     macroPtr mPtr;
@@ -67,7 +66,7 @@ struct protocol {
     protocolPtr next;
 } Protocol;
 
-struct device {
+typedef struct device {
     char *name;
     char *id;
     commandPtr cmdPtr;
@@ -75,7 +74,7 @@ struct device {
     devicePtr next;
 } Device;
 
-struct unit {
+typedef struct unit {
     char *name;
     char *abbrev;
     char *gCalc;
@@ -88,13 +87,13 @@ struct unit {
     unitPtr next;
 } Unit;
 
-struct macro {
+typedef struct macro {
     char *name;
     char *command;
     macroPtr next;
 } Macro;
 
-struct command {
+typedef struct command {
     char *name;
     char *pcmd;
     char *send;
@@ -115,7 +114,7 @@ struct command {
     commandPtr next;
 } Command;
 
-struct icmd {
+typedef struct icmd {
     char *name;
     char *send;
     unsigned char retry;
@@ -123,7 +122,7 @@ struct icmd {
     icmdPtr next;
 } iCmd;
 
-struct enumerate {
+typedef struct enumerate {
     char *bytes;
     int len;
     char *text;

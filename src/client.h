@@ -34,7 +34,7 @@ size_t sendServer(int fd, char *s_buf, size_t len);
 trPtr sendCmdFile(int sockfd, const char *tmpfile);
 trPtr sendCmds(int sockfd, char *commands);
 
-struct txRx {
+typedef struct txRx {
     char *cmd;
     float result;
     char *err;
