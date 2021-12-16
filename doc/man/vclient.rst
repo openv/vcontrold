@@ -1,14 +1,16 @@
-=========
- vclient
-=========
+..
+    SPDX-FileCopyrightText: 2012 Frank Nobis <frank.nobis@radio-do.de>
+
+    SPDX-License-Identifier: CC-BY-SA-4.0
+
+=======
+vclient
+=======
 
 --------------------------------------
 tool for getting values from vcontrold
 --------------------------------------
 
-:Author: Frank Nobis fn@radio-do.de,
-         other contributors see `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
-:Copyright: GPLv3
 :Manual section: 1
 
 SYNOPSIS

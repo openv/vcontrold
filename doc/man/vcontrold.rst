@@ -1,14 +1,16 @@
-===========
- vcontrold
-===========
+..
+    SPDX-FileCopyrightText: 2012 Frank Nobis <frank.nobis@radio-do.de>
+
+    SPDX-License-Identifier: CC-BY-SA-4.0
+
+=========
+vcontrold
+=========
 
 ----------------------------------------------------------
 Unix daemon for communication with Viessmann Vito heatings
 ----------------------------------------------------------
 
-:Author: Frank Nobis fn@radio-do.de,
-         other contributors see `vcontrold @GitHub <https://github.com/openv/vcontrold>`__
-:Copyright: GPLv3
 :Manual section: 1
 
 SYNOPSIS
@@ -102,13 +104,6 @@ FILES
 
 ``/etc/vcontrold/vito.xml``
     These are the command definitions for the devices in use.
-
-LICENSE
-=======
-
-The vcontrold software, its accompanying files and documentation
-are licensed under the **GPLv3**.
-See COPYING in the package.
 
 SEE ALSO
 ========
