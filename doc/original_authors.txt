@@ -1,0 +1,17 @@
+Listed below is the original "AUTHORS" file from SourceForge before the move to GitHub and the new
+maintainer team. Even after consulting the only original author with a known email address (Frank
+Nobis a.k.a. fnobis), the other original authors remain unknown except for their nickname at the
+time. If you are one of them reading this, please contact us to let us know who you are, so that we
+can mention you as the original copyright holder correctly!
+
+The listed persons are referenced as the "The original vcontrold authors" in the sources.
+
+------------------------------
+
+This software has many authors. See the source and the repository for some infos.
+
+Original authors:
+ * marcust
+ * brainhunter
+ * vheat
+ * fnobis
