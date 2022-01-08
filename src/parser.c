@@ -436,14 +436,6 @@ void removeCompileList(compilePtr ptr)
 
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
-    // Recursion
-    if (! cPtr) {
-        return 0;
-    }
-    if (cPtr->next) {
-        expand(cPtr->next, pPtr);
-    }
-
     // If no address has been set, we do nothing
     if (! cPtr->addr) {
         return 0;
@@ -575,16 +567,17 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     return 1;
 }
 
+void expandAll(commandPtr cPtr, protocolPtr pPtr)
+{
+    // Start iteration
+    commandPtr curPtr = cPtr;
+    for (; curPtr; curPtr = curPtr->next) {
+        expand(curPtr, pPtr);
+    }
+}
+
 compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 {
-    // Recursion
-    if (!cPtr) {
-        return 0;
-    }
-    if (cPtr->next) {
-        buildByteCode(cPtr->next, uPtr);
-    }
-
     // If no address has been given, we do nothing
     if (! cPtr->addr) {
         return 0;
@@ -650,16 +643,31 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     return cmpStartPtr;
 }
 
+void buildByteCodeAll(commandPtr cPtr, unitPtr uPtr)
+{
+    // Start iteration
+    commandPtr curPtr = cPtr;
+    for (; curPtr; curPtr = curPtr->next) {
+        buildByteCode(curPtr, uPtr);
+    }
+}
+
 void compileCommand(devicePtr dPtr, unitPtr uPtr)
+{
+    logIT(LOG_INFO, "Expanding command for device %s", dPtr->id);
+    expandAll(dPtr->cmdPtr, dPtr->protoPtr);
+    buildByteCodeAll(dPtr->cmdPtr, uPtr);
+}
+
+void compileCommandAll(devicePtr dPtr, unitPtr uPtr)
 {
     if (! dPtr) {
         return;
     }
-    if (dPtr->next) {
-        compileCommand(dPtr->next, uPtr);
-    }
 
-    logIT(LOG_INFO, "Expanding command for device %s", dPtr->id);
-    expand(dPtr->cmdPtr, dPtr->protoPtr);
-    buildByteCode(dPtr->cmdPtr, uPtr);
+    // Start iteration
+    devicePtr curPtr = dPtr;
+    for (; curPtr; curPtr = curPtr->next) {
+        compileCommand(curPtr, uPtr);
+    }
 }
