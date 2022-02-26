@@ -22,24 +22,46 @@ There are three options for the build process with their defaults:
 * _VSIM=OFF_ Build the `vsim` helper program (for development and testing purposes)
 
 The installation path can be altered by
- 
- * _CMAKE_INSTALL_PREFIX=`/usr/local`_
-   This directory is prepended onto all install directories. This variable defaults to `/usr/local` on UNIX and `c:/Program Files` on Windows
 
-Invocation is as follows:
+ * _CMAKE_INSTALL_PREFIX=`/usr/local`_
+   This directory is prepended onto all install directories. This variable defaults to `/usr` on UNIX and `c:/Program Files` on Windows
+
+Invocation is e.g. as follows:
 
 ```
 cmake -DVSIM=ON -DMANPAGES=OFF -DCMAKE_INSTALL_PREFIX=/usr/local ..
 ```
 
+A common approach for a minimal installation (without manpages) would be:
+
+```
+cmake -DMANPAGES=OFF ..
+```
+
 ### Installation
 
-To install the package, execute
+To install the package, execute as root:
+
+```
+make install
+```
+
+or, on systems that use this logic (e.g. Debian, Ubuntu etc.), use `sudo`:
+
 ```
 sudo make install
 ```
+
 The whole installation can be relocated to a different directory by supplying a `DESTDIR` variable:
+
+```
+make DESTDIR=<DESTDIR> install
+```
+
+or
+
 ```
 sudo make DESTDIR=<DESTDIR> install
 ```
-In this case, the entire package will be installed in a directory with the installation prefix prepended with the `DESTDIR` value, which finally gives `<DESTDIR>/<CMAKE_INSTALL_PREFIX>`.
+
+respectively. In this case, the entire package will be installed in a directory with the installation prefix prepended with the `DESTDIR` value, which finally gives `<DESTDIR>/<CMAKE_INSTALL_PREFIX>`.
