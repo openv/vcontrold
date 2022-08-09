@@ -1,0 +1,175 @@
+<?xml version="1.0"?>
+<vito>
+  <devices>
+    <device ID="2047" name="V200WO1C" protocol="KW2"/>
+  </devices>
+  <commands>
+    <command name="getDevType" protocmd="getaddr">
+      <addr>00F8</addr>
+      <len>2</len>
+      <unit>DT</unit>
+      <description>Ermittle Device Typ der Anlage</description>
+    </command>
+    <command name="getTempA" protocmd="getaddr">
+      <addr>0101</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Aussentemeratur in Grad C</description>
+    </command>
+    <command name="getTempSollNormal" protocmd="getaddr">
+      <addr>2000</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Heizkreis Solltemp Normal in Grad C</description>
+    </command>
+    <command name="setTempSollNormal" protocmd="setaddr">
+      <addr>2000</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Heizkreis Solltemp Normal in Grad C</description>
+    </command>
+    <command name="getTempSollReduziert" protocmd="getaddr">
+      <addr>2001</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Heizkreis Solltemp Reduziert in Grad C</description>
+    </command>
+      <command name="setTempSollReduziert" protocmd="setaddr">
+      <addr>2001</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Heizkreis Solltemp Reduziert in Grad C</description>
+    </command>
+    <command name="getTempSpO" protocmd="getaddr">
+      <addr>010D</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Ermittle die Speichertemperatur oben in Grad C</description>
+    </command>
+    <command name="getTempPrimVor" protocmd="getaddr">
+      <addr>0103</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Vorlauftemperatur Primaerkreis Luft</description>
+    </command>
+    <command name="getTempPrimRueck" protocmd="getaddr">
+      <addr>0104</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Ruecktemperatur Primaerkreis Luft</description>
+    </command>
+    <command name="getTempVerdampfer" protocmd="getaddr">
+      <addr>0102</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Verdampfertemperatur</description>
+    </command>
+    <command name="getTempSekVor" protocmd="getaddr">
+      <addr>0105</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Vorlauftemperatur Sekundaerkreis Wasser</description>
+    </command>
+    <command name="getTempSekRueck" protocmd="getaddr">
+      <addr>0106</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Ruecklaufftemperatur Sekundaerkreis Wasser</description>
+    </command>
+    <command name="getTempWWSoll" protocmd="getaddr">
+      <addr>6000</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <error>05 05</error>
+      <description>Ermittle die Solltemperatur Warmwasser</description>
+    </command>
+    <command name="setTempWWsoll" protocmd="setaddr">
+      <addr>6000</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Setze die Warmwassersolltemperatur in Grad C</description>
+    </command>
+     <command name="getUmschaltventilStatus" protocmd="getaddr">
+      <addr>0414</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status des Umschaltventils 0 Heizen 1 Warmwasser</description>
+    </command>
+    <command name="getUmschaltventilStunden" protocmd="getaddr">
+      <addr>0594</addr>
+      <len>4</len>
+      <unit>CS</unit>
+      <description>Stunde in der das Ventil auf WW steht</description>
+    </command>
+    <command name="getVerdichterStatus" protocmd="getaddr">
+      <addr>0400</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Ermittle des Verdichterstatus</description>
+    </command>
+    <command name="getVerdichterStarts" protocmd="getaddr">
+      <addr>0500</addr>
+      <len>4</len>
+      <unit>CO</unit>
+      <description>Ermittle die Verdichterstarts</description>
+    </command>
+    <command name="getVerdichterStunden" protocmd="getaddr">
+      <addr>0580</addr>
+      <len>4</len>
+      <unit>CS</unit>
+      <description>Ermittle die Verdichterstunden</description>
+    </command>
+    <command name="getDurchlauferhitzerStufe1Status" protocmd="getaddr">
+      <addr>0408</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status Stufe 1 Durchlauferhitzer 3KW</description>
+    </command>
+    <command name="getDurchlauferhitzerStufe2Status" protocmd="getaddr">
+      <addr>0409</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status Stufe 2 Durchlauferhitzer 6KW</description>
+    </command>
+    <command name="getDurchlauferhitzerStundenStufe1" protocmd="getaddr">
+      <addr>0588</addr>
+      <len>4</len>
+      <unit>CS</unit>
+      <description>Ermittle die Durchlauerhitzerstunden Stufe 1</description>
+    </command>
+      <command name="getDurchlauferhitzerStundenStufe2" protocmd="getaddr">
+      <addr>0589</addr>
+      <len>4</len>
+      <unit>CS</unit>
+      <description>Ermittle die Durchlauferhitzerstunden Stufe 2</description>
+    </command>
+    <command name="getPumpeStatusHeizkreisA1" protocmd="getaddr">
+      <addr>040D</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Ermittle den Status der Heizkreispumpe A1</description>
+    </command>
+    <command name="getPumpeStatusZirku" protocmd="getaddr">
+      <addr>0410</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Ermittle den Status der Zirkulationspumpe</description>
+    </command>
+    <command name="getStatusStoerung" protocmd="getaddr">
+      <addr>0411</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status Sammelstoerung</description>
+    </command>
+  </commands>
+</vito>
