@@ -105,7 +105,11 @@ int openSocket2(int tcpport, const char* aname)
     }
 
     listen(listenfd, LISTEN_QUEUE);
-    logIT(LOG_NOTICE, "TCP socket %d opened", tcpport);
+    if (hints.ai_family == PF_INET6) {
+        logIT(LOG_NOTICE, "TCP socket %s::%d opened", (aname == NULL ? "" : aname), tcpport);
+    } else {
+        logIT(LOG_NOTICE, "TCP socket %s:%d opened", (aname == NULL ? "0.0.0.0" : aname), tcpport);
+    }
 
     freeaddrinfo(ressave);
 
