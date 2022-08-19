@@ -67,7 +67,7 @@ int openSocket2(int tcpport, const char* aname)
 
     free(port);
 
-    if (n < 0) {
+    if (n != 0) {
         logIT(LOG_ERR, "getaddrinfo error: [%s]\n", gai_strerror(n));
         return -1;
     }
@@ -104,7 +104,11 @@ int openSocket2(int tcpport, const char* aname)
         exit(1);
     }
 
-    listen(listenfd, LISTEN_QUEUE);
+    if (listen(listenfd, LISTEN_QUEUE) != 0) {
+        freeaddrinfo(ressave);
+        fprintf(stderr, "listen error: could not listen on %s:%d\n", aname, tcpport);
+        exit(1);
+    }
     if (hints.ai_family == PF_INET6) {
         logIT(LOG_NOTICE, "TCP socket %s::%d opened", (aname == NULL ? "" : aname), tcpport);
     } else {

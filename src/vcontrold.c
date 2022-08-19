@@ -874,6 +874,10 @@ int main(int argc, char *argv[])
 
         int sockfd = -1;
         int listenfd = openSocket2(tcpport, aname);
+        if (listenfd < 0) {
+                logIT(LOG_ERR, "Could not start vcontrold on %s port %d", (aname != NULL ? aname : "localhost"), tcpport);
+                exit(1);
+        }
 
         // Drop privileges after binding
         if (0 == getuid()) {
