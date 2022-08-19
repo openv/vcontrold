@@ -12,6 +12,8 @@
         <tty>/dev/ttySAC1</tty>
       </serial>
       <net>
+        <!-- if no bind address is given, daemon will bind to all found interfaces -->
+        <bind>localhost</bind>
         <port>3002</port>
       </net>
       <logging>

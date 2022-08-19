@@ -34,6 +34,10 @@ const int LISTEN_QUEUE = 128;
 
 int openSocket(int tcpport)
 {
+    return openSocket2(tcpport, NULL);
+}
+int openSocket2(int tcpport, const char* aname)
+{
     int listenfd;
     int n;
     char *port;
@@ -59,7 +63,7 @@ int openSocket(int tcpport)
 
     asprintf(&port, "%d", tcpport);
 
-    n = getaddrinfo(NULL, port, &hints, &res);
+    n = getaddrinfo(aname, port, &hints, &res);
 
     free(port);
 

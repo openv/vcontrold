@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 int openSocket(int tcpport);
+int openSocket2(int tcpport, const char* aname);
 int listenToSocket(int listenfd, int makeChild);
 int openCliSocket(char *host, int port, int noTCPdelay);
 void closeSocket(int sockfd);

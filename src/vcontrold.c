@@ -73,9 +73,10 @@ void usage()
     //      1       10        20        30        40        50        60        70        80
 
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
-    printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
+    printf("                 [-l|--logfile <logfile>] [-s|--syslog]\n");
+    printf("                 [-p|--port <port>] [-b|--bindtoaddress <interface>]\n");
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
-    printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]");
+    printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]\n");
     printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
     printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
@@ -622,6 +623,7 @@ int main(int argc, char *argv[])
     static int debug = 0;
     static int verbose = 0;
     int tcpport = 0;
+    char *aname = NULL;
     static int simuOut = 0;
     int opt;
 
@@ -637,6 +639,7 @@ int main(int argc, char *argv[])
             {"groupname",   required_argument, 0,            'G'},
             {"nodaemon",    no_argument,       &makeDaemon,  0  },
             {"port",        required_argument, 0,            'p'},
+            {"bindtoaddress",      required_argument, 0,            'b'},
             {"syslog",      no_argument,       &useSyslog,   1  },
             {"xmlfile",     required_argument, 0,            'x'},
             {"verbose",     no_argument,       &verbose,     1  },
@@ -649,7 +652,7 @@ int main(int argc, char *argv[])
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:sx:vV46",
+        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:b:sx:vV46",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -710,6 +713,9 @@ int main(int argc, char *argv[])
         case 'p':
             tcpport = atoi(optarg);
             break;
+        case 'b':
+            aname = optarg;
+            break;
         case 's':
             useSyslog = 1;
             break;
@@ -746,6 +752,9 @@ int main(int argc, char *argv[])
     if (cfgPtr) {
         if (! tcpport) {
             tcpport = cfgPtr->port;
+        } 
+        if (! aname) {
+            aname = cfgPtr->bindAddress;
         }
         if (! device) {
             device = cfgPtr->tty;
@@ -864,7 +873,7 @@ int main(int argc, char *argv[])
         }
 
         int sockfd = -1;
-        int listenfd = openSocket(tcpport);
+        int listenfd = openSocket2(tcpport, aname);
 
         // Drop privileges after binding
         if (0 == getuid()) {
