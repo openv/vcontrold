@@ -74,7 +74,7 @@ void usage()
 
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
     printf("                 [-l|--logfile <logfile>] [-s|--syslog]\n");
-    printf("                 [-p|--port <port>] [-b|--bindtoaddress <interface>]\n");
+    printf("                 [-p|--port <port>] [-L|--listen <address>]\n");
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
     printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]\n");
     printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
@@ -639,20 +639,20 @@ int main(int argc, char *argv[])
             {"groupname",   required_argument, 0,            'G'},
             {"nodaemon",    no_argument,       &makeDaemon,  0  },
             {"port",        required_argument, 0,            'p'},
-            {"bindtoaddress",      required_argument, 0,            'b'},
+            {"listen",      required_argument, 0,            'L'},
             {"syslog",      no_argument,       &useSyslog,   1  },
             {"xmlfile",     required_argument, 0,            'x'},
             {"verbose",     no_argument,       &verbose,     1  },
             {"Version",     no_argument,       0,            0  },
             {"inet4",       no_argument,       &inetversion, 4  },
             {"inet6",       no_argument,       &inetversion, 6  },
-            {"help",        no_argument,       0,            0  },
+            {"help",        no_argument,       0,            'h'},
             {0,             0,                 0,            0  }
         };
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:b:sx:vV46",
+        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:L:sx:vV46h",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -713,7 +713,7 @@ int main(int argc, char *argv[])
         case 'p':
             tcpport = atoi(optarg);
             break;
-        case 'b':
+        case 'L':
             aname = optarg;
             break;
         case 's':
@@ -730,6 +730,7 @@ int main(int argc, char *argv[])
         case 'x':
             xmlfile = optarg;
             break;
+        case 'h':
         case '?':
             // getopt_long already printed an error message.
             usage();
@@ -754,7 +755,7 @@ int main(int argc, char *argv[])
             tcpport = cfgPtr->port;
         } 
         if (! aname) {
-            aname = cfgPtr->bindAddress;
+            aname = cfgPtr->listenAddress;
         }
         if (! device) {
             device = cfgPtr->tty;
