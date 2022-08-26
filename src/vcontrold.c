@@ -623,7 +623,7 @@ int main(int argc, char *argv[])
     static int debug = 0;
     static int verbose = 0;
     int tcpport = 0;
-    char *aname = NULL;
+    char *listenAddress = NULL;
     static int simuOut = 0;
     int opt;
 
@@ -714,7 +714,7 @@ int main(int argc, char *argv[])
             tcpport = atoi(optarg);
             break;
         case 'L':
-            aname = optarg;
+            listenAddress = optarg;
             break;
         case 's':
             useSyslog = 1;
@@ -754,8 +754,8 @@ int main(int argc, char *argv[])
         if (! tcpport) {
             tcpport = cfgPtr->port;
         } 
-        if (! aname) {
-            aname = cfgPtr->listenAddress;
+        if (! listenAddress) {
+            listenAddress = cfgPtr->listenAddress;
         }
         if (! device) {
             device = cfgPtr->tty;
@@ -874,9 +874,9 @@ int main(int argc, char *argv[])
         }
 
         int sockfd = -1;
-        int listenfd = openSocket2(tcpport, aname);
+        int listenfd = openSocket2(tcpport, listenAddress);
         if (listenfd < 0) {
-                logIT(LOG_ERR, "Could not start vcontrold on %s port %d", (aname != NULL ? aname : "localhost"), tcpport);
+                logIT(LOG_ERR, "Could not start vcontrold on %s port %d", (listenAddress != NULL ? listenAddress : "localhost"), tcpport);
                 exit(1);
         }
 

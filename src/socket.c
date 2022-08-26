@@ -36,7 +36,7 @@ int openSocket(int tcpport)
 {
     return openSocket2(tcpport, NULL);
 }
-int openSocket2(int tcpport, const char* aname)
+int openSocket2(int tcpport, const char* listenAddress)
 {
     int listenfd;
     int n;
@@ -63,7 +63,7 @@ int openSocket2(int tcpport, const char* aname)
 
     asprintf(&port, "%d", tcpport);
 
-    n = getaddrinfo(aname, port, &hints, &res);
+    n = getaddrinfo(listenAddress, port, &hints, &res);
 
     free(port);
 
@@ -106,13 +106,13 @@ int openSocket2(int tcpport, const char* aname)
 
     if (listen(listenfd, LISTEN_QUEUE) != 0) {
         freeaddrinfo(ressave);
-        fprintf(stderr, "listen error: could not listen on %s:%d\n", aname, tcpport);
+        fprintf(stderr, "listen error: could not listen on %s:%d\n", listenAddress, tcpport);
         exit(1);
     }
     if (hints.ai_family == PF_INET6) {
-        logIT(LOG_NOTICE, "TCP socket %s::%d opened", (aname == NULL ? "" : aname), tcpport);
+        logIT(LOG_NOTICE, "TCP socket %s::%d opened", (listenAddress == NULL ? "" : listenAddress), tcpport);
     } else {
-        logIT(LOG_NOTICE, "TCP socket %s:%d opened", (aname == NULL ? "0.0.0.0" : aname), tcpport);
+        logIT(LOG_NOTICE, "TCP socket %s:%d opened", (listenAddress == NULL ? "0.0.0.0" : listenAddress), tcpport);
     }
 
     freeaddrinfo(ressave);
