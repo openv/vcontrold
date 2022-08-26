@@ -629,25 +629,25 @@ int main(int argc, char *argv[])
 
     while (1) {
         static struct option long_options[] = {
-            {"commandfile", required_argument, 0,            'c'},
-            {"device",      required_argument, 0,            'd'},
-            {"debug",       no_argument,       &debug,       1  },
-            {"vsim",        no_argument,       &simuOut,     1  },
-            {"logfile",     required_argument, 0,            'l'},
-            {"pidfile",     required_argument, 0,            'P'},
-            {"username",    required_argument, 0,            'U'},
-            {"groupname",   required_argument, 0,            'G'},
-            {"nodaemon",    no_argument,       &makeDaemon,  0  },
-            {"port",        required_argument, 0,            'p'},
-            {"listen",      required_argument, 0,            'L'},
-            {"syslog",      no_argument,       &useSyslog,   1  },
-            {"xmlfile",     required_argument, 0,            'x'},
-            {"verbose",     no_argument,       &verbose,     1  },
-            {"Version",     no_argument,       0,            0  },
-            {"inet4",       no_argument,       &inetversion, 4  },
-            {"inet6",       no_argument,       &inetversion, 6  },
-            {"help",        no_argument,       0,            'h'},
-            {0,             0,                 0,            0  }
+            {"commandfile", required_argument, 0,            0 },
+            {"device",      required_argument, 0,            0 },
+            {"debug",       no_argument,       &debug,       1 },
+            {"vsim",        no_argument,       &simuOut,     1 },
+            {"logfile",     required_argument, 0,            0 },
+            {"pidfile",     required_argument, 0,            0 },
+            {"username",    required_argument, 0,            0 },
+            {"groupname",   required_argument, 0,            0 },
+            {"nodaemon",    no_argument,       &makeDaemon,  0 },
+            {"port",        required_argument, 0,            0 },
+            {"listen",      required_argument, 0,            0 },
+            {"syslog",      no_argument,       &useSyslog,   1 },
+            {"xmlfile",     required_argument, 0,            0 },
+            {"verbose",     no_argument,       &verbose,     1 },
+            {"Version",     no_argument,       0,            0 },
+            {"inet4",       no_argument,       &inetversion, 4 },
+            {"inet6",       no_argument,       &inetversion, 6 },
+            {"help",        no_argument,       0,            0 },
+            {0,             0,                 0,            0 }
         };
 
         // getopt_long stores the option index here.
