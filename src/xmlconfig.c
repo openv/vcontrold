@@ -501,6 +501,7 @@ configPtr parseConfig(xmlNodePtr cur)
 
     cfgPtr = calloc(1, sizeof(Config));
     cfgPtr->port = 0;
+    cfgPtr->listenAddress;
     cfgPtr->syslog = 0;
     cfgPtr->debug = 0;
 
@@ -587,6 +588,18 @@ configPtr parseConfig(xmlNodePtr cur)
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
                 cfgPtr->port = atoi(chrPtr);
+            }
+            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                ? (cur = cur->next) : (cur = prevPtr->next);
+        } else if (logFound && strstr((char *)cur->name, "listen")) {
+            chrPtr = getTextNode(cur);
+            logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
+                  cur->line, cur->name, cur->type, chrPtr);
+            if (chrPtr) {
+                cfgPtr->listenAddress = calloc(strlen(chrPtr) + 1, sizeof(char));
+                strcpy(cfgPtr->listenAddress, chrPtr);
+            } else {
+                nullIT(&cfgPtr->listenAddress);
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);

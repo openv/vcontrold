@@ -73,9 +73,10 @@ void usage()
     //      1       10        20        30        40        50        60        70        80
 
     printf("usage: vcontrold [-x|--xmlfile xml-file] [-d|--device <device>]\n");
-    printf("                 [-l|--logfile <logfile>] [-p|--port port] [-s|--syslog]\n");
+    printf("                 [-l|--logfile <logfile>] [-s|--syslog]\n");
+    printf("                 [-p|--port <port>] [-L|--listen <address>]\n");
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
-    printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]");
+    printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]\n");
     printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
     printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
@@ -622,34 +623,36 @@ int main(int argc, char *argv[])
     static int debug = 0;
     static int verbose = 0;
     int tcpport = 0;
+    char *listenAddress = NULL;
     static int simuOut = 0;
     int opt;
 
     while (1) {
         static struct option long_options[] = {
-            {"commandfile", required_argument, 0,            'c'},
-            {"device",      required_argument, 0,            'd'},
-            {"debug",       no_argument,       &debug,       1  },
-            {"vsim",        no_argument,       &simuOut,     1  },
-            {"logfile",     required_argument, 0,            'l'},
-            {"pidfile",     required_argument, 0,            'P'},
-            {"username",    required_argument, 0,            'U'},
-            {"groupname",   required_argument, 0,            'G'},
-            {"nodaemon",    no_argument,       &makeDaemon,  0  },
-            {"port",        required_argument, 0,            'p'},
-            {"syslog",      no_argument,       &useSyslog,   1  },
-            {"xmlfile",     required_argument, 0,            'x'},
-            {"verbose",     no_argument,       &verbose,     1  },
-            {"Version",     no_argument,       0,            0  },
-            {"inet4",       no_argument,       &inetversion, 4  },
-            {"inet6",       no_argument,       &inetversion, 6  },
-            {"help",        no_argument,       0,            0  },
-            {0,             0,                 0,            0  }
+            {"commandfile", required_argument, 0,            0 },
+            {"device",      required_argument, 0,            0 },
+            {"debug",       no_argument,       &debug,       1 },
+            {"vsim",        no_argument,       &simuOut,     1 },
+            {"logfile",     required_argument, 0,            0 },
+            {"pidfile",     required_argument, 0,            0 },
+            {"username",    required_argument, 0,            0 },
+            {"groupname",   required_argument, 0,            0 },
+            {"nodaemon",    no_argument,       &makeDaemon,  0 },
+            {"port",        required_argument, 0,            0 },
+            {"listen",      required_argument, 0,            0 },
+            {"syslog",      no_argument,       &useSyslog,   1 },
+            {"xmlfile",     required_argument, 0,            0 },
+            {"verbose",     no_argument,       &verbose,     1 },
+            {"Version",     no_argument,       0,            0 },
+            {"inet4",       no_argument,       &inetversion, 4 },
+            {"inet6",       no_argument,       &inetversion, 6 },
+            {"help",        no_argument,       0,            0 },
+            {0,             0,                 0,            0 }
         };
 
         // getopt_long stores the option index here.
         int option_index = 0;
-        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:sx:vV46",
+        opt = getopt_long (argc, argv, "c:d:gil:P:U:G:np:L:sx:vV46h",
                            long_options, &option_index);
 
         // Detect the end of the options.
@@ -710,6 +713,9 @@ int main(int argc, char *argv[])
         case 'p':
             tcpport = atoi(optarg);
             break;
+        case 'L':
+            listenAddress = optarg;
+            break;
         case 's':
             useSyslog = 1;
             break;
@@ -724,6 +730,7 @@ int main(int argc, char *argv[])
         case 'x':
             xmlfile = optarg;
             break;
+        case 'h':
         case '?':
             // getopt_long already printed an error message.
             usage();
@@ -746,6 +753,9 @@ int main(int argc, char *argv[])
     if (cfgPtr) {
         if (! tcpport) {
             tcpport = cfgPtr->port;
+        }
+        if (! listenAddress) {
+            listenAddress = cfgPtr->listenAddress;
         }
         if (! device) {
             device = cfgPtr->tty;
@@ -864,7 +874,11 @@ int main(int argc, char *argv[])
         }
 
         int sockfd = -1;
-        int listenfd = openSocket(tcpport);
+        int listenfd = openSocket2(tcpport, listenAddress);
+        if (listenfd < 0) {
+                logIT(LOG_ERR, "Could not start vcontrold on %s port %d", (listenAddress != NULL ? listenAddress : "localhost"), tcpport);
+                exit(1);
+        }
 
         // Drop privileges after binding
         if (0 == getuid()) {

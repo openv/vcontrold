@@ -36,6 +36,7 @@ typedef struct compile {
 typedef struct config {
     char *tty;
     int port;
+    char *listenAddress;
     char *logfile;
     char *pidfile;
     char *username;

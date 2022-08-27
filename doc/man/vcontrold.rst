@@ -16,9 +16,16 @@ Unix daemon for communication with Viessmann Vito heatings
 SYNOPSIS
 ========
 
-  vcontrold [-x <xml-file>] [-d <device>] [-l <logfile>] [-p <port>] [-s] [-n]
-    [-c <command-file>] [-P <pid-file>] [-U <username>] [-G <groupname>]
-    [-i] [-g] [-4] [-6] [-v] [-V] [-?]
+*vcontrold* [`OPTIONS`...] 
+    [-x\|\--xmlfile xml-file] [-d\|\--device <device>]
+    [-l\|\--logfile <logfile>] [-s\|\--syslog]
+    [-p\|\--port <port>] [-L\|\--listen <address>]
+    [-n\|\--nodaemon] [-v\|\--verbose] [-V\|\--Version]
+    [-c\|\--commandfile <command-file>] [-P\|\--pidfile <pid-file>]
+    [-U\|\--username <username>] [-G\|\--groupname <groupname>]
+    [-?\|\--help] [-i\|\--vsim] [-g\|\--debug]
+    [-4\|\--inet4] [-6\|\--inet6]
+
 
 DESCRIPTION
 ===========
@@ -39,13 +46,18 @@ OPTIONS
 -l <logfile>, \--logfile <logfile>
     use <logfile> instead of syslog.
 
+-s, \--syslog
+    use syslog
+
 -p <port>, \--port <port>
     TCP <port> to use for remote connections.
     The default is 3002 and can be specified in the config file.
     This option overrides the corresponding entry in the config file.
 
--s, \--syslog
-    use syslog
+-L <address>, \--listen <address>
+    Address to listen for incoming connections.
+    Use e.g. ``localhost`` or ``127.0.0.1`` to bind to the loopback interface only.
+    Default is to bind to all addresses (``0.0.0.0`` in case of IPv4)
 
 -n, \--nodaemon
     do not fork. This is for testing purpose only. Normaly vcontrold
@@ -104,6 +116,7 @@ FILES
 
 ``/etc/vcontrold/vito.xml``
     These are the command definitions for the devices in use.
+    This file is included by the default xml config above via an xml include statement.
 
 SEE ALSO
 ========

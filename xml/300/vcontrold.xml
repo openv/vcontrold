@@ -12,6 +12,8 @@
         <tty>/dev/ttySAC1</tty>
       </serial>
       <net>
+        <!-- if no address is given, daemon will listen on all found interfaces -->
+        <!-- <listen>localhost</listen> -->
         <port>3002</port>
       </net>
       <logging>
