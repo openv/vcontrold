@@ -496,7 +496,6 @@ configPtr parseConfig(xmlNodePtr cur)
     configPtr cfgPtr;
     char *chrPtr;
     xmlNodePtr prevPtr;
-    //char string[256];
     char ip[16];
 
     cfgPtr = calloc(1, sizeof(Config));
