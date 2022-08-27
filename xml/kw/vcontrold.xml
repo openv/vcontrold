@@ -6,7 +6,7 @@
         <tty>192.168.1.153:3002</tty>
       </serial>
       <net>
-         <!-- if no address is given, daemon will listen to all found interfaces -->
+         <!-- if no address is given, daemon will listen on all found interfaces -->
          <!-- <listen>localhost</listen> -->
           <port>3002</port>
       </net>
