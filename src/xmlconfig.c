@@ -500,7 +500,6 @@ configPtr parseConfig(xmlNodePtr cur)
 
     cfgPtr = calloc(1, sizeof(Config));
     cfgPtr->port = 0;
-    cfgPtr->listenAddress;
     cfgPtr->syslog = 0;
     cfgPtr->debug = 0;
 
