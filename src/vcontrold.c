@@ -753,7 +753,7 @@ int main(int argc, char *argv[])
     if (cfgPtr) {
         if (! tcpport) {
             tcpport = cfgPtr->port;
-        } 
+        }
         if (! listenAddress) {
             listenAddress = cfgPtr->listenAddress;
         }
