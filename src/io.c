@@ -252,7 +252,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
         if (retval == 0) {
             logIT(LOG_ERR, "<RECV: read timeout");
             setblock(fd);
-            logIT(LOG_INFO, dump(string, "<RECV: received", r_buf, i));
+            logIT(LOG_INFO, "%s", dump(string, "<RECV: received", r_buf, i));
             return -1;
         } else if (retval < 0) {
             if (errno == EINTR) {
@@ -261,7 +261,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
             } else {
                 logIT(LOG_ERR, "<RECV: select error %d", retval);
                 setblock(fd);
-                logIT(LOG_INFO, dump(string, "<RECV: received", r_buf, i));
+                logIT(LOG_INFO, "%s", dump(string, "<RECV: received", r_buf, i));
                 return -1;
             }
         } else if ( FD_ISSET(fd, &rfds)) {
@@ -269,7 +269,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
             if (len == 0) {
                 logIT(LOG_ERR, "<RECV: read eof");
                 setblock(fd);
-                logIT(LOG_INFO, dump(string, "<RECV: received", r_buf, i));
+                logIT(LOG_INFO, "%s", dump(string, "<RECV: received", r_buf, i));
                 return -1;
             } else if (len < 0) {
                 if (errno == EINTR) {
@@ -278,7 +278,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
                 } else {
                     logIT(LOG_ERR, "<RECV: read error %d", errno);
                     setblock(fd);
-                    logIT(LOG_INFO, dump(string, "<RECV: received", r_buf, i));
+                    logIT(LOG_INFO, "%s", dump(string, "<RECV: received", r_buf, i));
                     return -1;
                 }
             } else {
@@ -296,7 +296,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
     end = times(&tms_t);
     *etime = ((float)(end - start) / clktck) * 1000;
     setblock(fd);
-    logIT(LOG_INFO, dump(string, "<RECV: received", r_buf, i));
+    logIT(LOG_INFO, "%s", dump(string, "<RECV: received", r_buf, i));
 
     return i;
 }
@@ -316,7 +316,7 @@ int waitfor(int fd, char *w_buf, int w_len)
     unsigned long etime;
 
     for (i = 0; i < w_len; i++) {
-        sprintf(dummy, "%02X", w_buf[i]);
+        sprintf(dummy, "%02hhX", w_buf[i]);
         strncat(hexString, dummy, strlen(dummy));
     }
 

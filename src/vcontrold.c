@@ -891,11 +891,13 @@ int main(int argc, char *argv[])
                 exit(1);
             }
 
+            int logfd = open(logfile, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
             // Make logfile accessible to the anticipated user/group
-            if (stat(logfile, &stb) == 0) {
-                chmod(logfile, stb.st_mode | S_IRGRP | S_IWGRP);
-                chown(logfile, pw->pw_uid, grp->gr_gid);
+            if ((logfd >= 0) && (fstat(logfd, &stb) == 0)) {
+                fchmod(logfd, stb.st_mode | S_IRGRP | S_IWGRP);
+                fchown(logfd, pw->pw_uid, grp->gr_gid);
             }
+            close(logfd);
             // Make lock file accessible to the anticipated user/group
             if (stat(tmpfilename, &stb) == 0) {
                 chmod(tmpfilename, stb.st_mode | S_IRGRP | S_IWGRP);
