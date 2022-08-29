@@ -1,4 +1,4 @@
-name: Builds for RPi on RaspiOS
+name: Builds for Linux
 on:
   workflow_call:
     inputs:
