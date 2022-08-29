@@ -8,10 +8,10 @@ on:
         required: true
         default: 'raspios_lite:latest'
         type: choice
-        options:
-        - raspios_lite:latest
-        - raspios_lite_arm64:latest
-        - raspi_1_bullseye:20220121
+          options:
+          - raspios_lite:latest
+          - raspios_lite_arm64:latest
+          - raspi_1_bullseye:20220121
       artifact_archive:
         required: true
         type: string
