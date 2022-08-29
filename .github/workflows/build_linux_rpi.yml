@@ -52,10 +52,11 @@ jobs:
         cat ${GITHUB_ENV}
     - name: Collect files
       run: |
-        cd ${BUILD_DIR}
-        zip -j ${DEPLOYFILEPREFIX_BIN}.zip vcontrold vclient doc/man/vcontrold.1.gz doc/man/vclient.1.gz COPYING README.md
-        md5sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.md5sum"
-        sha256sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.sha256sum"
+        sudo chown -R $USER:$USER ./build/
+        for FILE in ./build/doc/man/*.1 ; do gzip ${FILE} ; done
+        zip -j ./build/${DEPLOYFILEPREFIX_BIN}.zip ./build/vcontrold ./build/vclient ./build/doc/man/vcontrold.1.gz ./build/doc/man/vclient.1.gz COPYING README.md
+        md5sum "./build/${DEPLOYFILEPREFIX_BIN}.zip" > "./build/${DEPLOYFILEPREFIX_BIN}.zip.md5sum"
+        sha256sum "./build/${DEPLOYFILEPREFIX_BIN}.zip" > "./build/${DEPLOYFILEPREFIX_BIN}.zip.sha256sum"
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
