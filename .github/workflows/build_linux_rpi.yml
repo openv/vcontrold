@@ -45,8 +45,10 @@ jobs:
         echo "VERSION=${VERSION}" >> ${GITHUB_ENV}
         GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
         echo "GH_REPO=${GH_REPO}" >> ${GITHUB_ENV}
-        echo DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}" >> ${GITHUB_ENV}
-        echo DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${GITHUB_RUN_NUMBER}_${ARCH}" >> ${GITHUB_ENV}
+        DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
+        echo DEPLOYFILEPREFIX="${DEPLOYFILEPREFIX}" >> ${GITHUB_ENV}
+        DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${GITHUB_RUN_NUMBER}_${ARCH}"
+        echo DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX_BIN}" >> ${GITHUB_ENV}
         cat ${GITHUB_ENV}
     - name: Collect files
       run: |
