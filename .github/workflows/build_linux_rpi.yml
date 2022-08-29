@@ -38,7 +38,7 @@ jobs:
     - name: Set env vars
       run: |
         cat ./build/env >> ${GITHUB_ENV}
-        BUILD_DIR=2${GITHUB_WORKSPACE}/build"
+        BUILD_DIR="${GITHUB_WORKSPACE}/build"
         echo "BUILD_DIR=${BUILD_DIR}" >> ${GITHUB_ENV}
         VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/p' ${BUILD_DIR}/version.h)
         echo "VERSION=${VERSION}" >> ${GITHUB_ENV}
