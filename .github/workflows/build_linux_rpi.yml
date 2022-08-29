@@ -7,11 +7,12 @@ on:
         # see https://github.com/pguyot/arm-runner-action
         required: true
         default: 'raspios_lite:latest'
-        type: choice
-          options:
-          - raspios_lite:latest
-          - raspios_lite_arm64:latest
-          - raspi_1_bullseye:20220121
+        type: string
+        # type: choice
+        # options:
+        # - raspios_lite:latest
+        # - raspios_lite_arm64:latest
+        # - raspi_1_bullseye:20220121
       artifact_archive:
         required: true
         type: string
