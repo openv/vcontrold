@@ -53,7 +53,7 @@ jobs:
         md5sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.md5sum"
         sha256sum "${DEPLOYFILEPREFIX_BIN}.zip" > "${DEPLOYFILEPREFIX_BIN}.zip.sha256sum"
     - name: Upload artifacts
-      uses: action/upload-artifact@v3
+      uses: action/upload-artifact@v2
       with:
         name: ${{ inputs.artifact_archive }}
         path: |
