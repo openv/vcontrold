@@ -56,14 +56,18 @@ jobs:
         gzip --best "./build/${DEPLOYFILEPREFIX}.orig.tar"
         tar tzvf "./build/${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local
 
+    - name: Collect files 2
+      run: |
+        mkdir artifact-upload
+        mv ./build/*.zip ./build/*.deb ./build/*.tar.gz ./artifact-upload/
+        ls -laF ./artifact-upload/
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact_archive }}
         path: |
-           build/*.zip
-           build/*.deb
-           build/*.tar.gz
+           artifact-upload/*
         if-no-files-found: error
             
 
