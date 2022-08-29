@@ -49,6 +49,7 @@ jobs:
             echo DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX_BIN}" >> ./build/env
             sudo checkinstall --strip=no --install=no --pkgname="${GH_REPO}" --pkgversion="${VERSION}" --pkgrelease=${GITHUB_RUN_NUMBER} --arch="${ARCH}" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${
 DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=${TRAVIS_BUILD_DIR} -D -y cmake --build ./build/ --target install
+            sudo mv *.deb ./build/
     - name: Set env vars
       run: |
         source ./build/env
@@ -59,9 +60,8 @@ DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${G
         sudo chown -R $USER:$USER ./build/
         for FILE in ./build/doc/man/*.1 ; do gzip ${FILE} ; done
         zip -j ./build/${DEPLOYFILEPREFIX_BIN}.zip ./build/vcontrold ./build/vclient ./build/doc/man/vcontrold.1.gz ./build/doc/man/vclient.1.gz COPYING README.md
-        dpkg --info "${DEPLOYFILEPREFIX_BIN}.deb"
-        dpkg --contents "${DEPLOYFILEPREFIX_BIN}.deb"
-        mv *.deb ./build/
+        dpkg --info "./build/${DEPLOYFILEPREFIX_BIN}.deb"
+        dpkg --contents "./build/${DEPLOYFILEPREFIX_BIN}.deb"
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:

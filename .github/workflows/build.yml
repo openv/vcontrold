@@ -33,23 +33,7 @@ jobs:
           name: artifacts-build_linux
           path: artifacts
 
-      - name: Archive Source
-        run: |
-          BUILD_DIR="./build"
-          echo "BUILD_DIR=${BUILD_DIR}" >> ./build/env
-          VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/p' ${BUILD_DIR}/version.h)
-          echo "VERSION=${VERSION}" >> ./build/env
-          GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
-          echo "GH_REPO=${GH_REPO}" >> ./build/env
-          DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
-          echo DEPLOYFILEPREFIX="${DEPLOYFILEPREFIX}" >> ./build/env
-          git archive --prefix "${GH_REPO}-${VERSION}/" -o "${DEPLOYFILEPREFIX}.orig.tar" ${GITHUB_SHA}
-          # tar -rf "./build/${DEPLOYFILEPREFIX}.orig.tar" --owner=root --group=root --transform="s#^#${GH_REPO}-${VERSION}/#" src/version.h
-          # tar --delete -f "./build/${DEPLOYFILEPREFIX}.orig.tar" "${GH_REPO}-${VERSION}/.gitignore" "${GH_REPO}-${VERSION}/.travis.yml" "${GH_REPO}-${VERSION}/.github"
-          # gzip --best "${DEPLOYFILEPREFIX}.orig.tar"
-          # md5sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.md5sum"
-          # sha256sum "${DEPLOYFILEPREFIX}.orig.tar.gz" > "${DEPLOYFILEPREFIX}.orig.tar.gz.sha256sum"
-          # tar tzvf "${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local  
-
       - name: Sum files
-        run: for FILE in artifacts/* ; do md5sum ${FILE} > ${FILE}.md5sum ; sha256sum ${FILE} > ${FILE}.sha256sum ; done
+        run: |
+          for FILE in artifacts/* ; do md5sum ${FILE} > ${FILE}.md5sum ; sha256sum ${FILE} > ${FILE}.sha256sum ; done
+          ls -laF artifacts/
