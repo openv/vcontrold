@@ -38,12 +38,10 @@ jobs:
 
     - name: Checkinstall deb package creation
       run: |
-        sudo checkinstall --strip=no --install=no --pkgname="${GH_REPO}" --pkgversion="${VERSION}" --pkgrelease=${GITHUB_RUN_NUMBER} --arch="${ARCH}" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${
-DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=${TRAVIS_BUILD_DIR} -D -y cmake --build ./build/ --target install
+        sudo checkinstall --strip=no --install=no --pkgname="${GH_REPO}" --pkgversion="${VERSION}" --pkgrelease=${GITHUB_RUN_NUMBER} --arch="${ARCH}" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=./build/ -D -y cmake --build ./build/ --target install
 
     - name: Collect files
       run: |
-        sudo mv *.deb ./build/
         sudo chown -R $USER:$USER ./build/
         for FILE in ./build/doc/man/*.1 ; do gzip ${FILE} ; done
         zip -j ./build/${DEPLOYFILEPREFIX_BIN}.zip ./build/vcontrold ./build/vclient ./build/doc/man/vcontrold.1.gz ./build/doc/man/vclient.1.gz COPYING README.md
