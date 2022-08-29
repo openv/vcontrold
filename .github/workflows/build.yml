@@ -1,0 +1,25 @@
+name: BuildAll
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_linux_rpi:
+    uses: ./.github/workflows/build_linux_rpi.yml
+    with:
+      target: raspios_lite:latest
+      artifact_archive: artifacts-build_rpi
+
+  upload:
+    needs: [build_linux_rpi]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get Linux RPi build
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts-build_rpi
+
+      - name: Useless stuff
+        run: ls -laF
