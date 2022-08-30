@@ -11,6 +11,7 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+
     - name: Build on Ubuntu Linux
       run: |
         sudo apt-get update -y --allow-releaseinfo-change
@@ -18,11 +19,10 @@ jobs:
         mkdir build
         cmake -S . -B ./build  -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON
         cmake --build ./build
-        echo "ARCH=$(dpkg --print-architecture)" > ./build/env
 
     - name: Set env vars
       run: |
-        source ./build/env
+        ARCH="$(dpkg --print-architecture)"
         echo "ARCH=${ARCH}">> ${GITHUB_ENV}
         BUILD_DIR="./build"
         echo "BUILD_DIR=${BUILD_DIR}" >> ${GITHUB_ENV}
