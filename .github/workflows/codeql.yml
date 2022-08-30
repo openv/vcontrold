@@ -1,11 +1,11 @@
 name: "CodeQL"
 
 on:
-  #push:
-  #  branches: [ "master" ]
-  #pull_request:
+  push:
+  #  branches: [ "master", "main" ]
+  pull_request:
   #  # The branches below must be a subset of the branches above
-  #  branches: [ "master" ]
+  #  branches: [ "master", "main" ]
   #schedule:
   #  - cron: '15 20 * * 2'
   workflow_dispatch:
@@ -29,6 +29,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
+      #with:
+      #   fetch-depth: 0
 
     - name: Installing needed dependencies
       run: |
@@ -39,22 +41,11 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file.
-        # Prefix the list here with "+" to use these queries and those in the config file.
-        
-        # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
-        # queries: security-extended,security-and-quality
-
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    #- name: Autobuild
-    #  uses: github/codeql-action/autobuild@v2
 
     - name: Build Application
       run: |
         mkdir build
-        cmake -S . -B build  -DCMAKE_VERBOSE_MAKEFILE=ON
+        cmake -S . -B build -DVSIM=ON -DMANPAGES=ON -DCMAKE_VERBOSE_MAKEFILE=ON
         cmake --build build
 
     - name: Perform CodeQL Analysis
