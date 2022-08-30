@@ -1,0 +1,106 @@
+name: Builds for Windows with Cygwin
+
+on:
+  workflow_call:
+    inputs:
+      platform:
+        required: true
+        type: string
+      artifact_archive:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Cygwin platform'
+        required: true
+        default: 'x86_64'
+        type: choice
+        options:
+        - x86_64
+        - x86
+      artifact_archive:
+        required: true
+        type: string
+        default: artifacts-build_cygwin
+env:
+  #CYGWIN_NOWINPATH: 1
+  CHERE_INVOKING: 1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+         fetch-depth: 0
+
+    - name: Prepare environment
+      shell: bash
+      run: |
+        git config --global core.autocrlf input
+
+    - name: Install Cygwin environment
+      uses: cygwin/cygwin-install-action@cf17b9c15958a86fd5b0a53332b91f890aecadfd
+      with:
+        platform: ${{ inputs.platform }}
+        packages: cygwin-devel,make,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel,python39-docutils
+
+    - name: Cmake configure
+      env:
+        CYGWIN_NOWINPATH: 1
+      run: |
+        git config --global core.autocrlf input
+        mkdir build
+        cmake -S . -B ./build  -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON -DMANPAGES=ON
+        ls -laF build
+
+    - name: Cmake build
+      env:
+        CYGWIN_NOWINPATH: 1
+      run: |
+        export PATH=/usr/bin:$(cygpath ${SYSTEMROOT})/system32
+        git config --global --add safe.directory $(pwd)
+        cmake --build build
+        ls -laF build
+
+    - name: Set env vars
+      run: |
+        ARCH="${{inputs.platform}}"
+        echo "ARCH=${ARCH}" >> ${GITHUB_ENV}
+        BUILD_DIR="./build"
+        echo "BUILD_DIR=${BUILD_DIR}" >> ${GITHUB_ENV}
+        VERSION=$(sed -n -e '/^#define VERSION /{s/#define VERSION "\(.*\)"/\1/;s/unknown/'"$(date +0.0.%Y%m%d)"'/g;p}' ${BUILD_DIR}/version.h)
+        echo "VERSION=${VERSION}" >> ${GITHUB_ENV}
+        GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
+        echo "GH_REPO=${GH_REPO}" >> ${GITHUB_ENV}
+        GH_USER=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 1)
+        echo "GH_USER=${GH_USER}" >> ./build/env
+        DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
+        echo DEPLOYFILEPREFIX="${DEPLOYFILEPREFIX}" >> ${GITHUB_ENV}
+        DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${GITHUB_RUN_NUMBER}_${ARCH}"
+        echo DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX_BIN}" >> ${GITHUB_ENV}
+        cat ${GITHUB_ENV}
+
+    - name: Collect files
+      run: |
+        mkdir artifact-upload
+        echo ${VERSION} > ./build/VERSION
+        cd ./build && cp ../COPYING ../README.md . && 7z a ../artifact-upload/vcontrold_$(echo -n ${VERSION} | sed -e s/^v//)-${GITHUB_RUN_NUMBER}-cygwin_${ARCH}.zip *.exe COPYING VERSION README.md
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact_archive }}
+        path: |
+           artifact-upload/*
+        if-no-files-found: error
+
+    - name: Cleanup
+      shell: powershell
+      # this prevents the intrinsic "Post Checkout" step from accessing git.exe from Cygwin
+      run: Rename-Item C:\cygwin\bin\git.exe cygwin_git.exe

@@ -1,0 +1,98 @@
+name: Builds for RPi on RaspiOS
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: 'RPi base_image target'
+        # see https://github.com/pguyot/arm-runner-action
+        required: true
+        default: 'raspios_lite:latest'
+        type: string
+        # type: choice
+        # options:
+        # - raspios_lite:latest
+        # - raspios_lite_arm64:latest
+        # - raspi_1_bullseye:20220121
+      artifact_archive:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'RPi base_image target'
+        # see https://github.com/pguyot/arm-runner-action
+        required: true
+        default: 'raspios_lite:latest'
+        type: choice
+        options:
+        - raspios_lite:latest
+        - raspios_lite_arm64:latest
+        - raspi_1_bullseye:20220121
+      artifact_archive:
+        required: true
+        type: string
+        default: artifacts-build_raspios
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+         fetch-depth: 0
+
+    - name: Build on RaspiOs
+      uses: pguyot/arm-runner-action@ea8740c2afba239901f967347c5f420846aee665
+      with:
+        image_additional_mb: 1024
+        base_image: ${{ inputs.target }}
+        copy_artifact_path: build
+        import_github_env: true
+        commands: |
+            apt-get update -y --allow-releaseinfo-change
+            apt-get install -y build-essential git cmake libxml2-dev python3-docutils zip checkinstall
+            mkdir build
+            cmake -S . -B ./build  -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON
+            cmake --build ./build
+            ARCH="$(dpkg --print-architecture)"
+            echo "ARCH=${ARCH}" > ./build/env
+            BUILD_DIR="./build"
+            echo "BUILD_DIR=${BUILD_DIR}" >> ./build/env
+            VERSION=$(sed -n -e '/^#define VERSION /{s/#define VERSION "\(.*\)"/\1/;s/unknown/'"$(date +0.0.%Y%m%d)"'/g;p}' ${BUILD_DIR}/version.h)
+            echo "VERSION=${VERSION}" >> ./build/env
+            GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
+            echo "GH_REPO=${GH_REPO}" >> ./build/env
+            GH_USER=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 1)
+            echo "GH_USER=${GH_USER}" >> ./build/env
+            DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
+            echo DEPLOYFILEPREFIX="${DEPLOYFILEPREFIX}" >> ./build/env
+            DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${GITHUB_RUN_NUMBER}_${ARCH}"
+            echo DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX_BIN}" >> ./build/env
+            sudo checkinstall --strip=no --install=no --pkgname="${GH_REPO}" --pkgversion="${VERSION}" --pkgrelease=${GITHUB_RUN_NUMBER} --arch="${ARCH}" --maintainer="${GH_USER}@GitHub" --pkgsource="https://github.com/${GH_USER}/${GH_REPO}/releases/download/v${VERSION}/${DEPLOYFILEPREFIX}.orig.tar.gz" --pkgaltsource="https://github.com/${GH_USER}/${GH_REPO}/" --pkglicense="GPLv3" --pakdir=./build/ -D -y cmake --build ./build/ --target install
+
+    - name: Set env vars
+      run: |
+        source ./build/env
+        cat ./build/env >> ${GITHUB_ENV}
+        cat ${GITHUB_ENV}
+
+    - name: Collect files
+      run: |
+        sudo chown -R $USER:$USER ./build/
+        for FILE in ./build/doc/man/*.1 ; do gzip ${FILE} ; done
+        zip -j ./build/${DEPLOYFILEPREFIX_BIN}.zip ./build/vcontrold ./build/vclient ./build/doc/man/vcontrold.1.gz ./build/doc/man/vclient.1.gz COPYING README.md
+        dpkg --info "./build/${DEPLOYFILEPREFIX_BIN}.deb"
+        dpkg --contents "./build/${DEPLOYFILEPREFIX_BIN}.deb"
+        mkdir artifact-upload
+        mv ./build/*.zip ./build/*.deb ./artifact-upload/
+        ls -laF ./artifact-upload/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact_archive }}
+        path: |
+           artifact-upload/*
+        if-no-files-found: error
