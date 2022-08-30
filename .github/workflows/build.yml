@@ -10,7 +10,7 @@ on:
 
 jobs:
   build_linux_rpi:
-    if: ${{! startsWith(github.ref, 'refs/pull/')}
+    if: ${{! startsWith(github.ref, 'refs/pull/')}}
     name: Build for Raspberry Pi on RaspiOs
     uses: ./.github/workflows/build_linux_rpi.yml
     with:
@@ -18,7 +18,7 @@ jobs:
       artifact_archive: artifacts-build_rpi
 
   build_linux_rpi64:
-    if: ${{! startsWith(github.ref, 'refs/pull/')}
+    if: ${{! startsWith(github.ref, 'refs/pull/')}}
     name: Build for arm64 Raspberry Pi on RaspiOs
     uses: ./.github/workflows/build_linux_rpi.yml
     with:
