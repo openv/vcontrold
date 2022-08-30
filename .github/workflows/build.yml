@@ -10,7 +10,7 @@ on:
 
 jobs:
   build_linux_rpi:
-    if: ! startsWith(github.ref, 'refs/pull/')
+    if: ${{! startsWith(github.ref, 'refs/pull/')}
     name: Build for Raspberry Pi on RaspiOs
     uses: ./.github/workflows/build_linux_rpi.yml
     with:
@@ -18,7 +18,7 @@ jobs:
       artifact_archive: artifacts-build_rpi
 
   build_linux_rpi64:
-    if: ! startsWith(github.ref, 'refs/pull/')
+    if: ${{! startsWith(github.ref, 'refs/pull/')}
     name: Build for arm64 Raspberry Pi on RaspiOs
     uses: ./.github/workflows/build_linux_rpi.yml
     with:
@@ -37,14 +37,14 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Get Linux RPi build
-        if: ! startsWith(github.ref, 'refs/pull/')
+        if: ${{! startsWith(github.ref, 'refs/pull/')}
         uses: actions/download-artifact@v3
         with:
           name: artifacts-build_rpi
           path: artifacts
 
       - name: Get Linux RPi arm64 build
-        if: ! startsWith(github.ref, 'refs/pull/')
+        if: ${{! startsWith(github.ref, 'refs/pull/')}
         uses: actions/download-artifact@v3
         with:
           name: artifacts-build_rpi64
@@ -62,7 +62,7 @@ jobs:
           ls -laF artifacts/
 
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{startsWith(github.ref, 'refs/tags/')}}
         uses: ncipollo/release-action@58ae73b360456532aafd58ee170c045abbeaee37
         with:
           artifacts: "artifacts/*"
