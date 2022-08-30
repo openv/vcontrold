@@ -496,12 +496,10 @@ configPtr parseConfig(xmlNodePtr cur)
     configPtr cfgPtr;
     char *chrPtr;
     xmlNodePtr prevPtr;
-    //char string[256];
     char ip[16];
 
     cfgPtr = calloc(1, sizeof(Config));
     cfgPtr->port = 0;
-    cfgPtr->listenAddress;
     cfgPtr->syslog = 0;
     cfgPtr->debug = 0;
 

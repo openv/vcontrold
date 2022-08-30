@@ -88,7 +88,6 @@ static char framer_pid = 0;
 // status handling of current command
 static void framer_set_actaddr(void *pdu)
 {
-    char string[100];
     uint16 framer_old_addr;
 
     if (framer_current_addr != FRAMER_NO_ADDR) {
@@ -103,7 +102,6 @@ static void framer_set_actaddr(void *pdu)
 
 static void framer_reset_actaddr(void)
 {
-    char string[100];
     logIT(LOG_DEBUG, ">FRAMER: framer_reset_actaddr framer_current_addr = FRAMER_NO_ADDR (was %04X)",
             framer_current_addr);
     framer_current_addr = FRAMER_NO_ADDR;
@@ -111,8 +109,6 @@ static void framer_reset_actaddr(void)
 
 static int framer_check_actaddr(void *pdu)
 {
-    char string[100];
-
     if (framer_current_addr != *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET)) {
         logIT(LOG_ERR, ">FRAMER: addr corrupted stored %04X, now %04X",
                  framer_current_addr,
@@ -125,7 +121,6 @@ static int framer_check_actaddr(void *pdu)
 // TODO: could cause trouble on addr containing 0xFE
 static void framer_set_result(char result)
 {
-    char string[100];
     logIT(LOG_DEBUG, ">FRAMER: framer_reset_actaddr framer_current_addr = FRAMER_LINK_STATUS(%02X) (was %04X)",
             result, framer_current_addr);
     framer_current_addr = FRAMER_LINK_STATUS(result);
@@ -133,8 +128,6 @@ static void framer_set_result(char result)
 
 static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime)
 {
-    char string[100];
-
     if ((framer_pid == P300_LEADIN) &&
         ((framer_current_addr & FRAMER_LINK_STATUS(0)) == FRAMER_LINK_STATUS(0))) {
         r_buf[0] = (char) (framer_current_addr ^ FRAMER_LINK_STATUS(0));
@@ -149,7 +142,6 @@ static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime)
 // Synchronization for P300 + switch to P300, back to normal for close -> repeating P300X_ATTEMPTS
 static int framer_close_p300(int fd)
 {
-    char string[100];
     int i;
     char wbuf = P300_RESET;
     char rbuf = 0;
@@ -189,7 +181,6 @@ static int framer_close_p300(int fd)
 
 static int framer_open_p300(int fd)
 {
-    char string[100];
     int i;
     char rbuf = 0;
     char enable[] = P300_ENABLE;
@@ -263,8 +254,6 @@ static char framer_chksum(char *buf, int len)
  */
 int framer_send(int fd, char *s_buf, int len)
 {
-    char string[256];
-
     if ((len < 1) || (! s_buf)) {
         logIT(LOG_ERR, ">FRAMER: invalid buffer %d %p", len, s_buf);
         return FRAMER_ERROR;
@@ -337,7 +326,6 @@ int framer_send(int fd, char *s_buf, int len)
  */
 int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
 {
-    char string[256];
     int rlen;
     int total;
     int rtmp;
@@ -498,7 +486,6 @@ int framer_waitfor(int fd, char *w_buf, int w_len)
 // Device handling, with open and close the mode is also switched to P300/back
 int framer_openDevice(char *device, char pid)
 {
-    char string[100];
     int fd;
 
     logIT(LOG_INFO, ">FRAMER: open device %s ProtocolID %02X", device, pid);
