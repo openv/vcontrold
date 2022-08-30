@@ -53,7 +53,7 @@ jobs:
       run: |
         git archive --prefix "${GH_REPO}-${VERSION}/" -o "./build/${DEPLOYFILEPREFIX}.orig.tar" ${GITHUB_SHA}
         tar -rf "./build/${DEPLOYFILEPREFIX}.orig.tar" --owner=root --group=root --transform="s#^.*build/#${GH_REPO}-${VERSION}/src/#" ./build/version.h
-        tar --delete -f "./build/${DEPLOYFILEPREFIX}.orig.tar" --wildcards "${GH_REPO}-${VERSION}/*"
+        tar --delete -f "./build/${DEPLOYFILEPREFIX}.orig.tar" --wildcards "${GH_REPO}-${VERSION}/.*"
         gzip --best "./build/${DEPLOYFILEPREFIX}.orig.tar"
         tar tzvf "./build/${DEPLOYFILEPREFIX}.orig.tar.gz" --force-local
 
