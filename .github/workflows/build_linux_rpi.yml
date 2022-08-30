@@ -40,10 +40,12 @@ jobs:
             echo "ARCH=${ARCH}" > ./build/env
             BUILD_DIR="./build"
             echo "BUILD_DIR=${BUILD_DIR}" >> ./build/env
-            VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/;s/unknown/'"$(date +0.0.%Y%m%d)"'/gp' ${BUILD_DIR}/version.h)
+            VERSION=$(sed -n -e '/^#define VERSION /{s/#define VERSION "\(.*\)"/\1/;s/unknown/'"$(date +0.0.%Y%m%d)"'/g;p}' ${BUILD_DIR}/version.h)
             echo "VERSION=${VERSION}" >> ./build/env
             GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
             echo "GH_REPO=${GH_REPO}" >> ./build/env
+            GH_USER=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 1)
+            echo "GH_USER=${GH_USER}" >> ./build/env
             DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
             echo DEPLOYFILEPREFIX="${DEPLOYFILEPREFIX}" >> ./build/env
             DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${GITHUB_RUN_NUMBER}_${ARCH}"
