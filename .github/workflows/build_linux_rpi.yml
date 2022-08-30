@@ -40,7 +40,7 @@ jobs:
             echo "ARCH=${ARCH}" > ./build/env
             BUILD_DIR="./build"
             echo "BUILD_DIR=${BUILD_DIR}" >> ./build/env
-            VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/p' -e 's/unknown/'"$(date +0.0.%Y%m%d)"'/g' ${BUILD_DIR}/version.h)
+            VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/;s/unknown/'"$(date +0.0.%Y%m%d)"'/gp' ${BUILD_DIR}/version.h)
             echo "VERSION=${VERSION}" >> ./build/env
             GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
             echo "GH_REPO=${GH_REPO}" >> ./build/env
