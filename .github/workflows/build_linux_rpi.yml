@@ -41,7 +41,7 @@ jobs:
             BUILD_DIR="./build"
             echo "BUILD_DIR=${BUILD_DIR}" >> ./build/env
             VERSION=$(sed -n -e 's/#define VERSION "\(.*\)"/\1/p' ${BUILD_DIR}/version.h)
-            if [ "$VERSION" == "unknown" ] ; then VERSION="$(date +0.0.%Y%m%d)" ; fi
+            if [[ "$VERSION" == "unknown" ]] ; then VERSION="$(date +0.0.%Y%m%d)" ; fi
             echo "VERSION=${VERSION}" >> ./build/env
             GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
             echo "GH_REPO=${GH_REPO}" >> ./build/env
