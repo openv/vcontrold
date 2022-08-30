@@ -5,14 +5,25 @@ on:
     tags:
     - v[0-9]+.[0-9]+.[0-9]+
   pull_request:
+  pull_request_review:
   workflow_dispatch:
 
 jobs:
   build_linux_rpi:
+    if: ! startsWith(github.ref, 'refs/pull/')
+    name: Build for Raspberry Pi on RaspiOs
     uses: ./.github/workflows/build_linux_rpi.yml
     with:
       target: raspios_lite:latest
       artifact_archive: artifacts-build_rpi
+
+  build_linux_rpi64:
+    if: ! startsWith(github.ref, 'refs/pull/')
+    name: Build for arm64 Raspberry Pi on RaspiOs
+    uses: ./.github/workflows/build_linux_rpi.yml
+    with:
+      target: raspios_lite_arm64:latest
+      artifact_archive: artifacts-build_rpi64
 
   build_linux:
     uses: ./.github/workflows/build_linux.yml
@@ -20,15 +31,23 @@ jobs:
       artifact_archive: artifacts-build_linux
 
   upload:
-    needs: [build_linux_rpi, build_linux]
+    needs: [build_linux_rpi, build_linux, build_linux_rpi64]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
       - name: Get Linux RPi build
+        if: ! startsWith(github.ref, 'refs/pull/')
         uses: actions/download-artifact@v3
         with:
           name: artifacts-build_rpi
+          path: artifacts
+
+      - name: Get Linux RPi arm64 build
+        if: ! startsWith(github.ref, 'refs/pull/')
+        uses: actions/download-artifact@v3
+        with:
+          name: artifacts-build_rpi64
           path: artifacts
 
       - name: Get Linux build
