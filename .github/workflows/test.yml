@@ -1,0 +1,59 @@
+name: Test Workflow
+# This workflow is just for testing techniques in GitHub Actions workflows
+# it is not part of the CI or CD of this repository
+
+on:
+  push:
+    branches:
+    - 'test*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+         fetch-depth: 0
+
+    - name: Build on Ubuntu Linux
+      run: |
+        sudo apt-get install -y build-essential git cmake libxml2-dev python3-docutils zip checkinstall
+        mkdir build
+        cmake -S . -B ./build  -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON -DVSIM=ON
+        cmake --build ./build
+
+    - name: Set env vars
+      run: |
+        ARCH="$(dpkg --print-architecture)"
+        echo "ARCH=${ARCH}">> ${GITHUB_ENV}
+        BUILD_DIR="./build"
+        echo "BUILD_DIR=${BUILD_DIR}" >> ${GITHUB_ENV}
+        VERSION=$(sed -n -e '/^#define VERSION /{s/#define VERSION "\(.*\)"/\1/;s/unknown/'"$(date +0.0.%Y%m%d)"'/g;p}' ${BUILD_DIR}/version.h)
+        echo "VERSION=${VERSION}" >> ${GITHUB_ENV}
+        GH_REPO=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 2)
+        echo "GH_REPO=${GH_REPO}" >> ${GITHUB_ENV}
+        GH_USER=$(echo -n "${GITHUB_REPOSITORY}" | cut -d "/" -f 1)
+        echo "GH_USER=${GH_USER}" >> ./build/env
+        DEPLOYFILEPREFIX="${GH_REPO}_${VERSION}"
+        echo DEPLOYFILEPREFIX="${DEPLOYFILEPREFIX}" >> ${GITHUB_ENV}
+        DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX}-${GITHUB_RUN_NUMBER}_${ARCH}"
+        echo DEPLOYFILEPREFIX_BIN="${DEPLOYFILEPREFIX_BIN}" >> ${GITHUB_ENV}
+        printenv
+        git describe --tags --always --dirty
+        cat ${GITHUB_ENV}
+
+    - name: Collect files
+      run: |
+        PRIMARY_GROUP=$(id -g)
+        sudo chown -R ${USER}:$(PRIMARY_GROUP) ./build/
+        mkdir artifacts
+        for FILE in vcontrold vclient vsim version.h ; do cp -af ./build/${FILE} ./artifacts/ ; done
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        path: |
+           artifacts/*
+        if-no-files-found: error
