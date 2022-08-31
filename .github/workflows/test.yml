@@ -17,6 +17,12 @@ jobs:
       with:
          fetch-depth: 0
 
+
+    - name: Some git info
+      run: |
+        git pull
+        git show-ref -d
+
     - name: Build on Ubuntu Linux
       run: |
         sudo apt-get install -y build-essential git cmake libxml2-dev python3-docutils zip checkinstall
