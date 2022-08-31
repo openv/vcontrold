@@ -39,6 +39,7 @@ jobs:
       with:
          fetch-depth: 0
     - name: Hack around https://github.com/actions/checkout/issues/290
+      shell: powershell
       run: |
         git fetch --tags --force
 
