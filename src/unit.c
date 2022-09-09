@@ -435,11 +435,11 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
 
     ptr = recvBuf;
     memset(buffer, 0, sizeof(buffer));
-    for (n = 0; n <= 9; n++) {
+    for (n = 0; n <= 15; n++) {
         // The bytes 0..9 are of interest
         memset(string, 0, sizeof(string));
         unsigned char byte = *ptr++ & 255;
-        snprintf(string, sizeof(string), "B%d:%02X ", n, byte);
+        snprintf(string, sizeof(string), "B%01X:%02X ", n, byte);
         strcat(buffer, string);
         if (n >= MAXBUF - 3) {
             break;
