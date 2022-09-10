@@ -574,27 +574,24 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         inPtr = uPtr->sICalc;
         if (uPtr->ePtr) {
             // There are enums
-            if (! *input) {
-                sprintf(sendBuf, "Input missing");
-                return -1;
-            }
             if (! (count = text2Enum(uPtr->ePtr, input, &ptr, sendLen))) {
                 sprintf(sendBuf, "Did not find an appropriate enum");
                 return -1;
             } else {
                 memset(dumBuf, 0, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
-                logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
-                ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
-                if (*errPtr) {
-                    logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
-                    strcpy(sendBuf, string);
-                    return -1;
-                }
-                ergType = INT;
-                snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x", ergI);
             }
         }
+
+        logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
+        ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
+        if (*errPtr) {
+            logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
+            strcpy(sendBuf, string);
+            return -1;
+        }
+        ergType = INT;
+        snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x %d", ergI, ergI);
     }
 
     // The result is in erg and has to be converted according to the type
