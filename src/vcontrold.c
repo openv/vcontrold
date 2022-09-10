@@ -412,6 +412,13 @@ int interactive(int socketfd, char *device)
             if (cPtr->precmd && (pcPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cPtr->precmd))) {
                 logIT(LOG_INFO, "Executing pre command %s", cPtr->precmd);
 
+                // if there is no parameter, precommand and calc/icalc will set the parameter
+                if (! *sendBuf) {
+                    // dummy sendBuffer required for procSetUnit input check later
+                    strcpy(sendBuf, " ");
+                    sendLen = strlen(sendBuf);
+                }
+
                 if (execByteCode(pcPtr->cmpPtr, fd, pRecvBuf, sizeof(pRecvBuf), sendBuf, sendLen, 1, pcPtr->bit, pcPtr->retry, pRecvBuf, pcPtr->recvTimeout) == -1) {
                     logIT(LOG_ERR, "Error executing %s", readBuf);
                     sendErrMsg(socketfd);
