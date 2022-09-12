@@ -241,7 +241,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         }
         return expression;
     default:
-        sprintf(err, "expected factor: B0..B9 number ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..BF number ( ) [%c]\n", *item);
         return 0;
     }
 }
@@ -502,7 +502,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
     case NICHT:
         return ~execIFactor(str, bPtr, bitpos, pPtr, err);
     default:
-        sprintf(err, "expected factor: B0..B9 P0..P9 BP number ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..BF P0..PF BP number ( ) [%c]\n", *item);
         return 0;
     }
 }
