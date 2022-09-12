@@ -292,6 +292,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     if (*err) {
         return 0;
     }
+    //printf(" T1=%d\n",term1);
 
     int t;
     op = ERROR;
@@ -308,6 +309,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
             op = NICHT;
             break;
         default:
+            //printf(" Exp=%d\n",term1);
             pushBack(str, n);
             return term1;
         }
@@ -321,9 +323,11 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
         } if (*err) {
             return 0;
         }
+        //printf(" T2=%d\n",term2);
         term1 += term2;
     }
 
+    //printf(" Exp=%d\n",term1);
     return term1;
 }
 
@@ -369,7 +373,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
             break;
         default:
             pushBack(str, n);
-            //printf("  ret(%f)\n",factor1);
+            //printf("  ret(%d)\n",factor1);
             return factor1;
         }
 
