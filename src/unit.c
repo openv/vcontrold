@@ -591,7 +591,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             return -1;
         }
         ergType = INT;
-        snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x %d", ergI, ergI);
+        snprintf(string, sizeof(string), "Res: (Hex max. 4 bytes) %08x", ergI);
     }
 
     // The result is in erg and has to be converted according to the type
