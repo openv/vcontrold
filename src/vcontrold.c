@@ -413,7 +413,7 @@ int interactive(int socketfd, char *device)
                 logIT(LOG_INFO, "Executing pre command %s", cPtr->precmd);
 
                 // if there is no parameter, precommand and calc/icalc will set the parameter
-                if (! *sendBuf) {
+                if (! *para) {
                     // dummy sendBuffer required for procSetUnit input check later
                     strcpy(sendBuf, " ");
                     sendLen = strlen(sendBuf);
