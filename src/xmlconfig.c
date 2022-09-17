@@ -589,7 +589,7 @@ configPtr parseConfig(xmlNodePtr cur)
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
-        } else if (logFound && strstr((char *)cur->name, "listen")) {
+        } else if (netFound && strstr((char *)cur->name, "listen")) {
             chrPtr = getTextNode(cur);
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
