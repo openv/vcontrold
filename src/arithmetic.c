@@ -265,7 +265,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         }
         return expression;
     default:
-        sprintf(err, "expected factor: B0..B9 number ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..BF number ( ) [%c]\n", *item);
         return 0;
     }
 }
@@ -316,6 +316,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     if (*err) {
         return 0;
     }
+    //printf(" T1=%d\n",term1);
 
     int t;
     op = ERROR;
@@ -332,6 +333,7 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
             op = NICHT;
             break;
         default:
+            //printf(" Exp=%d\n",term1);
             pushBack(str, n);
             return term1;
         }
@@ -345,9 +347,11 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
         } if (*err) {
             return 0;
         }
+        //printf(" T2=%d\n",term2);
         term1 += term2;
     }
 
+    //printf(" Exp=%d\n",term1);
     return term1;
 }
 
@@ -393,7 +397,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
             break;
         default:
             pushBack(str, n);
-            //printf("  ret(%f)\n",factor1);
+            //printf("  ret(%d)\n",factor1);
             return factor1;
         }
 
@@ -546,7 +550,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
     case NICHT:
         return ~execIFactor(str, bPtr, bitpos, pPtr, err);
     default:
-        sprintf(err, "expected factor: B0..B9 P0..P9 BP number ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..BF P0..PF BP number ( ) [%c]\n", *item);
         return 0;
     }
 }
