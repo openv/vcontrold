@@ -34,7 +34,7 @@ jobs:
       platform: x86_64
       artifact_archive: artifacts-build_cygwin_x86_64
 
-upload:
+  upload:
     needs: [build_linux_rpi, build_linux, build_linux_rpi64, build_cygwin_x86_64]
     runs-on: ubuntu-latest
     steps:
