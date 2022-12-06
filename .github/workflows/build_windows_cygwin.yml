@@ -18,7 +18,6 @@ on:
         type: choice
         options:
         - x86_64
-        - x86
       artifact_archive:
         required: true
         type: string
