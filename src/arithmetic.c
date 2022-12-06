@@ -32,17 +32,29 @@
 #define BYTE7 207
 #define BYTE8 208
 #define BYTE9 209
-#define PBYTE0 210
-#define PBYTE1 211
-#define PBYTE2 212
-#define PBYTE3 213
-#define PBYTE4 214
-#define PBYTE5 215
-#define PBYTE6 216
-#define PBYTE7 217
-#define PBYTE8 218
-#define PBYTE9 219
-#define BITPOS 220
+#define BYTEA 210
+#define BYTEB 211
+#define BYTEC 212
+#define BYTED 213
+#define BYTEE 214
+#define BYTEF 215
+#define PBYTE0 216
+#define PBYTE1 217
+#define PBYTE2 218
+#define PBYTE3 219
+#define PBYTE4 220
+#define PBYTE5 221
+#define PBYTE6 222
+#define PBYTE7 223
+#define PBYTE8 224
+#define PBYTE9 225
+#define PBYTEA 226
+#define PBYTEB 227
+#define PBYTEC 228
+#define PBYTED 229
+#define PBYTEE 230
+#define PBYTEF 231
+#define BITPOS 232
 #define VALUE 300
 #define NICHT 400
 #define UND 401
@@ -67,14 +79,14 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     //float exp1,exp2;
     char *item;
     //unsigned char bPtr[10];
-    unsigned char bPtr[10];
+    unsigned char bPtr[16];
     int n;
 
     //printf("execExpression: %s\n",*str);
 
     // Tweak bPtr Bytes 0..9 and copy them to nPtr
     // We did not receive characters
-    for (n = 0; n <= 9; n++) {
+    for (n = 0; n <= 15; n++) {
         //bPtr[n]=*bInPtr++ & 255;
         bPtr[n] = *bInPtr++;
     }
@@ -199,6 +211,18 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         return bPtr[8];
     case BYTE9:
         return bPtr[9];
+    case BYTEA:
+        return bPtr[10];
+    case BYTEB:
+        return bPtr[11];
+    case BYTEC:
+        return bPtr[12];
+    case BYTED:
+        return bPtr[13];
+    case BYTEE:
+        return bPtr[14];
+    case BYTEF:
+        return bPtr[15];
     case VALUE:
         return floatV;
     case HEX:
@@ -253,14 +277,14 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     //int exp1, exp2;
     int op;
     char *item;
-    unsigned char bPtr[10];
+    unsigned char bPtr[16];
     int n;
 
     //printf("execExpression: %s\n", *str);
 
     // Tweak bPtr bytes 0..9 and copy them to nPtr
     // We have received characters
-    for (n = 0; n <= 9; n++) {
+    for (n = 0; n <= 15; n++) {
         //bPtr[n]=*bInPtr++ & 255;
         bPtr[n] = *bInPtr++;
     }
@@ -435,6 +459,18 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         return ((int)bPtr[8]) & 0xff;
     case BYTE9:
         return ((int)bPtr[9]) & 0xff;
+    case BYTEA:
+        return ((int)bPtr[10]) & 0xff;
+    case BYTEB:
+        return ((int)bPtr[11]) & 0xff;
+    case BYTEC:
+        return ((int)bPtr[12]) & 0xff;
+    case BYTED:
+        return ((int)bPtr[13]) & 0xff;
+    case BYTEE:
+        return ((int)bPtr[14]) & 0xff;
+    case BYTEF:
+        return ((int)bPtr[15]) & 0xff;
     case BITPOS:
         return ((int)bitpos) & 0xff;
     case PBYTE0:
@@ -457,6 +493,18 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         return ((int)pPtr[8]) & 0xff;
     case PBYTE9:
         return ((int)pPtr[9]) & 0xff;
+    case PBYTEA:
+        return ((int)pPtr[10]) & 0xff;
+    case PBYTEB:
+        return ((int)pPtr[11]) & 0xff;
+    case PBYTEC:
+        return ((int)pPtr[12]) & 0xff;
+    case PBYTED:
+        return ((int)pPtr[13]) & 0xff;
+    case PBYTEE:
+        return ((int)pPtr[14]) & 0xff;
+    case PBYTEF:
+        return ((int)pPtr[15]) & 0xff;
     case HEX:
         nPtr = nstring;
         memset(nstring, 0, sizeof(nstring));
@@ -586,6 +634,18 @@ int nextToken(char **str, char **c, int *count)
             return BYTE8;
         case '9':
             return BYTE9;
+        case 'A':
+            return BYTEA;
+        case 'B':
+            return BYTEB;
+        case 'C':
+            return BYTEC;
+        case 'D':
+            return BYTED;
+        case 'E':
+            return BYTEE;
+        case 'F':
+            return BYTEF;
         case 'P':
             return BITPOS;
         }
@@ -612,6 +672,18 @@ int nextToken(char **str, char **c, int *count)
             return PBYTE8;
         case '9':
             return PBYTE9;
+        case 'A':
+            return PBYTEA;
+        case 'B':
+            return PBYTEB;
+        case 'C':
+            return PBYTEC;
+        case 'D':
+            return PBYTED;
+        case 'E':
+            return PBYTEE;
+        case 'F':
+            return PBYTEF;
         }
     case '1':
     case '2':
