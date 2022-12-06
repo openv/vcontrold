@@ -33,14 +33,6 @@ jobs:
     with:
       platform: x86_64
       artifact_archive: artifacts-build_cygwin_x86_64
-
-  build_cygwin_x86:
-    name: Build for Windows with Cygwin (x86)
-    uses: ./.github/workflows/build_windows_cygwin.yml
-    with:
-      platform: x86
-      artifact_archive: artifacts-build_cygwin_x86
-
   upload:
     needs: [build_linux_rpi, build_linux, build_linux_rpi64, build_cygwin_x86_64, build_cygwin_x86]
     runs-on: ubuntu-latest
