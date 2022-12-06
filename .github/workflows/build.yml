@@ -34,7 +34,7 @@ jobs:
       platform: x86_64
       artifact_archive: artifacts-build_cygwin_x86_64
   upload:
-    needs: [build_linux_rpi, build_linux, build_linux_rpi64, build_cygwin_x86_64, build_cygwin_x86]
+    needs: [build_linux_rpi, build_linux, build_linux_rpi64, build_cygwin_x86_64]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -66,12 +66,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: artifacts-build_cygwin_x86_64
-          path: artifacts
-
-      - name: Get Cygwin (x86) build
-        uses: actions/download-artifact@v3
-        with:
-          name: artifacts-build_cygwin_x86
           path: artifacts
 
       - name: Sum files
