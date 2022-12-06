@@ -47,7 +47,7 @@ jobs:
         git fetch --tags --force
 
     - name: Build on RaspiOs
-      uses: pguyot/arm-runner-action@ea8740c2afba239901f967347c5f420846aee665
+      uses: pguyot/arm-runner-action@e04ca3becb581a2b52cabe31e53835ada344522f
       with:
         image_additional_mb: 1024
         base_image: ${{ inputs.target }}
