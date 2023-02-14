@@ -11,7 +11,7 @@ void removeCompileList(compilePtr ptr);
 int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen, char *sendBuf,
                  short sendLen, short supressUnit, char bitpos, int retry, char *pRecvPtr,
                  unsigned short recvTimeout);
-void compileCommand(devicePtr dPtr, unitPtr uPtr);
+void compileCommandAll(devicePtr dPtr, unitPtr uPtr);
 
 // Token Definition
 #define WAIT    1

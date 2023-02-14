@@ -87,7 +87,7 @@ void usage()
 int reloadConfig()
 {
     if (parseXMLFile(xmlfile)) {
-        compileCommand(devPtr, uPtr);
+        compileCommandAll(devPtr, uPtr);
         logIT(LOG_NOTICE, "XML file %s reloaded", xmlfile);
         return 1;
     } else {
@@ -820,7 +820,7 @@ int main(int argc, char *argv[])
     }
 
     // The macros are replaced and the strings to send are converted to bytecode
-    compileCommand(devPtr, uPtr);
+    compileCommandAll(devPtr, uPtr);
 
     int fd = 0;
     char result[MAXBUF];
