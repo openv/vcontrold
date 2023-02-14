@@ -377,7 +377,10 @@ int main(int argc, char *argv[])
                 continue;
             }
             memset(string, 0, sizeof(string));
-            sprintf(string, "%f;", resPtr->result);
+            if (strcmp("getSystemTime", resPtr->cmd)== 0)
+                sprintf(string, "%s;", resPtr->raw);
+            else
+                sprintf(string, "%f;", resPtr->result);
             strncat(result, string, sizeof(result) - strlen(result) - 1);
             resPtr = resPtr->next;
         }
