@@ -78,7 +78,7 @@ impl Vs1 {
 
       // Retry if the response contains `SYNC` (`0x05`),
       // since these could be synchronization bytes.
-      if buf.iter().any(|byte| *byte == SYNC) {
+      if buf.contains(&SYNC) {
         let read_time = stop - read_start;
 
         log::debug!(

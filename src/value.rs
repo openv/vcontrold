@@ -34,7 +34,7 @@ pub enum Value {
   String(String),
   Date(Date),
   DateTime(DateTime),
-  CircuitTimes(CircuitTimes),
+  CircuitTimes(Box<CircuitTimes>),
   Error(Error),
   Empty,
 }

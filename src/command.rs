@@ -72,7 +72,7 @@ impl Command {
           return Err(Error::InvalidFormat("array length is not 56".to_string()))
         }
 
-        Value::CircuitTimes(CircuitTimes::from_bytes(array_ref![bytes, 0, 56]))
+        Value::CircuitTimes(Box::new(CircuitTimes::from_bytes(array_ref![bytes, 0, 56])))
       },
       DataType::ErrorIndex => {
         if bytes.len() != 10 {

@@ -155,7 +155,7 @@ impl Time {
   }
 
   pub const fn to_byte(self) -> u8 {
-    self.hour << 3 | (self.minute / 10)
+    (self.hour << 3) | (self.minute / 10)
   }
 }
 

@@ -103,7 +103,7 @@ impl Optolink {
         return match err.kind {
           tokio_serial::ErrorKind::NoDevice => Err(io::Error::new(io::ErrorKind::NotFound, err.description)),
           tokio_serial::ErrorKind::InvalidInput => Err(io::Error::new(io::ErrorKind::InvalidInput, err.description)),
-          tokio_serial::ErrorKind::Unknown => Err(io::Error::new(io::ErrorKind::Other, err.description)),
+          tokio_serial::ErrorKind::Unknown => Err(io::Error::other(err.description)),
           tokio_serial::ErrorKind::Io(kind) => Err(io::Error::new(kind, err.description)),
         }
       },
