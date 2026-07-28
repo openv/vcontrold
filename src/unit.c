@@ -96,7 +96,10 @@ int getCycleTime(char *recv, int len, char *result)
     int i;
     size_t used = 0;
 
-    if (!recv || !result || (len != 8 && len != 15)) {
+    if (!result) {
+        return 0;
+    }
+    if (!recv || (len != 8 && len != 15)) {
         snprintf(result, MAXBUF, "Byte count is not 8 or 15");
         return 0;
     }
@@ -184,8 +187,10 @@ int getW01CCycleTime(char *recv, int len, char *result, int waterMode)
         break;
     }
     snprintf(result, MAXBUF, "%02u:%02u - %02u:%02u %s",
-             start >> 3, (start & 7) * 10,
-             end >> 3, (end & 7) * 10, mode);
+             (unsigned int)(start >> 3),
+             (unsigned int)((start & 7) * 10),
+             (unsigned int)(end >> 3),
+             (unsigned int)((end & 7) * 10), mode);
     return 1;
 }
 
@@ -347,12 +352,13 @@ int setSysTime(char *input, char *sendBuf)
 int getErrState(enumPtr ePtr, char *recv, int len, char *result)
 {
     int i;
-    char *errtext;
+    char *errtext = "Unknown error";
     char systime[35];
     char string[300];
     char *ptr;
 
-    if (len % 9) {
+    if (!recv || !result || len <= 0 || len % 9) {
+        if (!result) return 0;
         sprintf(result, "Bytes count is not mod 9");
         return 0;
     }
@@ -361,6 +367,7 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
         ptr = recv + i;
         memset(string, 0, sizeof(string));
         memset(systime, 0, sizeof(systime));
+        errtext = "Unknown error";
         // Error code: Byte 0
         if (bytes2Enum(ePtr, ptr, &errtext, 1))
             // Rest SysTime
@@ -562,9 +569,6 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         unsigned char byte = *ptr++ & 255;
         snprintf(string, sizeof(string), "B%01X:%02X ", n, byte);
         strcat(buffer, string);
-        if (n >= MAXBUF - 3) {
-            break;
-        }
     }
 
     if (uPtr->gCalc && *uPtr->gCalc) {
@@ -701,7 +705,6 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                              floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sCalc, error);
-            strcpy(sendBuf, string);
             return -1;
         }
         ergType = FLOAT;
@@ -726,7 +729,6 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
                                bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
-            strcpy(sendBuf, string);
             return -1;
         }
         ergType = INT;

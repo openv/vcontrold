@@ -68,8 +68,16 @@ static int check_integer_expression(const char *source, int expected,
     cursor = expression;
     result = execIExpression(&cursor, bytes, sizeof(bytes), 3,
                              previous, error);
-    if (!!*error != !!expect_error) return 0;
-    return expect_error || result == expected;
+    if (!!*error != !!expect_error) {
+        fprintf(stderr, "%s: unexpected error state: %s\n", source, error);
+        return 0;
+    }
+    if (!expect_error && result != expected) {
+        fprintf(stderr, "%s: got %d, expected %d\n",
+                source, result, expected);
+        return 0;
+    }
+    return 1;
 }
 
 int main(void)
@@ -103,6 +111,9 @@ int main(void)
     ok &= check_integer_expression("1/0", 0, 1);
     ok &= check_integer_expression("1%0", 0, 1);
     ok &= check_integer_expression("1<<32", 0, 1);
+    ok &= check_integer_expression("(-1)<<1", 0, 1);
+    ok &= check_integer_expression("(-1)>>1", 0, 1);
+    ok &= check_integer_expression("2147483647<<1", 0, 1);
     ok &= check_integer_expression("B4", 0, 1);
     ok &= check_integer_expression("P4", 0, 1);
     ok &= check_integer_expression("(1+2", 0, 1);

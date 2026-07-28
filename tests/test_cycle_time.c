@@ -247,6 +247,9 @@ static int test_error_state(void)
     if (!getErrState(&error, record, sizeof(record), result) ||
             strstr(result, "test-error") == NULL) return 0;
     if (getErrState(&error, record, 8, result) != 0) return 0;
+    if (getErrState(&error, record, 0, result) != 0) return 0;
+    if (getErrState(&error, NULL, sizeof(record), result) != 0) return 0;
+    if (getErrState(&error, record, sizeof(record), NULL) != 0) return 0;
     Unit unit = {.name = "errors", .type = "errstate", .ePtr = &error};
     memset(result, 0, sizeof(result));
     return procGetUnit(&unit, record, sizeof(record), result, 0, NULL) == 1;

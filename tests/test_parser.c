@@ -153,7 +153,9 @@ static int test_exec_bytecode_transport(void)
 
     Compile invalid = {.token = 99};
     return execByteCode(&invalid, -1, received, sizeof(received),
-                        parameter, 0, 1, 0, 1, NULL, 0) == -1;
+                        parameter, 0, 1, 0, 1, NULL, 0) == -1 &&
+        execByteCode(NULL, -1, received, sizeof(received),
+                     parameter, 0, 1, 0, 1, NULL, 0) == -1;
 }
 
 static int test_exec_command_transport(void)
@@ -284,15 +286,26 @@ static int test_simulation_output(void)
 
 static int rejected_modified_config(const char *needle,
                                     const char *replacement,
-                                    configPtr expectedConfiguration)
+    configPtr expectedConfiguration)
 {
     FILE *source = fopen("xml/300/vcontrold.xml", "rb");
-    if (!source || fseek(source, 0, SEEK_END) != 0) return 0;
+    if (!source) return 0;
+    if (fseek(source, 0, SEEK_END) != 0) {
+        fclose(source);
+        return 0;
+    }
     long sourceLength = ftell(source);
-    if (sourceLength <= 0 || fseek(source, 0, SEEK_SET) != 0) return 0;
+    if (sourceLength <= 0 || fseek(source, 0, SEEK_SET) != 0) {
+        fclose(source);
+        return 0;
+    }
     char *xml = calloc((size_t)sourceLength + 1, 1);
     if (!xml || fread(xml, 1, (size_t)sourceLength, source) !=
-            (size_t)sourceLength) return 0;
+            (size_t)sourceLength) {
+        free(xml);
+        fclose(source);
+        return 0;
+    }
     fclose(source);
 
     char *match = strstr(xml, needle);
