@@ -80,6 +80,7 @@ def main():
     parser.add_argument("build_dir", type=pathlib.Path)
     parser.add_argument("--core-min", type=float, default=80.0)
     parser.add_argument("--module-min", type=float, default=65.0)
+    parser.add_argument("--vcontrold-min", type=float, default=65.0)
     parser.add_argument("--overall-min", type=float)
     args = parser.parse_args()
 
@@ -104,6 +105,14 @@ def main():
             print(
                 f"ERROR: {module} is below the per-core-module "
                 f"threshold of {args.module_min:.2f}%")
+            failed = True
+        if (
+            module == "vcontrold"
+            and ratio(line_covered, line_total) < args.vcontrold_min
+        ):
+            print(
+                f"ERROR: vcontrold is below its threshold of "
+                f"{args.vcontrold_min:.2f}%")
             failed = True
 
     core_covered, core_total = totals(lines, CORE_MODULES)
