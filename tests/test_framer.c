@@ -85,6 +85,104 @@ static int test_send(void)
         framer_send(-1, tooLarge, sizeof(tooLarge)) == 0;
 }
 
+static int test_additional_receive_paths(void)
+{
+    unsigned char result[8] = {0};
+    unsigned char writeResponse[] = {
+        0x41, 0x05, 0x01, 0x02, 0x12, 0x34, 0x00, 0x00
+    };
+    writeResponse[sizeof(writeResponse) - 1] =
+        checksum(writeResponse, sizeof(writeResponse));
+    if (receive_frame(writeResponse, sizeof(writeResponse), 1, result) != 1 ||
+            result[0] != 0) return 0;
+
+    unsigned char errorResponse[] = {
+        0x41, 0x06, 0x03, 0x01, 0x12, 0x34, 0x01, 0x15, 0x00
+    };
+    errorResponse[sizeof(errorResponse) - 1] =
+        checksum(errorResponse, sizeof(errorResponse));
+    if (receive_frame(errorResponse, sizeof(errorResponse), 1, result) >= 1)
+        return 0;
+
+    unsigned char badLeadin[] = {
+        0x40, 0x07, 0x01, 0x01, 0x12, 0x34, 0x02, 0x55, 0xaa, 0x00
+    };
+    badLeadin[sizeof(badLeadin) - 1] =
+        checksum(badLeadin, sizeof(badLeadin));
+    if (receive_frame(badLeadin, sizeof(badLeadin), 2, result) >= 1) return 0;
+
+    unsigned char oversized[] = {0x41, 0xfe};
+    if (receive_frame(oversized, sizeof(oversized), 1, result) >= 1) return 0;
+
+    int sockets[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    framer_test_reset();
+    char raw[] = {0x21, 0x22, 0x23};
+    if (write(sockets[0], raw, sizeof(raw)) != (ssize_t)sizeof(raw)) return 0;
+    unsigned long elapsed = 0;
+    int rc = framer_receive(sockets[1], (char *)result, 3, &elapsed);
+    close(sockets[0]);
+    close(sockets[1]);
+    if (rc != 3 || memcmp(result, raw, sizeof(raw)) != 0) return 0;
+
+    const unsigned char presetAddress[2] = {0x06, 0xfe};
+    framer_test_set_p300_address(presetAddress);
+    elapsed = 0;
+    if (framer_receive(-1, (char *)result, 1, &elapsed) != 1 ||
+            result[0] != 0x06) return 0;
+    framer_test_set_p300_address(presetAddress);
+    return framer_waitfor(-1, (char *)result, 1) == 1 &&
+        result[0] == 0x06;
+}
+
+static int test_p300_handshake(void)
+{
+    int sockets[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    pid_t pid = fork();
+    if (pid < 0) return 0;
+    if (pid == 0) {
+        close(sockets[0]);
+        unsigned char request[3] = {0};
+        unsigned char notInitialized = 0x05;
+        unsigned char initialized = 0x06;
+        if (read(sockets[1], request, 1) != 1 || request[0] != 0x04 ||
+                write(sockets[1], &notInitialized, 1) != 1) _exit(2);
+        if (read(sockets[1], request, 3) != 3 ||
+                request[0] != 0x16 || request[1] != 0 ||
+                request[2] != 0 ||
+                write(sockets[1], &initialized, 1) != 1) _exit(3);
+        close(sockets[1]);
+        _exit(0);
+    }
+    close(sockets[1]);
+    int ok = framer_test_open_p300(sockets[0]) == 1;
+    close(sockets[0]);
+    int status = 0;
+    ok = ok && waitpid(pid, &status, 0) == pid &&
+        WIFEXITED(status) && WEXITSTATUS(status) == 0;
+    if (!ok) return 0;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    pid = fork();
+    if (pid < 0) return 0;
+    if (pid == 0) {
+        close(sockets[0]);
+        unsigned char reset = 0;
+        unsigned char initialized = 0x06;
+        if (read(sockets[1], &reset, 1) != 1 || reset != 0x04 ||
+                write(sockets[1], &initialized, 1) != 1) _exit(2);
+        close(sockets[1]);
+        _exit(0);
+    }
+    close(sockets[1]);
+    ok = framer_test_close_p300(sockets[0]) == 1;
+    close(sockets[0]);
+    status = 0;
+    return ok && waitpid(pid, &status, 0) == pid &&
+        WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
 int main(void)
 {
     unsigned char result[8] = {0};
@@ -94,7 +192,8 @@ int main(void)
     valid[sizeof(valid) - 1] = checksum(valid, sizeof(valid));
 
     initLog(0, "/tmp/vcontrold-test-framer.log", 1);
-    if (!test_send()) return 1;
+    if (!test_send() || !test_additional_receive_paths() ||
+            !test_p300_handshake()) return 1;
 
     for (size_t length = 0; length < sizeof(valid); ++length) {
         if (receive_frame(valid, length, 2, result) >= 1) {

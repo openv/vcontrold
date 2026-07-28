@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -99,6 +101,66 @@ static int test_command_file(void)
     return finish_server(fd, pid) && ok;
 }
 
+static int test_overlong_command_file(void)
+{
+    char filename[] = "/tmp/vcontrold-client-long-XXXXXX";
+    int fd = mkstemp(filename);
+    if (fd < 0) return 0;
+    char line[MAXBUF];
+    memset(line, 'A', sizeof(line));
+    int ok = write(fd, line, sizeof(line)) == (ssize_t)sizeof(line);
+    close(fd);
+    if (ok) ok = sendCmdFile(-1, filename) == NULL;
+    unlink(filename);
+    return ok;
+}
+
+static int test_connect_and_disconnect(void)
+{
+    if (connectServer("/invalid", 3002) != -1) return 0;
+
+    int listener = socket(AF_INET, SOCK_STREAM, 0);
+    if (listener < 0) return 0;
+    struct sockaddr_in address = {
+        .sin_family = AF_INET,
+        .sin_addr.s_addr = htonl(INADDR_LOOPBACK),
+        .sin_port = 0
+    };
+    socklen_t addressLength = sizeof(address);
+    if (bind(listener, (struct sockaddr *)&address, sizeof(address)) != 0 ||
+            getsockname(listener, (struct sockaddr *)&address,
+                        &addressLength) != 0 ||
+            listen(listener, 1) != 0) return 0;
+
+    int connected = connectServer("127.0.0.1", ntohs(address.sin_port));
+    int accepted = accept(listener, NULL, NULL);
+    int ok = connected >= 0 && accepted >= 0;
+    if (connected >= 0) close(connected);
+    if (accepted >= 0) close(accepted);
+    close(listener);
+    if (!ok) return 0;
+
+    int sockets[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    pid_t pid = fork();
+    if (pid < 0) return 0;
+    if (pid == 0) {
+        close(sockets[0]);
+        char quit[5] = {0};
+        if (read(sockets[1], quit, sizeof(quit)) != (ssize_t)sizeof(quit) ||
+                memcmp(quit, "quit\n", sizeof(quit)) != 0) _exit(2);
+        if (write(sockets[1], BYE, strlen(BYE)) != (ssize_t)strlen(BYE))
+            _exit(3);
+        close(sockets[1]);
+        _exit(0);
+    }
+    close(sockets[1]);
+    disconnectServer(sockets[0]);
+    int status = 0;
+    return waitpid(pid, &status, 0) == pid &&
+        WIFEXITED(status) && WEXITSTATUS(status) == 0;
+}
+
 int main(void)
 {
     char empty[] = "";
@@ -109,6 +171,8 @@ int main(void)
     }
     if (!test_command_list()) return 1;
     if (!test_command_file()) return 1;
+    if (!test_overlong_command_file()) return 1;
+    if (!test_connect_and_disconnect()) return 1;
 
     const char *responses[] = {""};
     int fd;

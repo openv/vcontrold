@@ -135,7 +135,7 @@ int connectServer(char *host, int port)
 
     if (host[0] != '/' ) {
         sockfd = openCliSocket(host, port, 0);
-        if (sockfd) {
+        if (sockfd >= 0) {
             logIT(LOG_INFO, "Setup connection to %s port %d", host, port);
         } else {
             logIT(LOG_INFO, "Setting up connection to %s port %d failed", host, port);
