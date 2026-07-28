@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
          fetch-depth: 0
     - name: Hack around https://github.com/actions/checkout/issues/290
@@ -115,7 +115,7 @@ jobs:
         ls -laF ./artifact-upload/
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.artifact_archive }}
         path: |

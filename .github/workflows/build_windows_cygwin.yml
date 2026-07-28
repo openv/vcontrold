@@ -34,7 +34,7 @@ jobs:
         shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
          fetch-depth: 0
     - name: Hack around https://github.com/actions/checkout/issues/290
@@ -97,7 +97,7 @@ jobs:
         cd ./build && cp ../COPYING ../README.md . && 7z a ../artifact-upload/vcontrold_$(echo -n ${VERSION} | sed -e s/^v//)-${GITHUB_RUN_NUMBER}-cygwin_${ARCH}.zip *.exe COPYING VERSION README.md
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: ${{ inputs.artifact_archive }}
         path: |
