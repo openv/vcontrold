@@ -5,6 +5,8 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <time.h>
+
 #define CL_TIMEOUT 25
 
 #ifndef MAXBUF

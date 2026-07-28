@@ -101,6 +101,27 @@ if(VSIM)
 endif()
 
 if(BUILD_TESTING)
+    add_executable(test_common
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_common.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+    )
+    target_include_directories(test_common PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    add_test(NAME common COMMAND test_common)
+
+    add_executable(test_client
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_client.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
+    )
+    target_include_directories(test_client PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    add_test(NAME client COMMAND test_client)
+
     add_executable(test_arithmetic
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_arithmetic.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c

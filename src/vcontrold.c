@@ -60,7 +60,8 @@ extern devicePtr devPtr;
 extern configPtr cfgPtr;
 
 // Declarations
-int readCmdFile(char *filename, char *result, int *resultLen, char *device);
+int readCmdFile(char *filename, char *result, size_t resultCapacity,
+                size_t *resultLen, char *device);
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
@@ -86,7 +87,6 @@ void usage()
 int reloadConfig()
 {
     if (parseXMLFile(xmlfile)) {
-        compileCommand(devPtr, uPtr);
         logIT(LOG_NOTICE, "XML file %s reloaded", xmlfile);
         return 1;
     } else {
@@ -95,7 +95,8 @@ int reloadConfig()
     }
 }
 
-int readCmdFile(char *filename, char *result, int *resultLen, char *device)
+int readCmdFile(char *filename, char *result, size_t resultCapacity,
+                size_t *resultLen, char *device)
 {
     FILE *cmdPtr;
     char line[MAXBUF];
@@ -104,14 +105,20 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device)
     char *resultPtr = result;
     int fd;
     int count = 0;
-    *resultLen = 0; // nothing received yet :-)
+    if (!filename || !result || !resultLen || resultCapacity == 0 || !device) {
+        return 0;
+    }
+    *resultLen = 0;
+    result[0] = '\0';
 
     // Open the device only if we have something to do
-    vcontrol_semget();
+    if (!vcontrol_semget()) {
+        logIT1(LOG_ERR, "Could not acquire device lock");
+        return 0;
+    }
     if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
         vcontrol_semrelease();
         logIT(LOG_ERR, "Error opening %s", device);
-        result = "\0";
         *resultLen = 0;
         return 0;
     }
@@ -119,7 +126,6 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device)
     cmdPtr = fopen(filename, "r");
     if (! cmdPtr) {
         logIT(LOG_ERR, "Could not open cmd file %s", filename);
-        result = "\0";
         *resultLen = 0;
         framer_closeDevice(fd);
         vcontrol_semrelease();
@@ -129,10 +135,33 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device)
     // Empty queue
     tcflush(fd, TCIOFLUSH);
     while (fgets(line, MAXBUF - 1, cmdPtr)) {
-        // Remove \n
-        line[strlen(line) - 1] = '\0';
+        size_t lineLength = strlen(line);
+        int completeLine = lineLength > 0 && line[lineLength - 1] == '\n';
+        stripLineEnding(line, lineLength);
+        if (!completeLine && !feof(cmdPtr)) {
+            logIT1(LOG_ERR, "Command file line too long");
+            framer_closeDevice(fd);
+            vcontrol_semrelease();
+            fclose(cmdPtr);
+            return 0;
+        }
+        if (!*line) continue;
         memset(recvBuf, 0, sizeof(recvBuf));
         count = execCmd(line, fd, recvBuf, sizeof(recvBuf));
+        if (count < 0) {
+            logIT(LOG_ERR, "Error executing command-file line: %s", line);
+            framer_closeDevice(fd);
+            vcontrol_semrelease();
+            fclose(cmdPtr);
+            return 0;
+        }
+        if ((size_t)count > resultCapacity - *resultLen) {
+            logIT1(LOG_ERR, "Command-file result buffer too small");
+            framer_closeDevice(fd);
+            vcontrol_semrelease();
+            fclose(cmdPtr);
+            return 0;
+        }
         int n;
         char *ptr;
         ptr = recvBuf;
@@ -218,8 +247,9 @@ int rawModus(int socketfd, char *device)
         if (strcmp(readBuf, "END\n") == 0 || strcmp(readBuf, "END\r\n") == 0 ||
                 strcmp(readBuf, "END") == 0) {
             fclose(filePtr);
-            resultLen = sizeof(result);
-            readCmdFile(tmpfile, result, &resultLen, device);
+            size_t used = 0;
+            readCmdFile(tmpfile, result, sizeof(result), &used, device);
+            resultLen = (int)used;
             if (resultLen) {
                 // Re received characters
                 char buffer[MAXBUF];
@@ -272,11 +302,7 @@ int interactive(int socketfd, char *device)
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
         sendLen = 0;
         sendErrMsg(socketfd);
-        // Remove control characters
-        readPtr = readBuf + rcount;
-        while (iscntrl(*readPtr)) {
-            *readPtr-- = '\0';
-        }
+        stripLineEnding(readBuf, (size_t)rcount);
         logIT(LOG_INFO, "Command: %s", readBuf);
 
         // We separate the command and possible options at the first blank
@@ -853,12 +879,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    // The macros are replaced and the strings to send are converted to bytecode
-    compileCommand(devPtr, uPtr);
-
     int fd = 0;
     char result[MAXBUF];
-    int resultLen = sizeof(result);
+    size_t resultLen = 0;
     int sid;
     int pidFD = -1;
     char str[32];
@@ -1031,7 +1054,7 @@ int main(int argc, char *argv[])
     }
 
     if (cmdfile && *cmdfile) {
-        readCmdFile(cmdfile, result, &resultLen,
+        readCmdFile(cmdfile, result, sizeof(result), &resultLen,
                     cfgPtr && cfgPtr->tty ? cfgPtr->tty : device);
     }
 

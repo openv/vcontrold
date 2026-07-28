@@ -13,6 +13,13 @@ void removeCompileList(compilePtr ptr)
     (void)ptr;
 }
 
+int compileCommand(devicePtr devices, unitPtr units)
+{
+    (void)devices;
+    (void)units;
+    return 1;
+}
+
 static int test_legacy(void)
 {
     char input[] = "06:00 08:00 - - 17:30 22:00 - -";

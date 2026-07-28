@@ -413,6 +413,11 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
     }
 
     total = (unsigned char)l_buf[P300_LEN_OFFSET] + P300_EXTRA_BYTES;
+    if (total < P300_BUFFER_OFFSET + P300_CRC_LEN) {
+        framer_reset_actaddr();
+        logIT(LOG_ERR, ">FRAMER: response frame too short: %d", total);
+        return FRAMER_READ_ERROR;
+    }
     if (total > (int)sizeof(l_buf)) {
         framer_reset_actaddr();
         logIT(LOG_ERR, ">FRAMER: response frame too large: %d", total);
@@ -471,6 +476,11 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
     }
 
     if (l_buf[P300_TYPE_OFFSET] == P300_ERROR_REPORT) {
+        if (total < P300_BUFFER_OFFSET + 1 + P300_CRC_LEN) {
+            framer_reset_actaddr();
+            logIT(LOG_ERR, ">FRAMER: truncated error response");
+            return FRAMER_READ_ERROR;
+        }
         framer_reset_actaddr();
         logIT(LOG_ERR, ">FRAMER: ERROR address %02X%02X code %d",
                  l_buf[P300_ADDR_OFFSET], l_buf[P300_ADDR_OFFSET + 1],
