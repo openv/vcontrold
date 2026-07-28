@@ -119,6 +119,25 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
     return token;
 }
 
+static int appendSimulation(char *destination, size_t destinationSize,
+                            const char *value)
+{
+    size_t used;
+    size_t valueLength;
+
+    if (!destination || !destinationSize || !value) return 0;
+    used = strlen(destination);
+    valueLength = strlen(value);
+    if (used + valueLength + 2 > destinationSize) {
+        logIT1(LOG_ERR, "Simulation output buffer too small");
+        return 0;
+    }
+    memcpy(destination + used, value, valueLength);
+    destination[used + valueLength] = ' ';
+    destination[used + valueLength + 1] = '\0';
+    return 1;
+}
+
 int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                  char *sendBuf, short sendLen, short supressUnit,
                  char bitpos, int retry,
@@ -134,8 +153,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     char out_buff[1024];
     int out_len;
 
-    memset(simIn, 0, sizeof(simIn));
-    memset(simOut, 0, sizeof(simOut));
+    if (iniFD) {
+        memset(simIn, 0, sizeof(simIn));
+        memset(simOut, 0, sizeof(simOut));
+    }
 
     // First copy or convert the bytes of sendBuf to the BYTES token of cmpPtr
     // to be sure not to abort right in the middle of it
@@ -185,10 +206,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     logIT1(LOG_ERR, "Error in wait, terminating");
                     return -1;
                 }
-                memset(string, 0, sizeof(string));
-                char2hex(string, sizeof(string), cmpPtr->send, cmpPtr->len);
-                strcat(simIn, string);
-                strcat(simIn, " ");
+                if (iniFD) {
+                    memset(string, 0, sizeof(string));
+                    if (!char2hex(string, sizeof(string), cmpPtr->send, cmpPtr->len) ||
+                            !appendSimulation(simIn, sizeof(simIn), string)) {
+                        return -1;
+                    }
+                }
                 break;
             case SEND:
                 out_len = 0;
@@ -222,10 +246,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     memset(simIn, 0, sizeof(simIn));
                 }
 
-                memset(string, 0, sizeof(string));
-                char2hex(string, sizeof(string), out_buff, out_len);
-                strcat(simOut, string);
-                strcat(simOut, " ");
+                if (iniFD) {
+                    memset(string, 0, sizeof(string));
+                    if (!char2hex(string, sizeof(string), out_buff, out_len) ||
+                            !appendSimulation(simOut, sizeof(simOut), string)) {
+                        return -1;
+                    }
+                }
                 break;
             case RECV:
                 if (cmpPtr->len > recvLen) {
@@ -264,10 +291,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     }
                 }
 
-                memset(string, 0, sizeof(string));
-                char2hex(string, sizeof(string), recvBuf, cmpPtr->len);
-                strcat(simIn, string);
-                strcat(simIn, " ");
+                if (iniFD) {
+                    memset(string, 0, sizeof(string));
+                    if (!char2hex(string, sizeof(string), recvBuf, cmpPtr->len) ||
+                            !appendSimulation(simIn, sizeof(simIn), string)) {
+                        return -1;
+                    }
+                }
 
                 // If we have a Unit (== uPtr), we convert the received value and also
                 // return the converted value to uPtr
@@ -308,9 +338,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         logIT1(LOG_ERR, "Error in send, terminating");
                         return -1;
                     }
-                    char2hex(string, sizeof(string), sendBuf, sendLen);
-                    strcat(simOut, string);
-                    strcat(simOut, " ");
+                    if (iniFD) {
+                        memset(string, 0, sizeof(string));
+                        if (!char2hex(string, sizeof(string), sendBuf, sendLen) ||
+                                !appendSimulation(simOut, sizeof(simOut), string)) {
+                            return -1;
+                        }
+                    }
                 } else if (cmpPtr->len) {
                     // A unit to use is already defined, and we already converted it
                     if (! my_send(fd, cmpPtr->send, cmpPtr->len)) {
@@ -320,10 +354,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         cmpPtr->len = 0;
                         return -1;
                     }
-                    memset(string, 0, sizeof(string));
-                    char2hex(string, sizeof(string), cmpPtr->send, cmpPtr->len);
-                    strcat(simOut, string);
-                    strcat(simOut, " ");
+                    if (iniFD) {
+                        memset(string, 0, sizeof(string));
+                        if (!char2hex(string, sizeof(string), cmpPtr->send, cmpPtr->len) ||
+                                !appendSimulation(simOut, sizeof(simOut), string)) {
+                            return -1;
+                        }
+                    }
                 }
                 break;
             default:
@@ -663,8 +700,15 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
         cmpPtr->token = token;
         cmpPtr->len = hexlen;
         cmpPtr->errStr = cPtr->errStr;
-        cmpPtr->send = calloc(hexlen, sizeof(char));
-        memcpy(cmpPtr->send, hex, hexlen);
+        if (hexlen > 0) {
+            cmpPtr->send = calloc((size_t)hexlen, sizeof(char));
+            if (!cmpPtr->send) {
+                logIT1(LOG_ERR, "calloc failed");
+                removeCompileList(cmpStartPtr);
+                return NULL;
+            }
+            memcpy(cmpPtr->send, hex, (size_t)hexlen);
+        }
 
         if (*uSPtr && !(cmpPtr->uPtr = getUnitNode(uPtr, uSPtr))) {
             logIT(LOG_ERR, "Unit %s not defined", uSPtr);

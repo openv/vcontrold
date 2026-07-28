@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdint.h>
 #include <signal.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -33,6 +34,37 @@
 
 // global variables
 int inetversion = 0;
+
+static int appendCommand(char **commands, size_t *length, size_t *capacity,
+                         const char *command)
+{
+    size_t commandLength;
+    size_t required;
+    char *resized;
+
+    if (!commands || !length || !capacity || !command || !*command) return 0;
+    commandLength = strlen(command);
+    if (commandLength > SIZE_MAX - *length - 2) return 0;
+    required = *length + commandLength + (*length ? 2 : 1);
+    if (required > *capacity || !*commands) {
+        size_t newCapacity = *capacity ? *capacity : 256;
+        while (newCapacity < required) {
+            if (newCapacity > SIZE_MAX / 2) {
+                newCapacity = required;
+                break;
+            }
+            newCapacity *= 2;
+        }
+        resized = realloc(*commands, newCapacity);
+        if (!resized) return 0;
+        *commands = resized;
+        *capacity = newCapacity;
+    }
+    if (*length) (*commands)[(*length)++] = ',';
+    memcpy(*commands + *length, command, commandLength + 1);
+    *length += commandLength;
+    return 1;
+}
 
 void usage()
 {
@@ -82,14 +114,16 @@ int main(int argc, char *argv[])
     // Get the command line options
     char *host = NULL;
     int port = 0;
-    char commands[5120] = "";
+    char *commands = NULL;
+    size_t commandsLength = 0;
+    size_t commandsCapacity = 0;
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
     const char *tmplfile = NULL;
     const char *outfile = NULL;
     char string[1024] = "";
-    char result[1024] = "";
     int sockfd;
+    int hadServerError = 0;
     char dummylog[] = "\0";
     int opt;
     static int verbose = 0;
@@ -201,23 +235,14 @@ int main(int argc, char *argv[])
         case 'c':
             if (verbose) {
                 printf("option -c with value `%s'\n", optarg);
-                printf("sizeof optarg:%zu, strlen:%zu, sizeof commands:%zu, strlen:%zu,  [%s]\n",
-                       sizeof(optarg), strlen(optarg), sizeof(commands), strlen(commands),
-                       commands);
+                printf("strlen optarg:%zu, command bytes:%zu, [%s]\n",
+                       strlen(optarg), commandsLength, commands ? commands : "");
             }
-            if (strlen(commands) == 0) {
-                if (snprintf(commands, sizeof(commands), "%s", optarg) >=
-                        (int)sizeof(commands)) {
-                    fprintf(stderr, "command too long\n");
-                    exit(2);
-                }
-            } else {
-                if (strlen(optarg) + 2 > sizeof(commands) - strlen(commands)) {
-                    fprintf(stderr, "too many commands\n");
-                    break;
-                }
-                strcat(commands, ",");
-                strncat(commands, optarg, sizeof(commands) - strlen(commands) - 2);
+            if (!appendCommand(&commands, &commandsLength,
+                               &commandsCapacity, optarg)) {
+                fprintf(stderr, "could not allocate command list\n");
+                free(commands);
+                exit(2);
             }
             break;
         case 'f':
@@ -284,20 +309,11 @@ int main(int argc, char *argv[])
             if (verbose) {
                 printf("%s ", argv[optind]);
             }
-            if (strlen(commands) == 0) {
-                if (snprintf(commands, sizeof(commands), "%s", argv[optind]) >=
-                        (int)sizeof(commands)) {
-                    fprintf(stderr, "command too long\n");
-                    exit(2);
-                }
-            } else {
-                if (strlen(argv[optind]) + 2 > sizeof(commands) - strlen(commands)) {
-                    fprintf(stderr, "Command list too long\n");
-                    optind++;
-                    break;
-                }
-                strcat(commands, ",");
-                strncat(commands, argv[optind], sizeof(commands) - strlen(commands) - 2);
+            if (!appendCommand(&commands, &commandsLength,
+                               &commandsCapacity, argv[optind])) {
+                fprintf(stderr, "could not allocate command list\n");
+                free(commands);
+                exit(2);
             }
             optind++;
         }
@@ -334,7 +350,7 @@ int main(int argc, char *argv[])
     }
 
     initLog(0, dummylog, verbose);
-    if (! *commands && !cmdfile) {
+    if ((!commands || !*commands) && !cmdfile) {
         usage();
     }
 
@@ -346,7 +362,7 @@ int main(int argc, char *argv[])
 
     // Give commands directly
     resPtr = NULL;
-    if (*commands) {
+    if (commands && *commands) {
         resPtr = sendCmds(sockfd, commands);
     } else if (cmdfile) {
         resPtr = sendCmdFile(sockfd, cmdfile);
@@ -357,6 +373,9 @@ int main(int argc, char *argv[])
     }
     resultHead = resPtr;
     disconnectServer(sockfd);
+    for (trPtr item = resultHead; item; item = item->next) {
+        if (item->err) hadServerError = 1;
+    }
 
     if (outfile) {
         if (! (ofilePtr = fopen(outfile, "w"))) {
@@ -381,36 +400,27 @@ int main(int argc, char *argv[])
             exit(1);
         }
         memset(string, 0, sizeof(string));
-        memset(result, 0, sizeof(result));
+        int firstField = 1;
         while (resPtr) {
+            if (!firstField) fputc(';', filePtr);
+            firstField = 0;
             if (resPtr->err) {
-                //fprintf(stderr,"%s:%s\n",resPtr->cmd,resPtr->err);
                 fprintf(stderr, "%s: server error\n", resPtr->cmd);
-                strcat(result, ";");
                 resPtr = resPtr->next;
                 continue;
             }
-            size_t used = strlen(result);
-            if (used < sizeof(result)) {
-                char *end = NULL;
-                errno = 0;
-                (void)strtod(resPtr->raw, &end);
-                if (errno == 0 && end && end != resPtr->raw &&
-                        (*end == '\0' || isspace((unsigned char)*end))) {
-                    snprintf(result + used, sizeof(result) - used,
-                             "%f;", resPtr->result);
-                } else {
-                    snprintf(result + used, sizeof(result) - used,
-                             "%s;", resPtr->raw);
-                }
+            char *end = NULL;
+            errno = 0;
+            (void)strtod(resPtr->raw, &end);
+            if (errno == 0 && end && end != resPtr->raw &&
+                    (*end == '\0' || isspace((unsigned char)*end))) {
+                fprintf(filePtr, "%f", resPtr->result);
+            } else {
+                fputs(resPtr->raw, filePtr);
             }
             resPtr = resPtr->next;
         }
-        // Remove the last semicolon and add \n
-        if (*result) {
-            *(result + strlen(result) - 1) = '\n';
-            fputs(result, filePtr);
-        }
+        fputc('\n', filePtr);
         fclose(filePtr);
     } else if (tmplfile) {
         // Template given
@@ -667,10 +677,11 @@ int main(int argc, char *argv[])
         free(resultHead);
         resultHead = next;
     }
+    free(commands);
     if (outfile && ofilePtr) {
         fclose(ofilePtr);
     } else if (ofilePtr) {
         fflush(ofilePtr);
     }
-    return 0;
+    return hadServerError ? 3 : 0;
 }
