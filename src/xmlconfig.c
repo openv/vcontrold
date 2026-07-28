@@ -62,6 +62,19 @@ static int parse_long_range(const char *text, long min, long max,
     return 1;
 }
 
+static void removeConfigNode(configPtr ptr)
+{
+    if (!ptr) return;
+    free(ptr->tty);
+    free(ptr->logfile);
+    free(ptr->devID);
+    free(ptr->listenAddress);
+    free(ptr->pidfile);
+    free(ptr->username);
+    free(ptr->groupname);
+    free(ptr);
+}
+
 protocolPtr newProtocolNode(protocolPtr ptr)
 {
     protocolPtr nptr;
@@ -1512,6 +1525,23 @@ int parseXMLFile(char *filename)
     }
     if (! (TcfgPtr->devPtr = getDeviceNode(TdevPtr, TcfgPtr->devID))) {
         logIT(LOG_ERR, "Device %s is not defined\n", TcfgPtr->devID);
+        xmlFreeDoc(doc);
+        return 0;
+    }
+
+    /*
+     * Compile the complete candidate configuration before replacing any
+     * active global state. A semantic error therefore leaves the old
+     * configuration usable.
+     */
+    if (!compileCommand(TdevPtr, TuPtr)) {
+        logIT1(LOG_ERR, "Candidate XML configuration did not compile");
+        removeDeviceList(TdevPtr);
+        removeCommandList(TcmdPtr);
+        removeUnitList(TuPtr);
+        removeProtocolList(TprotoPtr);
+        removeConfigNode(TcfgPtr);
+        xmlFreeDoc(doc);
         return 0;
     }
 
@@ -1542,14 +1572,7 @@ void freeAllLists()
     devPtr = NULL;
     cmdPtr = NULL;
     if (cfgPtr) {
-        free(cfgPtr->tty);
-        free(cfgPtr->logfile);
-        free(cfgPtr->devID);
-        free(cfgPtr->listenAddress);
-        free(cfgPtr->pidfile);
-        free(cfgPtr->username);
-        free(cfgPtr->groupname);
-        free(cfgPtr);
+        removeConfigNode(cfgPtr);
         cfgPtr = NULL;
     }
 }

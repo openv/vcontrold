@@ -38,23 +38,28 @@ static void sigPipeHandler(int signo);
 void logIT (int class, char *string, ...)
 {
     va_list arguments;
-    char *print_buffer;
+    char *print_buffer = NULL;
 
+    (void)class;
     va_start(arguments, string);
-    vasprintf(&print_buffer, string, arguments);
+    if (vasprintf(&print_buffer, string, arguments) < 0) {
+        print_buffer = NULL;
+    }
     va_end(arguments);
+    if (!print_buffer) return;
     printf("%s\n", print_buffer);
     free(print_buffer);
 }
 
 static void sigPipeHandler(int signo)
 {
+    (void)signo;
     logIT(LOG_ERR, "Received SIGPIPE");
 }
 
-static void dump(char *buf, int len, char *txt)
+static void dump(const unsigned char *buf, size_t len, const char *txt)
 {
-    int i = 0;
+    size_t i = 0;
     printf("%s:\n", txt);
     for (i = 0; i < len; i++) {
         printf(" %02x", (unsigned char)buf[i]);
@@ -63,10 +68,10 @@ static void dump(char *buf, int len, char *txt)
 }
 
 typedef struct {
-    int cmdlen;
-    char cmd[20];
-    int rsplen;
-    char rsp[20];
+    size_t cmdlen;
+    unsigned char cmd[20];
+    size_t rsplen;
+    unsigned char rsp[20];
 } ctable;
 
 ctable cmds[] = {
@@ -98,12 +103,12 @@ ctable cmds[] = {
 // The number of commands is derived from the table itself, so it can't get out of sync
 int cmdc = sizeof(cmds) / sizeof(cmds[0]);
 
-char input[100];
-int inpidx = 0;
+unsigned char input[100];
+size_t inpidx = 0;
 
 static void handle(int fd)
 {
-    char buf[1] = "\0";
+    unsigned char buf[1] = {0};
     ssize_t len;
 
     while ( 1 ) {
@@ -115,21 +120,40 @@ static void handle(int fd)
             printf("eof read\n");
             return;
         } else {
-            int i = 0;
-            int j = 0;
+            ssize_t i = 0;
             while ( i < len ) {
+                if (inpidx == sizeof(input)) {
+                    logIT(LOG_ERR, "Simulator input buffer overflow avoided");
+                    inpidx = 0;
+                }
                 input[inpidx] = buf[i];
                 dump(&input[inpidx], 1, "received char:");
                 inpidx++;
-                for ( j = 0 ; j < cmdc; j++) {
-                    if ( cmds[j].cmd[0] == input[0] ) {
-                        if (( cmds[j].cmdlen == inpidx) && (!memcmp(cmds[j].cmd, input, inpidx))) {
+                int possible = 0;
+                for (int j = 0; j < cmdc; j++) {
+                    if (inpidx <= cmds[j].cmdlen &&
+                            memcmp(cmds[j].cmd, input, inpidx) == 0) {
+                        possible = 1;
+                        if (cmds[j].cmdlen == inpidx) {
                             dump(input, inpidx, "received cmd:");
                             dump(cmds[j].rsp, cmds[j].rsplen, "answer:");
-                            if (writen(fd, cmds[j].rsp, cmds[j].rsplen) != cmds[j].rsplen) {
+                            if (writen(fd, cmds[j].rsp, cmds[j].rsplen) !=
+                                    (ssize_t)cmds[j].rsplen) {
                                 printf("not completely written\n");
                             }
                             inpidx = 0;
+                            break;
+                        }
+                    }
+                }
+                if (!possible && inpidx != 0) {
+                    unsigned char last = input[inpidx - 1];
+                    inpidx = 0;
+                    for (int j = 0; j < cmdc; j++) {
+                        if (cmds[j].cmd[0] == last) {
+                            input[0] = last;
+                            inpidx = 1;
+                            break;
                         }
                     }
                 }
@@ -144,6 +168,8 @@ int main(int argc, char *argv[])
     int sockfd = -1;
     int listenfd = -1;
 
+    (void)argc;
+    (void)argv;
     listenfd = openSocket(SERVERPORT);
     while (1) {
         sockfd = listenToSocket(listenfd, makeDaemon);

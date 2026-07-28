@@ -211,8 +211,16 @@ trPtr sendCmds(int sockfd, char *commands)
     trPtr ptr;
     trPtr startPtr = NULL;
 
+    if (!commands || !*commands) {
+        logIT1(LOG_ERR, "Empty command list");
+        return NULL;
+    }
     sptr = strtok(commands, ",");
-    do {
+    while (sptr) {
+        if (!*sptr) {
+            sptr = strtok(NULL, ",");
+            continue;
+        }
         ptr = newTrNode(startPtr);
         if (! startPtr) {
             startPtr = ptr;
@@ -223,7 +231,13 @@ trPtr sendCmds(int sockfd, char *commands)
             return NULL;
         }
         memcpy(ptr->cmd, sptr, strlen(sptr) + 1);
-    } while ((sptr = strtok(NULL, ",")) != NULL);
+        sptr = strtok(NULL, ",");
+    }
+
+    if (!startPtr) {
+        logIT1(LOG_ERR, "Empty command list");
+        return NULL;
+    }
 
     if (! sendTrList(sockfd, startPtr))
     {

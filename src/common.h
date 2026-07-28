@@ -13,6 +13,7 @@ void logIT (int class, char *string, ...);
 char hex2chr(char *hex);
 int char2hex(char *outString, size_t outSize, const char *charPtr, int len);
 short string2chr(char *line, char *buf, short bufsize);
+size_t stripLineEnding(char *line, size_t length);
 void sendErrMsg(int fd);
 void setDebugFD(int fd);
 ssize_t readn(int fd, void *vptr, size_t n);

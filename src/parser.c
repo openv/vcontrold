@@ -512,7 +512,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     // 1. Search command pcmd at the protocol's command
     if (! (iPtr = (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
         logIT(LOG_ERR, "Protocol command %s (at %s) not defined", cPtr->pcmd, cPtr->name);
-        exit(3);
+        return 0;
     }
 
     // 2. Parse the line and replace the variables with values from cPtr
@@ -577,7 +577,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
                 }
             } else {
                 logIT(LOG_ERR, "Variable %s Unknown", var);
-                exit(3);
+                return 0;
             }
         }
         sendPtr = bptr;
@@ -585,6 +585,10 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     logIT(LOG_INFO, "  After substitution: %s", eString);
     tmpPtr = calloc(strlen(eString) + 1, sizeof(char));
+    if (!tmpPtr) {
+        logIT1(LOG_ERR, "calloc failed");
+        return 0;
+    }
     strcpy(tmpPtr, eString);
 
     // 3. Expand the line as usual
@@ -633,7 +637,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     logIT(LOG_INFO, "   after EXPAND:%s", eString);
     if (! (cPtr->send = calloc(strlen(eString) + 1, sizeof(char)))) {
         logIT1(LOG_ERR, "calloc failed");
-        exit(1);
+        return 0;
     }
 
     strcpy(cPtr->send, eString);
@@ -712,7 +716,8 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 
         if (*uSPtr && !(cmpPtr->uPtr = getUnitNode(uPtr, uSPtr))) {
             logIT(LOG_ERR, "Unit %s not defined", uSPtr);
-            exit(3);
+            removeCompileList(cmpStartPtr);
+            return NULL;
         }
 
         if (*ptr == '\0') {
@@ -725,13 +730,18 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     return cmpStartPtr;
 }
 
-void compileCommand(devicePtr dPtr, unitPtr uPtr)
+int compileCommand(devicePtr dPtr, unitPtr uPtr)
 {
     for (devicePtr device = dPtr; device; device = device->next) {
         logIT(LOG_INFO, "Expanding command for device %s", device->id);
         for (commandPtr command = device->cmdPtr; command; command = command->next) {
-            expand(command, device->protoPtr);
-            buildByteCode(command, uPtr);
+            if (!expand(command, device->protoPtr) ||
+                    !buildByteCode(command, uPtr)) {
+                logIT(LOG_ERR, "Could not compile command %s for device %s",
+                      command->name, device->id);
+                return 0;
+            }
         }
     }
+    return 1;
 }

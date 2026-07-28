@@ -212,3 +212,13 @@ short string2chr(char *line, char *buf, short bufsize)
 
     return count;
 }
+
+size_t stripLineEnding(char *line, size_t length)
+{
+    if (!line) return 0;
+    while (length > 0 &&
+            (line[length - 1] == '\r' || line[length - 1] == '\n')) {
+        line[--length] = '\0';
+    }
+    return length;
+}
