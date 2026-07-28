@@ -85,6 +85,14 @@ static uint16 framer_current_addr = FRAMER_NO_ADDR; // stored value depends on E
 // current active protocol
 static char framer_pid = 0;
 
+#ifdef VCONTROLD_TESTING
+void framer_test_set_p300_address(const unsigned char address[2])
+{
+    framer_pid = P300_LEADIN;
+    memcpy(&framer_current_addr, address, sizeof(framer_current_addr));
+}
+#endif
+
 // status handling of current command
 static void framer_set_actaddr(void *pdu)
 {
@@ -442,6 +450,14 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         rtmp = 0;
     }
 
+    // Check fields available in the bytes actually received, not only in the
+    // frame length claimed by an untrusted peer.
+    if (received < 2) {
+        framer_reset_actaddr();
+        logIT(LOG_ERR, ">FRAMER: truncated frame header: %d bytes", received);
+        return FRAMER_READ_ERROR;
+    }
+
     // check for leadin
     if (l_buf[P300_LEADIN_OFFSET] != P300_LEADIN) {
         framer_reset_actaddr();
@@ -450,10 +466,17 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         return FRAMER_READ_ERROR;
     }
 
-    // bug in Vitotronic getTimerWWMi, we got it, but complete
-    if ((l_buf[P300_ADDR_OFFSET] == 0x21) &&
+    /*
+     * A known controller bug omits only the final checksum byte.  Do not
+     * accept any shorter frame under this compatibility exception.
+     */
+    int missingTimerChecksum =
+        received == total - P300_CRC_LEN &&
+        received > P300_ADDR_OFFSET + 1 &&
+        (l_buf[P300_ADDR_OFFSET] == 0x21) &&
             (l_buf[P300_ADDR_OFFSET + 1] == 0x10) &&
-            (rtmp == -1)) {
+            (rtmp == -1);
+    if (missingTimerChecksum) {
         logIT(LOG_ERR, ">FRAMER: bug of getTimerWWMi - omit checksum");
     } else {
         if (rtmp < 0) {
@@ -464,6 +487,12 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
             framer_reset_actaddr();
             logIT(LOG_ERR, ">FRAMER: read final timeout");
             return FRAMER_READ_TIMEOUT;
+        }
+        if (received != total) {
+            framer_reset_actaddr();
+            logIT(LOG_ERR, ">FRAMER: incomplete frame %d of %d bytes",
+                  received, total);
+            return FRAMER_READ_ERROR;
         }
 
         chk = framer_chksum(l_buf + P300_LEADIN_LEN, total - 2);
@@ -485,6 +514,20 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         logIT(LOG_ERR, ">FRAMER: ERROR address %02X%02X code %d",
                  l_buf[P300_ADDR_OFFSET], l_buf[P300_ADDR_OFFSET + 1],
                  l_buf[P300_BUFFER_OFFSET]);
+        return FRAMER_READ_ERROR;
+    }
+    if (l_buf[P300_TYPE_OFFSET] != P300_RESPONSE) {
+        framer_reset_actaddr();
+        logIT(LOG_ERR, ">FRAMER: unexpected response type 0x%02X",
+              (unsigned char)l_buf[P300_TYPE_OFFSET]);
+        return FRAMER_READ_ERROR;
+    }
+    if (l_buf[P300_FCT_OFFSET] != P300_READ_DATA &&
+            l_buf[P300_FCT_OFFSET] != P300_WRITE_DATA &&
+            l_buf[P300_FCT_OFFSET] != P300_FUNCT_CALL) {
+        framer_reset_actaddr();
+        logIT(LOG_ERR, ">FRAMER: unexpected response function 0x%02X",
+              (unsigned char)l_buf[P300_FCT_OFFSET]);
         return FRAMER_READ_ERROR;
     }
 
@@ -512,21 +555,24 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
             r_buf[0] = 0x01;
         }
     } else {
-        if (r_len != (l_buf[P300_RESP_LEN_OFFSET])) {
+        unsigned char responseLength =
+            (unsigned char)l_buf[P300_RESP_LEN_OFFSET];
+        if (r_len != responseLength) {
             logIT(LOG_ERR, ">FRAMER: unexpected length r_len=0x%02X != 0x%02X=l_buf[P300_RESP_LEN_OFFSET]",
                     r_len, l_buf[P300_RESP_LEN_OFFSET]);
             framer_reset_actaddr();
             return FRAMER_READ_ERROR;
         }
+        if (total != P300_BUFFER_OFFSET + (int)responseLength +
+                P300_CRC_LEN) {
+            framer_reset_actaddr();
+            logIT(LOG_ERR,
+                  ">FRAMER: response payload length does not match frame");
+            return FRAMER_READ_ERROR;
+        }
         memcpy(r_buf, &l_buf[P300_BUFFER_OFFSET], r_len);
     }
 
-    if (received != total) {
-        framer_reset_actaddr();
-        logIT(LOG_ERR, ">FRAMER: incomplete frame %d of %d bytes",
-              received, total);
-        return FRAMER_READ_ERROR;
-    }
     framer_reset_actaddr();
     return r_len;
 }

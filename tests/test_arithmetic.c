@@ -54,6 +54,24 @@ static int check_byte_expression(const char *source, int bufferLen,
     return 1;
 }
 
+static int check_integer_expression(const char *source, int expected,
+                                    int expect_error)
+{
+    char expression[128];
+    unsigned char bytes[4] = {1, 2, 3, 4};
+    char previous[4] = {5, 6, 7, 8};
+    char error[256] = {0};
+    char *cursor;
+    int result;
+
+    snprintf(expression, sizeof(expression), "%s", source);
+    cursor = expression;
+    result = execIExpression(&cursor, bytes, sizeof(bytes), 3,
+                             previous, error);
+    if (!!*error != !!expect_error) return 0;
+    return expect_error || result == expected;
+}
+
 int main(void)
 {
     int ok = 1;
@@ -65,5 +83,8 @@ int main(void)
     ok &= check_byte_expression("B0+B15+B99", 100, 114.0, 0);
     ok &= check_byte_expression("BA+BF", 16, 25.0, 0);
     ok &= check_byte_expression("B16", 16, 0.0, 1);
+    ok &= check_integer_expression("42+0x10", 58, 0);
+    ok &= check_integer_expression("1.5", 0, 1);
+    ok &= check_integer_expression("999999999999999999999", 0, 1);
     return ok ? 0 : 1;
 }

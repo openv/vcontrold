@@ -15,6 +15,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "xmlconfig.h"
 #include "parser.h"
@@ -90,14 +91,30 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                 ++*hexlen;
                 // If it's Pause or Reveice, we tread it as an integer
                 if (token == PAUSE || token == RECV) {
-                    *hexlen = atoi(pString);
+                    char *end = NULL;
+                    long parsed;
+                    errno = 0;
+                    parsed = strtol(pString, &end, 10);
+                    if (errno || end == pString || *end || parsed < 0 ||
+                            parsed > SHRT_MAX) {
+                        logIT(LOG_ERR, "Invalid bytecode length: %s", pString);
+                        *hexlen = 0;
+                        return 0;
+                    }
+                    *hexlen = (int)parsed;
                     // With RECV, one can give the unit to be converted
                     if (token == RECV) {
                         pPtr = pString;
                         while (*ptr && (isdigit(*ptr) || isspace(*ptr))) {
                             ptr++;
                         }
-                        strncpy(uSPtr, ptr, uSPtrLen);
+                        if (uSPtrLen <= 0 ||
+                                snprintf(uSPtr, (size_t)uSPtrLen, "%s", ptr) >=
+                                uSPtrLen) {
+                            logIT1(LOG_ERR, "Unit name too long");
+                            *hexlen = 0;
+                            return 0;
+                        }
                     }
                     return token;
                 } else if (token == BYTES ) {
@@ -106,7 +123,13 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                     while (*ptr && (isdigit(*ptr) || isspace(*ptr))) {
                         ptr++;
                     }
-                    strncpy(uSPtr, ptr, uSPtrLen);
+                    if (uSPtrLen <= 0 ||
+                            snprintf(uSPtr, (size_t)uSPtrLen, "%s", ptr) >=
+                            uSPtrLen) {
+                        logIT1(LOG_ERR, "Unit name too long");
+                        *hexlen = 0;
+                        return 0;
+                    }
                     return token;
                 } else  {
                     *hex++ = hex2chr(pString);
@@ -525,26 +548,26 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     memset(eString, 0, sizeof(eString));
     cPtr->retry = iPtr->retry; // We take the Retry value from the protocol command
     cPtr->recvTimeout = iPtr->recvTimeout; // Same for the receive timeout
-    do {
-        ptr = sendPtr;
-        while (*ptr++) {
-            if ((*ptr == '$') || (*ptr == '\0')) {
-                break;
+    while (*sendPtr) {
+        ptr = strchr(sendPtr, '$');
+        if (!ptr) {
+            if (!append_bytes(&ePtr, eEnd, sendPtr, strlen(sendPtr))) {
+                logIT(LOG_ERR, "Expanded command %s is too long", cPtr->name);
+                return 0;
             }
-        }
-        bptr = ptr;
-        while (*bptr++) {
-            if ((*bptr == ' ') || (*bptr == ';') || (*bptr == '\0')) {
-                break;
-            }
+            break;
         }
         // Don't copy the converted string
         if (!append_bytes(&ePtr, eEnd, sendPtr, (size_t)(ptr - sendPtr))) {
             logIT(LOG_ERR, "Expanded command %s is too long", cPtr->name);
             return 0;
         }
+        bptr = strpbrk(ptr + 1, " ;");
+        if (!bptr) {
+            bptr = ptr + strlen(ptr);
+        }
         memset(var, 0, sizeof(var));
-        size_t varlen = (size_t)(bptr - ptr - 1);
+        size_t varlen = (size_t)(bptr - (ptr + 1));
         if (varlen >= sizeof(var)) {
             logIT(LOG_ERR, "Variable name in command %s is too long", cPtr->name);
             return 0;
@@ -581,7 +604,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
             }
         }
         sendPtr = bptr;
-    } while (*sendPtr);
+    }
 
     logIT(LOG_INFO, "  After substitution: %s", eString);
     tmpPtr = calloc(strlen(eString) + 1, sizeof(char));
@@ -597,12 +620,10 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     // We search for words and look if we have them as macros
     memset(eString, 0, sizeof(eString));
     ePtr = eString;
-    do {
-        ptr = sendPtr;
-        while (*ptr++) {
-            if ((*ptr == ' ') || (*ptr == ';') || (*ptr == '\0')) {
-                break;
-            }
+    while (*sendPtr) {
+        ptr = strpbrk(sendPtr, " ;");
+        if (!ptr) {
+            ptr = sendPtr + strlen(sendPtr);
         }
         memset(name, 0, sizeof(name));
         size_t namelen = (size_t)(ptr - sendPtr);
@@ -613,13 +634,13 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
         }
         memcpy(name, sendPtr, namelen);
         if ((mFPtr = getMacroNode(pPtr->mPtr, name))) {
-            if (!append_bytes(&ePtr, eEnd, mFPtr->command, strlen(mFPtr->command)) ||
-                    !append_bytes(&ePtr, eEnd, ptr, 1)) {
+            if (!append_bytes(&ePtr, eEnd, mFPtr->command,
+                              strlen(mFPtr->command))) {
                 free(tmpPtr);
                 return 0;
             }
         } else {
-            if (!append_bytes(&ePtr, eEnd, sendPtr, (size_t)(ptr - sendPtr + 1))) {
+            if (!append_bytes(&ePtr, eEnd, sendPtr, namelen)) {
                 free(tmpPtr);
                 return 0;
             }
@@ -627,8 +648,12 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
         if (*ptr == '\0') {
             break;
         }
+        if (!append_bytes(&ePtr, eEnd, ptr, 1)) {
+            free(tmpPtr);
+            return 0;
+        }
         sendPtr = ptr + 1;
-    } while (*sendPtr);
+    }
 
     free(tmpPtr);
     logIT(LOG_INFO, "   after EXPAND:%s", eString);
@@ -676,11 +701,9 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     logIT(LOG_INFO, "BuildByteCode: %s", sendPtr);
     memset(eString, 0, sizeof(eString));
     do {
-        ptr = sendPtr;
-        while (*ptr++) {
-            if ((*ptr == '\0') || (*ptr == ';')) {
-                break;
-            }
+        ptr = strchr(sendPtr, ';');
+        if (!ptr) {
+            ptr = sendPtr + strlen(sendPtr);
         }
         memset(cmd, 0, sizeof(cmd));
         size_t cmdlen = (size_t)(ptr - sendPtr);
@@ -732,6 +755,9 @@ int compileCommand(devicePtr dPtr, unitPtr uPtr)
     for (devicePtr device = dPtr; device; device = device->next) {
         logIT(LOG_INFO, "Expanding command for device %s", device->id);
         for (commandPtr command = device->cmdPtr; command; command = command->next) {
+            if (!command->addr) {
+                continue;
+            }
             if (!expand(command, device->protoPtr) ||
                     !buildByteCode(command, uPtr)) {
                 logIT(LOG_ERR, "Could not compile command %s for device %s",

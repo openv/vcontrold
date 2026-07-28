@@ -66,6 +66,70 @@ static int appendCommand(char **commands, size_t *length, size_t *capacity,
     return 1;
 }
 
+static int writeJsonString(FILE *stream, const char *value)
+{
+    const unsigned char *cursor = (const unsigned char *)(value ? value : "");
+    if (fputc('"', stream) == EOF) return 0;
+    while (*cursor) {
+        switch (*cursor) {
+        case '"':
+            if (fputs("\\\"", stream) == EOF) return 0;
+            break;
+        case '\\':
+            if (fputs("\\\\", stream) == EOF) return 0;
+            break;
+        case '\b':
+            if (fputs("\\b", stream) == EOF) return 0;
+            break;
+        case '\f':
+            if (fputs("\\f", stream) == EOF) return 0;
+            break;
+        case '\n':
+            if (fputs("\\n", stream) == EOF) return 0;
+            break;
+        case '\r':
+            if (fputs("\\r", stream) == EOF) return 0;
+            break;
+        case '\t':
+            if (fputs("\\t", stream) == EOF) return 0;
+            break;
+        default:
+            if (*cursor < 0x20) {
+                if (fprintf(stream, "\\u%04x", *cursor) < 0) return 0;
+            } else if (fputc(*cursor, stream) == EOF) {
+                return 0;
+            }
+        }
+        cursor++;
+    }
+    return fputc('"', stream) != EOF;
+}
+
+static int parseTemplateIndex(const char *text, size_t *index)
+{
+    char *end = NULL;
+    unsigned long long parsed;
+    if (!text || !*text || !index) return 0;
+    errno = 0;
+    parsed = strtoull(text, &end, 10);
+    if (errno || end == text || *end || parsed == 0 ||
+            parsed > SIZE_MAX) return 0;
+    *index = (size_t)parsed;
+    return 1;
+}
+
+static int parsePort(const char *text, int *port)
+{
+    char *end = NULL;
+    long parsed;
+    if (!text || !*text || !port) return 0;
+    errno = 0;
+    parsed = strtol(text, &end, 10);
+    if (errno || end == text || *end || parsed < 1 || parsed > 65535) return 0;
+    *port = (int)parsed;
+    return 1;
+}
+
 void usage()
 {
     //      1       10        20        30        40        50        60        70        80
@@ -226,8 +290,7 @@ int main(int argc, char *argv[])
             if (verbose) {
                 printf("option -p with value `%s'\n", optarg);
             }
-            port = atoi(optarg);
-            if (port == 0) {
+            if (!parsePort(optarg, &port)) {
                 fprintf(stderr, "Invalid value for option --port: %s\n", optarg);
                 usage(); // and exit
             }
@@ -337,7 +400,10 @@ int main(int argc, char *argv[])
 
         last_colon = strrchr(host, ':');
         if (last_colon != NULL) {
-            port = atoi(last_colon + 1);
+            if (!parsePort(last_colon + 1, &port)) {
+                fprintf(stderr, "Invalid port in host: %s\n", host);
+                exit(2);
+            }
             *last_colon = '\0';
         }
     }
@@ -429,9 +495,9 @@ int main(int argc, char *argv[])
         char *lSptr;
         char *lEptr;
         char varname[20];
-        unsigned short count;
-        unsigned short idx;
-        unsigned short maxIdx;
+        size_t count;
+        size_t idx;
+        size_t maxIdx;
         trPtr tPtr = resPtr;
         trPtr *idxPtr;
 
@@ -442,6 +508,10 @@ int main(int argc, char *argv[])
 
         // We reserve an array with a suitable size
         idxPtr = calloc(count, sizeof(tPtr));
+        if (count > 0 && !idxPtr) {
+            logIT1(LOG_ERR, "Could not allocate template result index");
+            exit(1);
+        }
 
         maxIdx = count; // Biggest index in the variables
 
@@ -472,7 +542,8 @@ int main(int argc, char *argv[])
                 }
                 lEptr = lptr + 1;
                 // Noew, we search the end of the variables.
-                while (isalpha(*lEptr) || isdigit(*lEptr)) {
+                while (isalpha((unsigned char)*lEptr) ||
+                        isdigit((unsigned char)*lEptr)) {
                     lEptr++;
                 }
                 memset(varname, 0, sizeof(varname));
@@ -493,7 +564,8 @@ int main(int argc, char *argv[])
                 // We differentiate the different variables
 
                 // $Rn
-                if ((strlen(varname) > 1) && (*varname == 'R') && (idx = atoi(varname + 1))) {
+                if ((strlen(varname) > 1) && (*varname == 'R') &&
+                        parseTemplateIndex(varname + 1, &idx)) {
                     // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
@@ -505,11 +577,12 @@ int main(int argc, char *argv[])
                             }
                         }
                     } else {
-                        logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of variable $%s > %zu", varname, maxIdx);
                     }
                 }
                 // $Cn
-                else if ((strlen(varname) > 1) && (*varname == 'C') && (idx = atoi(varname + 1))) {
+                else if ((strlen(varname) > 1) && (*varname == 'C') &&
+                        parseTemplateIndex(varname + 1, &idx)) {
                     // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
@@ -518,11 +591,12 @@ int main(int argc, char *argv[])
                             fprintf(ofilePtr, "%s", tPtr->cmd);
                         }
                     } else {
-                        logIT(LOG_ERR, "Index of Variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of Variable $%s > %zu", varname, maxIdx);
                     }
                 }
                 // $En
-                else if ((strlen(varname) > 1) && (*varname == 'E') && (idx = atoi(varname + 1))) {
+                else if ((strlen(varname) > 1) && (*varname == 'E') &&
+                        parseTemplateIndex(varname + 1, &idx)) {
                     // Variable R index then in idx
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
@@ -533,18 +607,19 @@ int main(int argc, char *argv[])
                             fprintf(ofilePtr, "OK");
                         }
                     } else {
-                        logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of variable $%s > %zu", varname, maxIdx);
                     }
                 }
                 // $n
-                else if (isdigit(*varname) && (idx = atoi(varname)))  {
+                else if (isdigit((unsigned char)*varname) &&
+                        parseTemplateIndex(varname, &idx))  {
                     if ((idx - 1) < maxIdx) {
                         tPtr = idxPtr[idx - 1];
                         logIT(LOG_INFO, "%s:%f", tPtr->cmd, tPtr->result);
                         //if (tPtr->result)
                         fprintf(ofilePtr, "%f", tPtr->result);
                     } else {
-                        logIT(LOG_ERR, "Index of variable $%s > %d", varname, maxIdx - 1);
+                        logIT(LOG_ERR, "Index of variable $%s > %zu", varname, maxIdx);
                     }
                 } else {
                     memset(string, 0, sizeof(string));
@@ -557,6 +632,7 @@ int main(int argc, char *argv[])
         }
 
         fclose(filePtr);
+        free(idxPtr);
 
         if (outfile && *outfile && execMe) {
             // Make the file executable and start
@@ -618,12 +694,15 @@ int main(int argc, char *argv[])
 
     } else if (json_short) {
         // Output JSON format - object with cmd,value pairs
-        int index = 1;
 	fprintf(ofilePtr, "{");
         while (resPtr) {
-            fprintf(ofilePtr, "\"%s\":", resPtr->cmd);
-            fprintf(ofilePtr, "%f", resPtr->result);
-            index++;
+            writeJsonString(ofilePtr, resPtr->cmd);
+            fputc(':', ofilePtr);
+            if (resPtr->err) {
+                fputs("null", ofilePtr);
+            } else {
+                fprintf(ofilePtr, "%f", resPtr->result);
+            }
             resPtr = resPtr->next;
             if (resPtr) {
                 fprintf(ofilePtr, ",");
@@ -633,20 +712,19 @@ int main(int argc, char *argv[])
 
     } else if (json_long) {
         // Output JSON format list with with objects in it
-        int index = 1;
         fprintf(ofilePtr,"[");
         while (resPtr) {
-            fprintf(ofilePtr, "{");
-            fprintf(ofilePtr, "\"command\":\"%s\",", resPtr->cmd);
-            fprintf(ofilePtr, "\"value\":%f,", resPtr->result);
-            fprintf(ofilePtr, "\"raw\":\"%s\",", resPtr->raw);
-            if (resPtr->err) {
-                fprintf(ofilePtr, "\"error\":\"%s\"", resPtr->err);
-            } else {
-                fprintf(ofilePtr, "\"error\":\"\"");
-            }
-            fprintf(ofilePtr, "}");
-            index++;
+            fputs("{\"command\":", ofilePtr);
+            writeJsonString(ofilePtr, resPtr->cmd);
+            fputs(",\"value\":", ofilePtr);
+            if (resPtr->err) fputs("null", ofilePtr);
+            else fprintf(ofilePtr, "%f", resPtr->result);
+            fputs(",\"raw\":", ofilePtr);
+            writeJsonString(ofilePtr, resPtr->raw);
+            fputs(",\"error\":", ofilePtr);
+            if (resPtr->err) writeJsonString(ofilePtr, resPtr->err);
+            else fputs("null", ofilePtr);
+            fputc('}', ofilePtr);
             resPtr = resPtr->next;
             if (resPtr) {
                 fprintf(ofilePtr, ",");

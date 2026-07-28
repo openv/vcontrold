@@ -21,6 +21,7 @@ int parseXMLFile(char *filename);
 macroPtr getMacroNode(macroPtr ptr, const char *name);
 unitPtr getUnitNode(unitPtr ptr, const char *name);
 commandPtr getCommandNode(commandPtr ptr, const char *name);
+devicePtr getDeviceNode(devicePtr ptr, const char *id);
 enumPtr getEnumNode(enumPtr prt, char *search, int len);
 icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
 
@@ -98,7 +99,7 @@ typedef struct command {
     char nodeType;
     // 0: everything copied
     // 1: everything orig
-    // 2: only address, unit len orig
+    // 2: device override; an empty address marks an explicit exclusion
     compilePtr cmpPtr;
     char *description;
     commandPtr next;

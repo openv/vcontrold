@@ -28,4 +28,8 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime);
 int framer_openDevice(char *device, char pid);
 void framer_closeDevice(int fd);
 
+#ifdef VCONTROLD_TESTING
+void framer_test_set_p300_address(const unsigned char address[2]);
+#endif
+
 #endif // FRAMER_H
