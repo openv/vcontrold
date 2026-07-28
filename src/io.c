@@ -74,7 +74,7 @@ int opentty(char *device)
     logIT(LOG_INFO, "Configuring serial interface %s", device);
     if ((fd = open(device, O_RDWR)) < 0) {
         logIT(LOG_ERR, "cannot open %s:%m", device);
-        exit(1);
+        return -1;
     }
 
     int s;
@@ -82,7 +82,8 @@ int opentty(char *device)
     s = tcgetattr(fd, &oldsb);
     if (s < 0) {
         logIT(LOG_ERR, "error tcgetattr %s:%m", device);
-        exit(1);
+        close(fd);
+        return -1;
     }
 
     newsb = oldsb;
@@ -103,16 +104,25 @@ int opentty(char *device)
     newsb.c_cc[VMIN]  = 1;
     newsb.c_cc[VTIME] = 0;
 
-    tcsetattr(fd, TCSADRAIN, &newsb);
+    if (tcsetattr(fd, TCSADRAIN, &newsb) < 0) {
+        logIT(LOG_ERR, "error tcsetattr %s:%m", device);
+        close(fd);
+        return -1;
+    }
 
     // DTR High for voltage supply
     int modemctl = 0;
-    ioctl(fd, TIOCMGET, &modemctl);
+    if (ioctl(fd, TIOCMGET, &modemctl) < 0) {
+        logIT(LOG_ERR, "error ioctl TIOCMGET %s:%m", device);
+        close(fd);
+        return -1;
+    }
     modemctl |= TIOCM_DTR;
     s = ioctl(fd, TIOCMSET, &modemctl);
     if (s < 0) {
         logIT(LOG_ERR, "error ioctl TIOCMSET %s:%m", device);
-        exit(1);
+        close(fd);
+        return -1;
     }
 
     return fd;
@@ -123,7 +133,10 @@ int my_send(int fd, char *s_buf, int len)
     int i;
     int wr;
     // Empty buffer
-    tcflush(fd, TCIOFLUSH);
+    if (isatty(fd) && tcflush(fd, TCIOFLUSH) < 0) {
+        logIT(LOG_ERR, "Could not flush serial device: %s", strerror(errno));
+        return 0;
+    }
     // We use the socket fixed variant from socket.c
     wr = writen(fd, s_buf, len);
     for (i = 0; i < len; i++) {
@@ -142,40 +155,6 @@ int my_send(int fd, char *s_buf, int len)
 int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
 {
     return receive_nb(fd, r_buf, r_len, etime);
-}
-
-static int setnonblock(int fd)
-{
-    int flags;
-
-    // If they have O_NONBLOCK, use the Posix way to do it
-#if defined(O_NONBLOCK)
-    if (-1 == (flags = fcntl(fd, F_GETFL, 0))) {
-        flags = 0;
-    }
-    return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-#else
-    // Otherwise, use the old way of doing it
-    flags = 1;
-    return ioctl(fd, FIOBIO, &flags);
-#endif
-}
-
-static int setblock(int fd)
-{
-    int flags;
-
-    // If they have O_BLOCK, use the Posix way to do it
-#if defined(O_NONBLOCK)
-    if (-1 == (flags = fcntl(fd, F_GETFL, 0))) {
-        flags = 0;
-    }
-    return fcntl(fd, F_SETFL, flags & (~O_NONBLOCK));
-#else
-    // Otherwise, use the old way of doing it
-    flags = 0;
-    return ioctl(fd, FIOBIO, &flags);
-#endif
 }
 
 static char *dump(char *dest, size_t destSize, const char *title,
@@ -224,7 +203,6 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
 
     i = 0;
     while ( i < r_len ) {
-        setnonblock(fd);
         FD_ZERO(&rfds);
         FD_SET(fd, &rfds);
         tv.tv_sec = TIMEOUT;
@@ -232,7 +210,6 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
         retval = select(fd + 1, &rfds, NULL, NULL, &tv);
         if (retval == 0) {
             logIT(LOG_ERR, "<RECV: read timeout");
-            setblock(fd);
             logIT(LOG_INFO, "%s", dump(string, sizeof(string),
                                        "<RECV: received", r_buf, i));
             return -1;
@@ -242,7 +219,6 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
                 continue;
             } else {
                 logIT(LOG_ERR, "<RECV: select error %d", retval);
-                setblock(fd);
                 logIT(LOG_INFO, "%s", dump(string, sizeof(string),
                                            "<RECV: received", r_buf, i));
                 return -1;
@@ -251,7 +227,6 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
             len = read(fd, &r_buf[i], r_len - i);
             if (len == 0) {
                 logIT(LOG_ERR, "<RECV: read eof");
-                setblock(fd);
                 logIT(LOG_INFO, "%s", dump(string, sizeof(string),
                                            "<RECV: received", r_buf, i));
                 return -1;
@@ -261,7 +236,6 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
                     continue;
                 } else {
                     logIT(LOG_ERR, "<RECV: read error %d", errno);
-                    setblock(fd);
                     logIT(LOG_INFO, "%s", dump(string, sizeof(string),
                                                "<RECV: received", r_buf, i));
                     return -1;
@@ -280,7 +254,6 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
 
     end = times(&tms_t);
     *etime = ((float)(end - start) / clktck) * 1000;
-    setblock(fd);
     logIT(LOG_INFO, "%s", dump(string, sizeof(string),
                                "<RECV: received", r_buf, i));
 

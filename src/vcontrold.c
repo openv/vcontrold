@@ -671,6 +671,18 @@ static void sigTermHandler(int signo)
     terminateRequested = 1;
 }
 
+static int parseTcpPort(const char *text, int *port)
+{
+    char *end = NULL;
+    long parsed;
+    if (!text || !*text || !port) return 0;
+    errno = 0;
+    parsed = strtol(text, &end, 10);
+    if (errno || end == text || *end || parsed < 1 || parsed > 65535) return 0;
+    *port = (int)parsed;
+    return 1;
+}
+
 // Here we go
 int main(int argc, char *argv[])
 {
@@ -772,7 +784,10 @@ int main(int argc, char *argv[])
             makeDaemon = 0;
             break;
         case 'p':
-            tcpport = atoi(optarg);
+            if (!parseTcpPort(optarg, &tcpport)) {
+                fprintf(stderr, "Invalid TCP port: %s\n", optarg);
+                return 2;
+            }
             break;
         case 'L':
             listenAddress = optarg;

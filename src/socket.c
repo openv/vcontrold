@@ -189,9 +189,9 @@ int openCliSocket(char *host, int port, int noTCPdelay)
 
     snprintf(port_string, sizeof(port_string), "%d", port);
     n = getaddrinfo(host, port_string, &hints, &res);
-    if (n < 0) {
+    if (n != 0) {
         logIT(LOG_ERR, "Error in getaddrinfo: %s:%s", host, gai_strerror(n));
-        exit(1);
+        return -1;
     }
 
     ressave = res;
@@ -255,7 +255,7 @@ ssize_t writen(int fd, const void *vptr, size_t n)
 
 // end writen
 
-ssize_t Writen(int fd, void *ptr, size_t nbytes)
+ssize_t Writen(int fd, const void *ptr, size_t nbytes)
 {
     if (writen(fd, ptr, nbytes) != (ssize_t)nbytes) {
         logIT1(LOG_ERR, "Error writing to socket");

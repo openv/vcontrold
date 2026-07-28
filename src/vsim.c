@@ -35,7 +35,7 @@ void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
 static void sigPipeHandler(int signo);
 
-void logIT (int class, char *string, ...)
+void logIT(int class, const char *string, ...)
 {
     va_list arguments;
     char *print_buffer = NULL;

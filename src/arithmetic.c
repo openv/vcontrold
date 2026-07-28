@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 
 #define HEX 8
 #define HEXDIGIT 10
@@ -159,7 +161,7 @@ double execFactor(char **str, unsigned char *bPtr, int bufferLen,
     double factor;
     char *nPtr;
     char *item;
-    char token;
+    int token;
     int n;
 
     //printf("execFactor: %s\n",*str);
@@ -406,7 +408,7 @@ int execIFactor(char **str, unsigned char *bPtr, int bufferLen,
     int factor;
     char *nPtr;
     char *item;
-    char token;
+    int token;
     int n;
 
     //printf("execFactor: %s\n",*str);
@@ -444,7 +446,16 @@ int execIFactor(char **str, unsigned char *bPtr, int bufferLen,
             token = nextToken(str, &item, &n);
         }
         pushBack(str, n);
-        sscanf(nstring, "%i", &factor);
+        char *end = NULL;
+        long parsed;
+        errno = 0;
+        parsed = strtol(nstring, &end, 0);
+        if (errno || end == nstring || *end || parsed < INT_MIN ||
+                parsed > INT_MAX) {
+            snprintf(err, 128, "invalid integer literal");
+            return 0;
+        }
+        factor = (int)parsed;
         return factor;
     case DIGIT:
         nPtr = nstring;
@@ -455,19 +466,23 @@ int execIFactor(char **str, unsigned char *bPtr, int bufferLen,
             }
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
-        // If a . follows, we have a decimal number
         if (token == PUNKT) {
-            do {
-                if (nPtr >= nstring + sizeof(nstring) - 1) {
-                    sprintf(err, "numeric literal too long");
-                    return 0;
-                }
-                *nPtr++ = *item;
-            } while ((token = nextToken(str, &item, &n)) == DIGIT);
+            snprintf(err, 128,
+                     "fractional literal not allowed in integer expression");
+            return 0;
         }
         pushBack(str, n);
         *nPtr = '\0';
-        factor = atof(nstring);
+        char *endDecimal = NULL;
+        long parsedDecimal;
+        errno = 0;
+        parsedDecimal = strtol(nstring, &endDecimal, 10);
+        if (errno || endDecimal == nstring || *endDecimal ||
+                parsedDecimal < INT_MIN || parsedDecimal > INT_MAX) {
+            snprintf(err, 128, "invalid integer literal");
+            return 0;
+        }
+        factor = (int)parsedDecimal;
         return factor;
     case KAUF:
         expression = execIExpression(str, bPtr, bufferLen, bitpos, pPtr, err);

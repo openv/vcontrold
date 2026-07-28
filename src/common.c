@@ -25,7 +25,7 @@ char errMsg[2000];
 int errClass = 99;
 int dbgFD = -1;
 
-int initLog(int useSyslog, char *logfile, int debugSwitch)
+int initLog(int useSyslog, const char *logfile, int debugSwitch)
 {
     // If needed, opes the syslog or log file
     if (useSyslog) {
@@ -57,7 +57,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
     return 1;
 }
 
-void logIT (int class, char *string, ...)
+void logIT(int class, const char *string, ...)
 {
     va_list arguments;
     time_t t;
@@ -150,7 +150,7 @@ void setDebugFD(int fd)
     dbgFD = fd;
 }
 
-char hex2chr(char *hex)
+char hex2chr(const char *hex)
 {
     char *end = NULL;
     unsigned long hex_value;
