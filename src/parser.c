@@ -176,10 +176,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     char out_buff[1024];
     int out_len;
 
-    if (iniFD) {
-        memset(simIn, 0, sizeof(simIn));
-        memset(simOut, 0, sizeof(simOut));
+    if (!cmpPtr || !recvBuf || recvLen <= 0 || !sendBuf || sendLen < 0) {
+        logIT1(LOG_ERR, "Invalid bytecode execution arguments");
+        return -1;
     }
+
+    memset(simIn, 0, sizeof(simIn));
+    memset(simOut, 0, sizeof(simOut));
 
     // First copy or convert the bytes of sendBuf to the BYTES token of cmpPtr
     // to be sure not to abort right in the middle of it
@@ -191,7 +194,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
         }
         if (supressUnit) {
             // No unit conversion needed, just copy the bytes
-            if (sendLen != cPtr->len) {
+            if (cPtr->len <= 0 || sendLen != cPtr->len) {
                 // This should never happen!
                 logIT(LOG_ERR,
                       "Error in length of the hex string (%d) != send length of the command (%d), terminating", sendLen, cPtr->len);
@@ -201,6 +204,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 free(cPtr->send);
             }
             cPtr->send = calloc(cPtr->len, sizeof(char));
+            if (!cPtr->send) {
+                logIT1(LOG_ERR, "Could not allocate command send buffer");
+                return -1;
+            }
             sendLen = 0; // We don't send the converted sendBuf
             memcpy(cPtr->send, sendBuf, cPtr->len);
         } else if (cPtr->uPtr) {
@@ -213,6 +220,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 free(cPtr->send);
             }
             cPtr->send = calloc(len, sizeof(char));
+            if (!cPtr->send) {
+                logIT1(LOG_ERR, "Could not allocate converted send buffer");
+                return -1;
+            }
             cPtr->len = len;
             sendLen = 0; // We don't send the converted sendBuf
             memcpy(cPtr->send, sendBuf, len);
@@ -491,7 +502,6 @@ void removeCompileList(compilePtr ptr)
         free(ptr->send);
         ptr->send = NULL;
         free(ptr);
-        ptr = NULL;
     }
 }
 

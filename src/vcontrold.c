@@ -532,7 +532,7 @@ int interactive(int socketfd, char *device)
                 readPtr++;
             }
             // Is the command defined in the XML?
-            if (readPtr && (cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
+            if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
                 memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->send);
                 Writen(socketfd, string, strlen(string));
@@ -995,7 +995,9 @@ int main(int argc, char *argv[])
                 exit(1);
             }
 
-            int logfd = open(logfile, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
+            int logfd = logfile
+                ? open(logfile, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR)
+                : -1;
             // Make logfile accessible to the anticipated user/group
             if ((logfd >= 0) && (fstat(logfd, &stb) == 0)) {
                 fchmod(logfd, stb.st_mode | S_IRGRP | S_IWGRP);
@@ -1004,7 +1006,9 @@ int main(int argc, char *argv[])
                           strerror(errno));
                 }
             }
-            close(logfd);
+            if (logfd >= 0) {
+                close(logfd);
+            }
             // Make lock file accessible to the anticipated user/group
             if (stat(tmpfilename, &stb) == 0) {
                 chmod(tmpfilename, stb.st_mode | S_IRGRP | S_IWGRP);

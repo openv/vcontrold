@@ -56,3 +56,17 @@ jobs:
           ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
           UBSAN_OPTIONS: halt_on_error=1
         run: ctest --test-dir build --output-on-failure
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Install dependencies
+        run: >
+          sudo apt-get update &&
+          sudo apt-get install -y
+          libxml2-dev clang-tidy clang-tools cppcheck valgrind
+      - name: Run static and dynamic analysis
+        run: sh tools/run-quality.sh

@@ -386,10 +386,19 @@ int execITerm(char **str, unsigned char *bPtr, int bufferLen,
                 sprintf(err, "invalid shift count");
                 return 0;
             }
+            if (factor1 < 0 ||
+                    (factor2 > 0 && factor1 > (INT_MAX >> factor2))) {
+                sprintf(err, "invalid left shift operand");
+                return 0;
+            }
             factor1 <<= factor2;
         } else if (op == SHR) {
             if (factor2 < 0 || factor2 >= (int)(sizeof(int) * 8)) {
                 sprintf(err, "invalid shift count");
+                return 0;
+            }
+            if (factor1 < 0) {
+                sprintf(err, "invalid right shift operand");
                 return 0;
             }
             factor1 >>= factor2;
@@ -515,6 +524,10 @@ int nextToken(char **str, char **c, int *count)
     }
 
     *c = *str;
+    if (**c == '\0') {
+        *count = 0;
+        return END;
+    }
     (*str)++;
     //printf("\t  Token: %c   [ %s ] \n",**c,*str);
     *count = 1;
@@ -615,8 +628,6 @@ int nextToken(char **str, char **c, int *count)
         return HEXDIGIT;
     case '.':
         return PUNKT;
-    case '\0':
-        return END;
     default:
         return ERROR;
     }
