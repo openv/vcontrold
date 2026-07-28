@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -181,6 +182,106 @@ static int test_exec_command_transport(void)
     return ok;
 }
 
+static int test_exec_bytecode_units_and_failures(void)
+{
+    int sockets[2];
+    char received[64] = {0};
+    char previous[8] = {0};
+    char parameter[32] = {0};
+    Unit getUnit = {
+        .name = "get", .type = "uchar", .gCalc = "V*2"
+    };
+    Compile getNode = {.token = RECV, .len = 1, .uPtr = &getUnit};
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    char value = 4;
+    if (write(sockets[1], &value, 1) != 1 ||
+            execByteCode(&getNode, sockets[0], received, sizeof(received),
+                         parameter, 0, 0, 0, 1, previous, 0) != 0 ||
+            strncmp(received, "8.000000", 8) != 0) return 0;
+    close(sockets[0]);
+    close(sockets[1]);
+
+    Unit setUnit = {
+        .name = "set", .type = "uchar", .sCalc = "V"
+    };
+    Compile setNode = {.token = BYTES, .len = 1, .uPtr = &setUnit};
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    snprintf(parameter, sizeof(parameter), "7");
+    if (execByteCode(&setNode, sockets[0], received, sizeof(received),
+                     parameter, 1, 0, 0, 1, previous, 0) != 0) return 0;
+    char sent = 0;
+    if (read(sockets[1], &sent, 1) != 1 || sent != 7) return 0;
+    free(setNode.send);
+    close(sockets[0]);
+    close(sockets[1]);
+
+    char sendByte = 1;
+    Compile sendFailure = {
+        .token = SEND, .send = &sendByte, .len = 1
+    };
+    if (execByteCode(&sendFailure, -1, received, sizeof(received),
+                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+
+    Compile waitFailure = {
+        .token = WAIT, .send = &sendByte, .len = 1
+    };
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    close(sockets[1]);
+    if (execByteCode(&waitFailure, sockets[0], received, sizeof(received),
+                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+    close(sockets[0]);
+
+    Compile receiveFailure = {.token = RECV, .len = 1};
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    close(sockets[1]);
+    if (execByteCode(&receiveFailure, sockets[0], received, sizeof(received),
+                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+    close(sockets[0]);
+
+    Compile wrongLength = {.token = BYTES, .len = 2};
+    snprintf(parameter, sizeof(parameter), "x");
+    if (execByteCode(&wrongLength, -1, received, sizeof(received),
+                     parameter, 1, 1, 0, 1, previous, 0) != -1) return 0;
+
+    char oversizedData[1025] = {0};
+    Compile oversized = {
+        .token = SEND, .send = oversizedData, .len = sizeof(oversizedData)
+    };
+    if (execByteCode(&oversized, -1, received, sizeof(received),
+                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+
+    Compile pause = {.token = PAUSE, .len = 0};
+    return execByteCode(&pause, -1, received, sizeof(received),
+                        parameter, 0, 1, 0, 1, previous, 0) == 0;
+}
+
+static int test_simulation_output(void)
+{
+    int sockets[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
+    char sendByte = 0x11;
+    char response = 0x22;
+    char received[8] = {0};
+    char parameter[2] = {0};
+    Compile recvNode = {.token = RECV, .len = 1};
+    Compile sendNode = {
+        .token = SEND, .send = &sendByte, .len = 1, .next = &recvNode
+    };
+    iniFD = tmpfile();
+    if (!iniFD || write(sockets[1], &response, 1) != 1) return 0;
+    int rc = execByteCode(&sendNode, sockets[0], received, sizeof(received),
+                          parameter, 0, 1, 0, 1, NULL, 0);
+    long outputLength = -1;
+    if (fflush(iniFD) == 0 && fseek(iniFD, 0, SEEK_END) == 0) {
+        outputLength = ftell(iniFD);
+    }
+    fclose(iniFD);
+    iniFD = NULL;
+    close(sockets[0]);
+    close(sockets[1]);
+    return rc == 1 && outputLength > 0;
+}
+
 static int rejected_modified_config(const char *needle,
                                     const char *replacement,
                                     configPtr expectedConfiguration)
@@ -238,10 +339,13 @@ int main(void)
     char unit[8] = {0};
     int length = 0;
 
+    signal(SIGPIPE, SIG_IGN);
     initLog(0, "/tmp/vcontrold-test-parser.log", 1);
     if (!test_bytecode_parser() || !test_expansion() ||
             !test_exec_bytecode_transport() ||
-            !test_exec_command_transport()) return 1;
+            !test_exec_command_transport() ||
+            !test_exec_bytecode_units_and_failures() ||
+            !test_simulation_output()) return 1;
     if (!parse("RECV 2 UT", RECV, 2)) return 1;
     if (!parse("PAUSE 100", PAUSE, 100)) return 1;
     if (!parse("RECV -1", 0, 0)) return 1;

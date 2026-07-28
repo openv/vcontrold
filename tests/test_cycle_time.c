@@ -8,6 +8,11 @@
 int getCycleTime(char *recv, int len, char *result);
 int getW01CCycleTime(char *recv, int len, char *result, int waterMode);
 int setCycleTime(char *input, char *sendBuf);
+int getSysTime(char *recv, int len, char *result);
+int setSysTime(char *input, char *sendBuf);
+int getErrState(enumPtr ePtr, char *recv, int len, char *result);
+short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
+short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
 
 void removeCompileList(compilePtr ptr)
 {
@@ -188,6 +193,137 @@ static int test_special_unit_dispatch(void)
         procGetUnit(&water, w01c, 3, result, 0, NULL) == 1;
 }
 
+static int test_enumeration_boundaries(void)
+{
+    char one = 1;
+    Enumerate fallback = {
+        .bytes = NULL, .len = -1, .text = "fallback"
+    };
+    Enumerate known = {
+        .bytes = &one, .len = 1, .text = "known", .next = &fallback
+    };
+    char *text = NULL;
+    char *bytes = NULL;
+    short length = 0;
+    char unknown = 9;
+    if (!bytes2Enum(&known, &one, &text, 1) ||
+            strcmp(text, "known") != 0) return 0;
+    if (!bytes2Enum(&known, &unknown, &text, 1) ||
+            strcmp(text, "fallback") != 0) return 0;
+    if (bytes2Enum(&known, &one, &text, 0) != 0 ||
+            bytes2Enum(NULL, &one, &text, 1) != 0) return 0;
+    if (text2Enum(&known, "known", &bytes, &length) != 1 ||
+            bytes != &one || length != 1) return 0;
+    return text2Enum(&known, "missing", &bytes, &length) == 0;
+}
+
+static int test_time_setters(void)
+{
+    char bytes[16] = {0};
+    char empty[] = "";
+    char invalid[] = "not-a-time";
+    char explicitTime[] = "2026-07-28T12:34:56+0200";
+    if (setSysTime(empty, bytes) != 8) return 0;
+    if (setSysTime(invalid, bytes) != 0) return 0;
+    if (setSysTime(explicitTime, bytes) != 8) return 0;
+
+    Unit unit = {.name = "clock", .type = "systime"};
+    char input[64] = "2026-07-28T12:34:56+0200";
+    short length = (short)sizeof(input);
+    return procSetUnit(&unit, input, &length, 0, NULL) == 1 &&
+        length == 8;
+}
+
+static int test_error_state(void)
+{
+    char code = 1;
+    Enumerate error = {
+        .bytes = &code, .len = 1, .text = "test-error"
+    };
+    char record[9] = {
+        1, 0x20, 0x26, 0x07, 0x28, 0x02, 0x12, 0x34, 0x56
+    };
+    char result[MAXBUF] = {0};
+    if (!getErrState(&error, record, sizeof(record), result) ||
+            strstr(result, "test-error") == NULL) return 0;
+    if (getErrState(&error, record, 8, result) != 0) return 0;
+    Unit unit = {.name = "errors", .type = "errstate", .ePtr = &error};
+    memset(result, 0, sizeof(result));
+    return procGetUnit(&unit, record, sizeof(record), result, 0, NULL) == 1;
+}
+
+static int test_set_dispatch_and_ranges(void)
+{
+    char previous[8] = {0};
+    char input[MAXBUF];
+    short length;
+    Unit cycle = {.name = "cycle", .type = "cycletime"};
+    snprintf(input, sizeof(input), "06:00 08:00 - - - - - -");
+    length = (short)sizeof(input);
+    if (procSetUnit(&cycle, input, &length, 0, previous) != 1 ||
+            length != 8) return 0;
+    input[0] = '\0';
+    length = (short)sizeof(input);
+    if (procSetUnit(&cycle, input, &length, 0, previous) != -1) return 0;
+
+    char enumByte = 1;
+    Enumerate value = {.bytes = &enumByte, .len = 1, .text = "enabled"};
+    Unit enumeration = {
+        .name = "enum", .type = "enum", .ePtr = &value
+    };
+    input[0] = '\0';
+    length = (short)sizeof(input);
+    if (procSetUnit(&enumeration, input, &length, 0, previous) != -1)
+        return 0;
+    snprintf(input, sizeof(input), "missing");
+    length = (short)sizeof(input);
+    if (procSetUnit(&enumeration, input, &length, 0, previous) != -1)
+        return 0;
+
+    struct {
+        const char *type;
+        const char *tooLarge;
+    } ranges[] = {
+        {"char", "128"}, {"uchar", "256"}, {"short", "32768"},
+        {"ushort", "65536"}, {"int", "2147483648"},
+        {"uint", "4294967296"}
+    };
+    for (size_t i = 0; i < sizeof(ranges) / sizeof(ranges[0]); ++i) {
+        Unit numeric = {
+            .name = "range", .type = (char *)ranges[i].type, .sCalc = "V"
+        };
+        snprintf(input, sizeof(input), "%s", ranges[i].tooLarge);
+        length = (short)sizeof(input);
+        if (procSetUnit(&numeric, input, &length, 0, previous) != -1)
+            return 0;
+    }
+    return 1;
+}
+
+static int test_conversion_failures(void)
+{
+    char byte[8] = {1};
+    char previous[8] = {0};
+    char result[MAXBUF] = {0};
+    const char *types[] = {"short", "ushort", "int", "uint"};
+    for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); ++i) {
+        Unit unit = {.name = "short-buffer", .type = (char *)types[i]};
+        if (procGetUnit(&unit, byte, 1, result, 0, previous) != -1)
+            return 0;
+    }
+    Unit badFloat = {
+        .name = "bad-float", .type = "uchar", .gCalc = "1/0"
+    };
+    Unit badInteger = {
+        .name = "bad-integer", .type = "uchar", .gICalc = "1/0"
+    };
+    if (procGetUnit(&badFloat, byte, 1, result, 0, previous) != -1 ||
+            procGetUnit(&badInteger, byte, 1, result, 0, previous) != -1)
+        return 0;
+    Unit missingEnum = {.name = "enum", .type = "enum"};
+    return procGetUnit(&missingEnum, byte, 1, result, 0, previous) == -1;
+}
+
 int main(void)
 {
     if (!test_legacy()) return fputs("legacy failed\n", stderr), 1;
@@ -201,5 +337,15 @@ int main(void)
         return fputs("integer unit failed\n", stderr), 1;
     if (!test_special_unit_dispatch())
         return fputs("special dispatch failed\n", stderr), 1;
+    if (!test_enumeration_boundaries())
+        return fputs("enumeration boundaries failed\n", stderr), 1;
+    if (!test_time_setters())
+        return fputs("time setters failed\n", stderr), 1;
+    if (!test_error_state())
+        return fputs("error state failed\n", stderr), 1;
+    if (!test_set_dispatch_and_ranges())
+        return fputs("set dispatch failed\n", stderr), 1;
+    if (!test_conversion_failures())
+        return fputs("conversion failures failed\n", stderr), 1;
     return 0;
 }
