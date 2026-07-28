@@ -24,23 +24,33 @@ int sendTrList(int sockfd, trPtr ptr);
 
 trPtr newTrNode(trPtr ptr)
 {
-    trPtr nptr;
-
-    if (ptr && ptr->next) {
-        return newTrNode(ptr->next);
+    trPtr tail = ptr;
+    while (tail && tail->next) {
+        tail = tail->next;
     }
 
-    nptr = calloc(1, sizeof(*ptr));
+    trPtr nptr = calloc(1, sizeof(*nptr));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc failed");
+        return NULL;
     }
 
-    if (ptr) {
-        ptr->next = nptr;
+    if (tail) {
+        tail->next = nptr;
     }
 
     return nptr;
+}
+
+static void freeTrList(trPtr ptr)
+{
+    while (ptr) {
+        trPtr next = ptr->next;
+        free(ptr->cmd);
+        free(ptr->raw);
+        free(ptr);
+        ptr = next;
+    }
 }
 
 ssize_t recvSync(int fd, char *wait, char **recv)
@@ -182,13 +192,28 @@ trPtr sendCmdFile(int sockfd, const char *filename)
 
     memset(line, 0, sizeof(line));
     while (fgets(line, MAXBUF - 1, filePtr)) {
+        size_t physicalLength = strlen(line);
+        if (physicalLength > 0 &&
+                line[physicalLength - 1] != '\n' &&
+                !feof(filePtr)) {
+            logIT(LOG_ERR, "Command file line exceeds %d bytes", MAXBUF - 2);
+            freeTrList(startPtr);
+            fclose(filePtr);
+            return NULL;
+        }
         ptr = newTrNode(startPtr);
+        if (!ptr) {
+            freeTrList(startPtr);
+            fclose(filePtr);
+            return NULL;
+        }
         if (! startPtr) {
             startPtr = ptr;
         }
         size_t len = strcspn(line, "\r\n");
         ptr->cmd = calloc(len + 1, sizeof(char));
         if (!ptr->cmd) {
+            freeTrList(startPtr);
             fclose(filePtr);
             return NULL;
         }
@@ -197,6 +222,7 @@ trPtr sendCmdFile(int sockfd, const char *filename)
 
     if (! sendTrList(sockfd, startPtr)) {
         // Something with the communication went wrong
+        freeTrList(startPtr);
         fclose(filePtr);
         return NULL;
     }
@@ -222,12 +248,17 @@ trPtr sendCmds(int sockfd, char *commands)
             continue;
         }
         ptr = newTrNode(startPtr);
+        if (!ptr) {
+            freeTrList(startPtr);
+            return NULL;
+        }
         if (! startPtr) {
             startPtr = ptr;
         }
         ptr->cmd = calloc(strlen(sptr) + 1, sizeof(char));
         if (!ptr->cmd) {
             logIT1(LOG_ERR, "calloc error");
+            freeTrList(startPtr);
             return NULL;
         }
         memcpy(ptr->cmd, sptr, strlen(sptr) + 1);
@@ -242,6 +273,7 @@ trPtr sendCmds(int sockfd, char *commands)
     if (! sendTrList(sockfd, startPtr))
     {
         // Something with the communication went wrong
+        freeTrList(startPtr);
         return NULL;
     }
 
@@ -264,7 +296,11 @@ int sendTrList(int sockfd, trPtr ptr)
     sptr = NULL;
 
     while (ptr) {
-        //memset(string, 0,sizeof(string));
+        size_t commandLength = strlen(ptr->cmd);
+        if (commandLength + 2 > sizeof(string)) {
+            logIT(LOG_ERR, "Command is too long: %zu bytes", commandLength);
+            return 0;
+        }
         snprintf(string, sizeof(string), "%s\n", ptr->cmd);
 
         if (sendServer(sockfd, string, strlen(string)) <= 0) {

@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "xmlconfig.h"
+#include "unit.h"
 
 int getCycleTime(char *recv, int len, char *result);
 int getW01CCycleTime(char *recv, int len, char *result, int waterMode);
@@ -77,9 +78,78 @@ static int test_w01c(void)
            getW01CCycleTime(heating, 2, result, 0) == 0;
 }
 
+static int test_numeric_units(void)
+{
+    static const char *types[] = {
+        "char", "uchar", "short", "ushort", "int", "uint"
+    };
+    static const int lengths[] = {1, 1, 2, 2, 4, 4};
+    char result[MAXBUF];
+    char previous[8] = {0};
+
+    for (size_t i = 0; i < sizeof(types) / sizeof(types[0]); ++i) {
+        Unit unit = {
+            .name = "numeric",
+            .type = (char *)types[i],
+            .gCalc = "V+1",
+            .sCalc = "V"
+        };
+        char bytes[8] = {5, 0, 0, 0};
+        memset(result, 0, sizeof(result));
+        if (procGetUnit(&unit, bytes, lengths[i], result, 0, previous) != 1 ||
+                strncmp(result, "6.000000", 8) != 0) return 0;
+
+        char input[32] = "7";
+        short inputLength = (short)sizeof(input);
+        if (procSetUnit(&unit, input, &inputLength, 0, previous) != 1 ||
+                inputLength != lengths[i] ||
+                (unsigned char)input[0] != 7) return 0;
+    }
+
+    Unit invalid = {.name = "invalid", .type = "unknown"};
+    char byte = 0;
+    return procGetUnit(&invalid, &byte, 1, result, 0, previous) == -1 &&
+        procGetUnit(NULL, &byte, 1, result, 0, previous) == -1;
+}
+
+static int test_enum_units(void)
+{
+    char onByte = 1;
+    char defaultByte = 0;
+    Enumerate fallback = {
+        .bytes = &defaultByte, .len = -1, .text = "unknown", .next = NULL
+    };
+    Enumerate on = {
+        .bytes = &onByte, .len = 1, .text = "on", .next = &fallback
+    };
+    Unit unit = {.name = "switch", .type = "enum", .ePtr = &on};
+    char result[MAXBUF] = {0};
+    char previous[2] = {0};
+    if (procGetUnit(&unit, &onByte, 1, result, 0, previous) != 1 ||
+            strcmp(result, "on") != 0) return 0;
+
+    char input[32] = "on";
+    short length = (short)sizeof(input);
+    return procSetUnit(&unit, input, &length, 0, previous) == 1 &&
+        length == 1 && input[0] == onByte;
+}
+
+static int test_system_time(void)
+{
+    char encoded[8] = {0x20, 0x26, 0x07, 0x28, 0x02, 0x12, 0x34, 0x56};
+    char result[MAXBUF] = {0};
+    char invalid[4] = {0};
+    Unit unit = {.name = "clock", .type = "systime"};
+    if (procGetUnit(&unit, encoded, 8, result, 0, NULL) != 1 ||
+            strstr(result, "2026-07-28T12:34:56") != result) return 0;
+    return procGetUnit(&unit, invalid, 4, result, 0, NULL) == -1;
+}
+
 int main(void)
 {
-    if (!test_legacy() || !test_extended() || !test_invalid() || !test_w01c()) {
+    if (!test_legacy() || !test_extended() || !test_invalid() || !test_w01c() ||
+            !test_numeric_units() || !test_enum_units() ||
+            !test_system_time()) {
         fputs("cycle time test failed\n", stderr);
         return 1;
     }
