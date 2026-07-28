@@ -110,6 +110,19 @@ if(BUILD_TESTING)
     )
     target_link_libraries(test_arithmetic m)
     add_test(NAME arithmetic COMMAND test_arithmetic)
+
+    add_executable(test_cycle_time
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_cycle_time.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/unit.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.c
+    )
+    target_include_directories(test_cycle_time PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(test_cycle_time ${LIBS} m)
+    add_test(NAME cycle_time COMMAND test_cycle_time)
 endif()
 
 if(MANPAGES)

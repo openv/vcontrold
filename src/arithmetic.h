@@ -7,7 +7,9 @@
 #ifndef ARITHMETIC_H
 #define ARITHMETIC_H
 
-double execExpression(char **str, char *bPtr, double numericValue, char *err);
-int execIExpression(char **str, char *bPtr, char bitpos, char *pPtr, char *err);
+double execExpression(char **str, unsigned char *buffer, int bufferLen,
+                      double numericValue, char *err);
+int execIExpression(char **str, unsigned char *buffer, int bufferLen,
+                    char bitpos, char *previousBuffer, char *err);
 
 #endif // ARITHMETIC_H
