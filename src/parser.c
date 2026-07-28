@@ -716,6 +716,12 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
         memset(uSPtr, 0, sizeof(uString));
         token = parseLine(cmd, hex, &hexlen, uString, sizeof(uString));
         logIT(LOG_INFO, "        Token: %d Hexlen: %d, Unit: %s", token, hexlen, uSPtr);
+        if (!token && cmdlen > 0) {
+            logIT(LOG_ERR, "Unknown bytecode segment in command %s: %s",
+                  cPtr->name, cmd);
+            removeCompileList(cmpStartPtr);
+            return NULL;
+        }
         cmpPtr = newCompileNode(cmpStartPtr);
 
         if (!cmpStartPtr) {

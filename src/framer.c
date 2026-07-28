@@ -85,20 +85,6 @@ static uint16 framer_current_addr = FRAMER_NO_ADDR; // stored value depends on E
 // current active protocol
 static char framer_pid = 0;
 
-#ifdef VCONTROLD_TESTING
-void framer_test_set_p300_address(const unsigned char address[2])
-{
-    framer_pid = P300_LEADIN;
-    memcpy(&framer_current_addr, address, sizeof(framer_current_addr));
-}
-
-void framer_test_reset(void)
-{
-    framer_pid = 0;
-    framer_current_addr = FRAMER_NO_ADDR;
-}
-#endif
-
 // status handling of current command
 static void framer_set_actaddr(void *pdu)
 {
@@ -245,6 +231,30 @@ static int framer_open_p300(int fd)
 
     return FRAMER_ERROR;
 }
+
+#ifdef VCONTROLD_TESTING
+void framer_test_set_p300_address(const unsigned char address[2])
+{
+    framer_pid = P300_LEADIN;
+    memcpy(&framer_current_addr, address, sizeof(framer_current_addr));
+}
+
+void framer_test_reset(void)
+{
+    framer_pid = 0;
+    framer_current_addr = FRAMER_NO_ADDR;
+}
+
+int framer_test_open_p300(int fd)
+{
+    return framer_open_p300(fd);
+}
+
+int framer_test_close_p300(int fd)
+{
+    return framer_close_p300(fd);
+}
+#endif
 
 // calculation check sum for P300, assuming buffer is frame and starts by P300_LEADIN
 static char framer_chksum(char *buf, int len)
