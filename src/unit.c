@@ -63,6 +63,7 @@
 #endif
 
 int getCycleTime(char *recv, int len, char *result);
+int getW01CCycleTime(char *recv, int len, char *result, int waterMode);
 int setCycleTime(char *string, char *sendBuf);
 short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
 short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
@@ -148,6 +149,43 @@ int getCycleTime(char *recv, int len, char *result)
         }
     }
     if (used > 0) result[used - 1] = '\0';
+    return 1;
+}
+
+int getW01CCycleTime(char *recv, int len, char *result, int waterMode)
+{
+    const char *mode;
+    unsigned char start;
+    unsigned char end;
+
+    if (!recv || !result || len != 3) {
+        if (result) snprintf(result, MAXBUF, "Byte count is not 3");
+        return 0;
+    }
+    start = (unsigned char)recv[0];
+    end = (unsigned char)recv[1];
+    if ((start & 7) > 5 || (end & 7) > 5 ||
+            (start >> 3) > 23 || (end >> 3) > 23) {
+        snprintf(result, MAXBUF, "Invalid W01C cycle time");
+        return 0;
+    }
+    switch ((unsigned char)recv[2]) {
+    case 1:
+        mode = waterMode ? "Oben" : "Reduziert";
+        break;
+    case 2:
+        mode = "Normal";
+        break;
+    case 3:
+        mode = "Sollwert2";
+        break;
+    default:
+        mode = "Aus";
+        break;
+    }
+    snprintf(result, MAXBUF, "%02u:%02u - %02u:%02u %s",
+             start >> 3, (start & 7) * 10,
+             end >> 3, (end & 7) * 10, mode);
     return 1;
 }
 
@@ -432,6 +470,10 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         } else {
             return -1;
         }
+    } else if (strstr(uPtr->type, "heatingtime") == uPtr->type) {
+        return getW01CCycleTime(recvBuf, recvLen, result, 0) ? 1 : -1;
+    } else if (strstr(uPtr->type, "watertime") == uPtr->type) {
+        return getW01CCycleTime(recvBuf, recvLen, result, 1) ? 1 : -1;
     } else if (strstr(uPtr->type, "systime") == uPtr->type) {
         // System time
         if (getSysTime(recvBuf, recvLen, result)) {
