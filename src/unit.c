@@ -70,95 +70,152 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result);
 int getSysTime(char *recv, int len, char *result);
 int setSysTime(char *input, char *sendBuf);
 
+static int parseCycleTimeToken(const char *token, unsigned char emptyValue,
+                               unsigned char *value)
+{
+    unsigned int hour;
+    unsigned int minute;
+    char trailing;
+
+    if (!token || !value) return 0;
+    if (strcmp(token, "-") == 0 || strcmp(token, "--") == 0) {
+        *value = emptyValue;
+        return 1;
+    }
+    if (sscanf(token, "%u:%u%c", &hour, &minute, &trailing) != 2 ||
+            hour > 23 || minute > 59 || minute % 10 != 0) {
+        return 0;
+    }
+    *value = (unsigned char)((hour << 3) + minute / 10);
+    return 1;
+}
+
 int getCycleTime(char *recv, int len, char *result)
 {
     int i;
-    char string[80];
+    size_t used = 0;
 
-    if (len % 2) {
-        sprintf(result, "Byte count not even");
+    if (!recv || !result || (len != 8 && len != 15)) {
+        snprintf(result, MAXBUF, "Byte count is not 8 or 15");
         return 0;
     }
+    result[0] = '\0';
 
-    memset(string, 0, sizeof(string));
-
-    for (i = 0; i < len; i += 2) {
-        // TODO - vitoopen: Leave output in German.
-        // CHANGING THIS WOULD BREAK existing applications.
-        // => maybe we could enable english results later with a build option,
-        // but not for the default.
-        if (recv[i] == (char)0xff) {
-            snprintf(string, sizeof(string), "%d:An:--     Aus:--\n", (i / 2) + 1);
-        } else {
-            snprintf(string, sizeof(string), "%d:An:%02d:%02d  Aus:%02d:%02d\n", (i / 2) + 1,
-                     (recv[i] & 0xF8) >> 3, (recv[i] & 7) * 10,
-                     (recv[i + 1] & 0xF8) >> 3, (recv[i + 1] & 7) * 10);
+    if (len == 8) {
+        for (i = 0; i < len; i += 2) {
+            int written;
+            if ((unsigned char)recv[i] == 0xff) {
+                written = snprintf(result + used, MAXBUF - used,
+                                   "%d:An:--     Aus:--\n", i / 2 + 1);
+            } else {
+                written = snprintf(result + used, MAXBUF - used,
+                                   "%d:An:%02d:%02d  Aus:%02d:%02d\n", i / 2 + 1,
+                                   ((unsigned char)recv[i] & 0xf8) >> 3,
+                                   ((unsigned char)recv[i] & 7) * 10,
+                                   ((unsigned char)recv[i + 1] & 0xf8) >> 3,
+                                   ((unsigned char)recv[i + 1] & 7) * 10);
+            }
+            if (written < 0 || (size_t)written >= MAXBUF - used) return 0;
+            used += (size_t)written;
         }
-        strcat(result, string);
-    }
-    result[strlen(result) - 1] = '\0'; // remove \n
+    } else {
+        for (i = 0; i < len; i += 3) {
+            unsigned char on = (unsigned char)recv[i];
+            unsigned char off = (unsigned char)recv[i + 1];
+            unsigned char mode = (unsigned char)recv[i + 2] & 0x7f;
+            char onTime[8] = "--";
+            char offTime[8] = "--";
+            int written;
 
+            if (on != 0) {
+                snprintf(onTime, sizeof(onTime), "%02d:%02d",
+                         (on & 0xf8) >> 3, (on & 7) * 10);
+            }
+            if (off != 0) {
+                snprintf(offTime, sizeof(offTime), "%02d:%02d",
+                         (off & 0xf8) >> 3, (off & 7) * 10);
+            }
+            if (on == 0 && off == 0) {
+                written = snprintf(result + used, MAXBUF - used,
+                                   "%d:An:--     Aus:--     Mod:--\n", i / 3 + 1);
+            } else {
+                written = snprintf(result + used, MAXBUF - used,
+                                   "%d:An:%-5s  Aus:%-5s  Mod:%02u\n",
+                                   i / 3 + 1, onTime, offTime, mode);
+            }
+            if (written < 0 || (size_t)written >= MAXBUF - used) return 0;
+            used += (size_t)written;
+        }
+    }
+    if (used > 0) result[used - 1] = '\0';
     return 1;
 }
 
 int setCycleTime(char *input, char *sendBuf)
 {
-    char *sptr, *cptr;
-    char *bptr = sendBuf;
-    int hour, min;
-    int count = 0;
+    char *tokens[15];
+    char *save = NULL;
+    char *token;
+    int tokenCount = 0;
 
-    // We split at the blank
-    sptr = strtok(input, " ");
-    cptr = NULL;
-
-    // First, we fill the sendBuf with 8 x ff
-    for (count = 0; count < 8; sendBuf[count++] = (char)0xff);
-    count = 0;
-
-    do {
-        if (sptr < cptr) {
-            // We already have been here (by double blanks)
-            continue;
-        }
-
-        while (isblank(*sptr)) {
-            sptr++;
-        }
-        // Does the string only consist of one or two minus? --> This line remains empty
-        if ((0 == strcmp(sptr, "-")) ||  (0 == strcmp(sptr, "--"))) {
-            // We skip the next time designation, as it also must be a "-"
-            bptr++;
-            count++;
-            sptr = strtok(NULL, " ");
-            logIT(LOG_INFO, "Cycle Time: -- -- -> [%02X%02X]", 0xff, 0xff);
-        } else {
-            // Is the a : in the string?
-            if (! strchr(sptr, ':')) {
-                sprintf(sendBuf, "Wrong time format: %s", sptr);
-                return 0;
-            }
-            if (sscanf(sptr, "%d:%d", &hour, &min) != 2 ||
-                    hour < 0 || hour > 23 || min < 0 || min > 59 ||
-                    (min % 10) != 0) {
-                snprintf(sendBuf, 8, "BadTime");
-                return 0;
-            }
-            *bptr = ((hour << 3) + (min / 10)) & 0xff;
-            logIT(LOG_INFO, "Cycle Time: %02d:%02d -> [%02X]", hour, min, (unsigned char) *bptr);
-        }
-        bptr++;
-        cptr = sptr;
-        count++;
-
-    } while ((sptr = strtok(NULL, " ")) != NULL);
-
-    if ((count / 2) * 2 != count) {
-        logIT(LOG_WARNING, "Times count odd, ignoring %s", cptr);
-        *(bptr - 1) = (char)0xff;
+    if (!input || !sendBuf) return 0;
+    for (token = strtok_r(input, " \t", &save); token && tokenCount < 15;
+            token = strtok_r(NULL, " \t", &save)) {
+        tokens[tokenCount++] = token;
+    }
+    if (token != NULL || (tokenCount != 8 && tokenCount != 15)) {
+        snprintf(sendBuf, 16, "BadCount");
+        return 0;
     }
 
-    return 8;
+    if (tokenCount == 8) {
+        memset(sendBuf, 0xff, 8);
+        for (int i = 0; i < 8; i += 2) {
+            unsigned char on;
+            unsigned char off;
+            if (!parseCycleTimeToken(tokens[i], 0xff, &on) ||
+                    !parseCycleTimeToken(tokens[i + 1], 0xff, &off) ||
+                    ((on == 0xff) != (off == 0xff))) {
+                snprintf(sendBuf, 16, "BadTime");
+                return 0;
+            }
+            sendBuf[i] = (char)on;
+            sendBuf[i + 1] = (char)off;
+        }
+        return 8;
+    }
+
+    memset(sendBuf, 0, 15);
+    for (int i = 0; i < 15; i += 3) {
+        unsigned char on;
+        unsigned char off;
+        char *end = NULL;
+        long mode;
+        if (!parseCycleTimeToken(tokens[i], 0, &on) ||
+                !parseCycleTimeToken(tokens[i + 1], 0, &off)) {
+            snprintf(sendBuf, 16, "BadTime");
+            return 0;
+        }
+        if (on == 0 && off == 0) {
+            if (strcmp(tokens[i + 2], "-") != 0 &&
+                    strcmp(tokens[i + 2], "--") != 0) {
+                snprintf(sendBuf, 16, "BadMode");
+                return 0;
+            }
+            mode = 0;
+        } else {
+            errno = 0;
+            mode = strtol(tokens[i + 2], &end, 0);
+            if (errno || end == tokens[i + 2] || *end || mode < 0 || mode > 0x7f) {
+                snprintf(sendBuf, 16, "BadMode");
+                return 0;
+            }
+        }
+        sendBuf[i] = (char)on;
+        sendBuf[i + 1] = (char)off;
+        sendBuf[i + 2] = (char)mode;
+    }
+    return 15;
 }
 
 int bcd2dec(int bcd) {
@@ -473,7 +530,8 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         logIT(LOG_INFO, "Typ: %s (in float: %f)", uPtr->type, floatV);
         inPtr = uPtr->gCalc;
         logIT(LOG_INFO, "(FLOAT) Exp: %s [%s]", inPtr, buffer);
-        erg = execExpression(&inPtr, recvBuf, floatV, errPtr);
+        erg = execExpression(&inPtr, (unsigned char *)recvBuf, recvLen,
+                             floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
@@ -485,15 +543,16 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         // icalc in XML and get defined within
         inPtr = uPtr->gICalc;
         logIT(LOG_INFO, "(INT) Exp: %s [BP:%d] [%s]", inPtr, bitpos, buffer);
-        ergI = execIExpression(&inPtr, recvBuf, bitpos, pRecvPtr, errPtr);
+        ergI = execIExpression(&inPtr, (unsigned char *)recvBuf, recvLen,
+                               bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
             strcpy(result, string);
             return -1;
         }
         logIT(LOG_INFO, "Res: (Hex max. 4 bytes) %08x", ergI);
-        res = ergI;
-        if ( uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, recvLen)) {
+        res = (char)(ergI & 0xff);
+        if (uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, 1)) {
             strcpy(result, tPtr);
             return 1;
         } else {
@@ -596,7 +655,8 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         }
         inPtr = uPtr->sCalc;
         logIT(LOG_INFO, "Send Exp: %s [V=%f]", inPtr, floatV);
-        erg = execExpression(&inPtr, dumBuf, floatV, errPtr);
+        erg = execExpression(&inPtr, (unsigned char *)dumBuf, sizeof(dumBuf),
+                             floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sCalc, error);
             strcpy(sendBuf, string);
@@ -620,7 +680,8 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         }
 
         logIT(LOG_INFO, "(INT) Exp: %s [BP:%d]", inPtr, bitpos);
-        ergI = execIExpression(&inPtr, dumBuf, bitpos, pRecvPtr, errPtr);
+        ergI = execIExpression(&inPtr, (unsigned char *)dumBuf, sizeof(dumBuf),
+                               bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->sICalc, error);
             strcpy(sendBuf, string);

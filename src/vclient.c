@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     // Get the command line options
     char *host = NULL;
     int port = 0;
-    char commands[512] = "";
+    char commands[5120] = "";
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
     const char *tmplfile = NULL;
@@ -392,8 +392,17 @@ int main(int argc, char *argv[])
             }
             size_t used = strlen(result);
             if (used < sizeof(result)) {
-                snprintf(result + used, sizeof(result) - used,
-                         "%f;", resPtr->result);
+                char *end = NULL;
+                errno = 0;
+                (void)strtod(resPtr->raw, &end);
+                if (errno == 0 && end && end != resPtr->raw &&
+                        (*end == '\0' || isspace((unsigned char)*end))) {
+                    snprintf(result + used, sizeof(result) - used,
+                             "%f;", resPtr->result);
+                } else {
+                    snprintf(result + used, sizeof(result) - used,
+                             "%s;", resPtr->raw);
+                }
             }
             resPtr = resPtr->next;
         }

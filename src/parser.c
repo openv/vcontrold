@@ -448,12 +448,8 @@ static int append_bytes(char **dst, char *end, const char *src, size_t len)
 
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
-    // Recursion
     if (! cPtr) {
         return 0;
-    }
-    if (cPtr->next) {
-        expand(cPtr->next, pPtr);
     }
 
     // If no address has been set, we do nothing
@@ -606,12 +602,8 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
 compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 {
-    // Recursion
     if (!cPtr) {
         return 0;
-    }
-    if (cPtr->next) {
-        buildByteCode(cPtr->next, uPtr);
     }
 
     // If no address has been given, we do nothing
@@ -688,14 +680,11 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 
 void compileCommand(devicePtr dPtr, unitPtr uPtr)
 {
-    if (! dPtr) {
-        return;
+    for (devicePtr device = dPtr; device; device = device->next) {
+        logIT(LOG_INFO, "Expanding command for device %s", device->id);
+        for (commandPtr command = device->cmdPtr; command; command = command->next) {
+            expand(command, device->protoPtr);
+            buildByteCode(command, uPtr);
+        }
     }
-    if (dPtr->next) {
-        compileCommand(dPtr->next, uPtr);
-    }
-
-    logIT(LOG_INFO, "Expanding command for device %s", dPtr->id);
-    expand(dPtr->cmdPtr, dPtr->protoPtr);
-    buildByteCode(dPtr->cmdPtr, uPtr);
 }
