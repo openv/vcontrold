@@ -800,7 +800,7 @@ int main(int argc, char *argv[])
             break;
         case 'V':
             printf("vcontrold version %s\n", VERSION);
-            exit(1);
+            return 0;
             break;
         case 'x':
             xmlfile = optarg;
