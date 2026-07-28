@@ -99,6 +99,7 @@ int main(int argc, char *argv[])
     static int json_long = 0;
     short execMe = 0;
     trPtr resPtr;
+    trPtr resultHead;
     FILE *filePtr;
     FILE *ofilePtr;
 
@@ -205,7 +206,11 @@ int main(int argc, char *argv[])
                        commands);
             }
             if (strlen(commands) == 0) {
-                strncpy(commands, optarg, sizeof(commands));
+                if (snprintf(commands, sizeof(commands), "%s", optarg) >=
+                        (int)sizeof(commands)) {
+                    fprintf(stderr, "command too long\n");
+                    exit(2);
+                }
             } else {
                 if (strlen(optarg) + 2 > sizeof(commands) - strlen(commands)) {
                     fprintf(stderr, "too many commands\n");
@@ -280,7 +285,11 @@ int main(int argc, char *argv[])
                 printf("%s ", argv[optind]);
             }
             if (strlen(commands) == 0) {
-                strncpy(commands, argv[optind], sizeof(commands));
+                if (snprintf(commands, sizeof(commands), "%s", argv[optind]) >=
+                        (int)sizeof(commands)) {
+                    fprintf(stderr, "command too long\n");
+                    exit(2);
+                }
             } else {
                 if (strlen(argv[optind]) + 2 > sizeof(commands) - strlen(commands)) {
                     fprintf(stderr, "Command list too long\n");
@@ -346,6 +355,7 @@ int main(int argc, char *argv[])
         logIT(LOG_ERR, "Error communicating with the server");
         exit(1);
     }
+    resultHead = resPtr;
     disconnectServer(sockfd);
 
     if (outfile) {
@@ -357,6 +367,10 @@ int main(int argc, char *argv[])
         logIT(LOG_INFO, "Output file %s", outfile);
     } else {
         ofilePtr = fdopen(fileno(stdout), "w");
+        if (!ofilePtr) {
+            logIT1(LOG_ERR, "Could not open standard output");
+            exit(1);
+        }
     }
 
     // The result is in the resPtr list, now we differentiate the output
@@ -376,9 +390,11 @@ int main(int argc, char *argv[])
                 resPtr = resPtr->next;
                 continue;
             }
-            memset(string, 0, sizeof(string));
-            sprintf(string, "%f;", resPtr->result);
-            strncat(result, string, sizeof(result) - strlen(result) - 1);
+            size_t used = strlen(result);
+            if (used < sizeof(result)) {
+                snprintf(result + used, sizeof(result) - used,
+                         "%f;", resPtr->result);
+            }
             resPtr = resPtr->next;
         }
         // Remove the last semicolon and add \n
@@ -399,7 +415,6 @@ int main(int argc, char *argv[])
         unsigned short maxIdx;
         trPtr tPtr = resPtr;
         trPtr *idxPtr;
-        short varReplaced;
 
         // In array idxPtr, the particular results are referenced via the index
         for (count = 0; tPtr; tPtr = tPtr->next) {
@@ -429,7 +444,6 @@ int main(int argc, char *argv[])
             logIT(LOG_INFO, "Tmpl line: %s", line);
             lSptr = line;
             while ((lptr = strchr(lSptr, '$'))) {
-                varReplaced = 0;
                 if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ is masked by a backslash
                     memset(string, 0, sizeof(string));
                     strncpy(string, lSptr, lptr - lSptr - 1);
@@ -443,7 +457,13 @@ int main(int argc, char *argv[])
                     lEptr++;
                 }
                 memset(varname, 0, sizeof(varname));
-                strncpy(varname, lptr + 1, lEptr - lptr - 1);
+                size_t varlen = (size_t)(lEptr - lptr - 1);
+                if (varlen >= sizeof(varname)) {
+                    logIT1(LOG_ERR, "Template variable name too long");
+                    lSptr = lEptr;
+                    continue;
+                }
+                memcpy(varname, lptr + 1, varlen);
                 logIT(LOG_INFO, "    Recognized variable: %s", varname);
 
                 // We output everything up to this
@@ -631,5 +651,17 @@ int main(int argc, char *argv[])
         }
     }
 
+    while (resultHead) {
+        trPtr next = resultHead->next;
+        free(resultHead->cmd);
+        free(resultHead->raw);
+        free(resultHead);
+        resultHead = next;
+    }
+    if (outfile && ofilePtr) {
+        fclose(ofilePtr);
+    } else if (ofilePtr) {
+        fflush(ofilePtr);
+    }
     return 0;
 }

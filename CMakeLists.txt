@@ -5,6 +5,8 @@
 cmake_minimum_required(VERSION 3.2.0)
 project(vcontrold C)
 
+include(CTest)
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     # CMAKE_INSTALL_PREFIX defaults to /usr/local, but it should go to /usr
     set(CMAKE_INSTALL_PREFIX /usr)
@@ -96,6 +98,18 @@ endif()
 if(VSIM)
     add_executable(vsim ${vsim_SRCS})
     add_dependencies(vsim UpdateVersion)
+endif()
+
+if(BUILD_TESTING)
+    add_executable(test_arithmetic
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_arithmetic.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
+    )
+    target_include_directories(test_arithmetic PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_link_libraries(test_arithmetic m)
+    add_test(NAME arithmetic COMMAND test_arithmetic)
 endif()
 
 if(MANPAGES)

@@ -7,13 +7,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include <signal.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <termios.h>
 #include <string.h>
 #include <time.h>
-#include <setjmp.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/times.h>
@@ -29,9 +27,6 @@
 // NCC is not defined under cygwin
 #define NCC NCCS
 #endif
-
-static void sig_alrm(int);
-static jmp_buf    env_alrm;
 
 void closeDevice(int fd)
 {
@@ -51,7 +46,13 @@ int openDevice(char *device)
         port = atoi(dptr + 1);
         // The dptr device gives us the length of the host
         memset(host, 0, sizeof(host));
-        strncpy(host, device, dptr - device);
+        size_t hostlen = (size_t)(dptr - device);
+        if (hostlen == 0 || hostlen >= sizeof(host)) {
+            logIT1(LOG_ERR, "Invalid network device hostname");
+            return -1;
+        }
+        memcpy(host, device, hostlen);
+        host[hostlen] = '\0';
         // Third parameter == 1 --> noTCPDelay set
         fd = openCliSocket(host, port, 1);
     } else {
@@ -140,41 +141,7 @@ int my_send(int fd, char *s_buf, int len)
 
 int receive(int fd, char *r_buf, int r_len, unsigned long *etime)
 {
-    int i;
-    struct tms tms_t;
-    clock_t start, end, mid, mid1;
-    unsigned long clktck;
-
-    clktck = sysconf(_SC_CLK_TCK);
-    start = times(&tms_t);
-    mid1 = start;
-    for (i = 0; i < r_len; i++) {
-        if (signal(SIGALRM, sig_alrm) == SIG_ERR) {
-            logIT1(LOG_ERR, "SIGALRM error");
-        }
-        if (setjmp(env_alrm) != 0) {
-            logIT1(LOG_ERR, "read timeout");
-            return -1;
-        }
-        alarm(TIMEOUT);
-        // We use the socket fixed variant from socket.c
-        if (readn(fd, &r_buf[i], 1) <= 0) {
-            logIT1(LOG_ERR, "error read tty");;
-            alarm(0);
-            return -1;
-        }
-
-        alarm(0);
-        unsigned char byte = r_buf[i] & 255;
-        mid = times(&tms_t);
-        logIT(LOG_INFO, "<RECV: %02X (%0.1f ms)", byte, ((float)(mid - mid1) / clktck) * 1000);
-        mid1 = mid;
-    }
-
-    end = times(&tms_t);
-    *etime = ((float)(end - start) / clktck) * 1000;
-
-    return i;
+    return receive_nb(fd, r_buf, r_len, etime);
 }
 
 static int setnonblock(int fd)
@@ -301,23 +268,21 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
     return i;
 }
 
-static void sig_alrm(int signo)
-{
-    longjmp(env_alrm, 1);
-}
-
 int waitfor(int fd, char *w_buf, int w_len)
 {
     int i;
     time_t start;
     char r_buf[MAXBUF];
     char hexString[128] = "\0";
-    char dummy[3];
     unsigned long etime;
 
+    if (w_len < 1 || (size_t)w_len > (sizeof(hexString) - 1) / 2) {
+        logIT(LOG_ERR, "Invalid wait sequence length: %d", w_len);
+        return 0;
+    }
     for (i = 0; i < w_len; i++) {
-        sprintf(dummy, "%02hhX", w_buf[i]);
-        strncat(hexString, dummy, strlen(dummy));
+        snprintf(hexString + i * 2, sizeof(hexString) - (size_t)i * 2,
+                 "%02X", (unsigned char)w_buf[i]);
     }
 
     logIT(LOG_INFO, "Waiting for %s", hexString);

@@ -64,7 +64,6 @@ int readCmdFile(char *filename, char *result, int *resultLen, char *device);
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
-static void sigPipeHandler(int signo);
 static void sigHupHandler(int signo);
 int reloadConfig();
 
@@ -187,8 +186,6 @@ int rawModus(int socketfd, char *device)
 {
     // Here, we write all incoming commands in a temporary file, which is forwarded to readCmdFile
     char readBuf[MAXBUF];
-    char string[256];
-
     // FIXME: I think we should be using some PID or such instead of "XXXXXX".
 #ifdef __CYGWIN__
     char tmpfile[] = "vitotmp-XXXXXX";
@@ -197,20 +194,20 @@ int rawModus(int socketfd, char *device)
 #endif
 
     FILE *filePtr;
+    int tmpfd;
     char result[MAXBUF];
     int resultLen;
 
-    if (! mkstemp(tmpfile)) {
-        // Another try
-        if (! mkstemp(tmpfile)) {
-            logIT1(LOG_ERR, "Error creating mkstemp");
-            return 0;
-        }
+    tmpfd = mkstemp(tmpfile);
+    if (tmpfd < 0) {
+        logIT(LOG_ERR, "Error creating temporary file: %s", strerror(errno));
+        return 0;
     }
-
-    filePtr = fopen(tmpfile, "w+");
+    filePtr = fdopen(tmpfd, "w+");
     if (! filePtr) {
         logIT(LOG_ERR, "Could not create temp file %s", tmpfile);
+        close(tmpfd);
+        unlink(tmpfile);
         return 0;
     }
 
@@ -218,7 +215,8 @@ int rawModus(int socketfd, char *device)
 
     while (Readline(socketfd, readBuf, sizeof(readBuf))) {
         // Here, we parse the particular commands
-        if (strstr(readBuf, "END") == readBuf) {
+        if (strcmp(readBuf, "END\n") == 0 || strcmp(readBuf, "END\r\n") == 0 ||
+                strcmp(readBuf, "END") == 0) {
             fclose(filePtr);
             resultLen = sizeof(result);
             readCmdFile(tmpfile, result, &resultLen, device);
@@ -226,9 +224,10 @@ int rawModus(int socketfd, char *device)
                 // Re received characters
                 char buffer[MAXBUF];
                 memset(buffer, 0, sizeof(buffer));
-                char2hex(buffer, result, resultLen);
-                snprintf(string, sizeof(string), "Result: %s\n", buffer);
-                Writen(socketfd, string, strlen(string));
+                char2hex(buffer, sizeof(buffer), result, resultLen);
+                Writen(socketfd, "Result: ", 8);
+                Writen(socketfd, buffer, strlen(buffer));
+                Writen(socketfd, "\n", 1);
             }
             remove(tmpfile);
             return 1;
@@ -240,7 +239,9 @@ int rawModus(int socketfd, char *device)
             // debug stuff
         }
     }
-    return 0; // is this correct?
+    fclose(filePtr);
+    unlink(tmpfile);
+    return 0;
 }
 
 int interactive(int socketfd, char *device)
@@ -261,13 +262,15 @@ int interactive(int socketfd, char *device)
     char cmd[MAXBUF];
     char para[MAXBUF];
     char *ptr;
-    short sendLen;
+    short sendLen = 0;
+    int lockOwned = 0;
     char buffer[MAXBUF];
 
     Writen(socketfd, PROMPT, strlen(PROMPT));
     memset(readBuf, 0, sizeof(readBuf));
 
     while ((rcount = Readline(socketfd, readBuf, sizeof(readBuf)))) {
+        sendLen = 0;
         sendErrMsg(socketfd);
         // Remove control characters
         readPtr = readBuf + rcount;
@@ -287,23 +290,28 @@ int interactive(int socketfd, char *device)
         }
 
         // Here, the particular commands are parsed
-        if (strstr(readBuf, "help") == readBuf) {
+        if (strcmp(cmd, "help") == 0) {
             printHelp(socketfd);
-        } else if (strstr(readBuf, "quit") == readBuf) {
+        } else if (strcmp(cmd, "quit") == 0) {
             Writen(socketfd, bye, strlen(bye));
             framer_closeDevice(fd);
-            vcontrol_semrelease();
+            fd = -1;
+            if (lockOwned) {
+                vcontrol_semrelease();
+                lockOwned = 0;
+            }
             return 1;
-        } else if (strstr(readBuf, "debug on") == readBuf) {
+        } else if (strcmp(readBuf, "debug on") == 0) {
             setDebugFD(socketfd);
-        } else if (strstr(readBuf, "debug off") == readBuf) {
+        } else if (strcmp(readBuf, "debug off") == 0) {
             setDebugFD(-1);
-        } else if (strstr(readBuf, "unit off") == readBuf) {
+        } else if (strcmp(readBuf, "unit off") == 0) {
             noUnit = 1;
-        } else if (strstr(readBuf, "unit on") == readBuf) {
+        } else if (strcmp(readBuf, "unit on") == 0) {
             noUnit = 0;
-        } else if (strstr(readBuf, "reload") == readBuf) {
+        } else if (strcmp(cmd, "reload") == 0) {
             if (reloadConfig()) {
+                device = cfgPtr->tty;
                 memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string), "XML file %s reloaded\n", xmlfile);
                 Writen(socketfd, string, strlen(string));
@@ -317,15 +325,24 @@ int interactive(int socketfd, char *device)
                          "Loading of XML file %s failed, using old configuration\n", xmlfile);
                 Writen(socketfd, string, strlen(string));
             }
-        } else if (strstr(readBuf, "raw") == readBuf) {
-            rawModus(socketfd, device);
-        } else if (strstr(readBuf, "close") == readBuf) {
+        } else if (strcmp(cmd, "raw") == 0) {
+            if (cfgPtr->readonly) {
+                snprintf(string, sizeof(string), "ERR: raw mode disabled by readonly configuration\n");
+                Writen(socketfd, string, strlen(string));
+            } else {
+                rawModus(socketfd, device);
+            }
+        } else if (strcmp(cmd, "close") == 0) {
             framer_closeDevice(fd);
-            vcontrol_semrelease();
+            fd = -1;
+            if (lockOwned) {
+                vcontrol_semrelease();
+                lockOwned = 0;
+            }
             snprintf(string, sizeof(string), "%s closed\n", device);
             Writen(socketfd, string, strlen(string));
             fd = -1;
-        } else if (strstr(readBuf, "commands") == readBuf) {
+        } else if (strcmp(cmd, "commands") == 0) {
             cPtr = cfgPtr->devPtr->cmdPtr;
             while (cPtr) {
                 if (cPtr->addr) {
@@ -335,22 +352,28 @@ int interactive(int socketfd, char *device)
                 }
                 cPtr = cPtr->next;
             }
-        } else if (strstr(readBuf, "protocol") == readBuf) {
+        } else if (strcmp(cmd, "protocol") == 0) {
             memset(string, 0, sizeof(string));
             snprintf(string, sizeof(string), "%s\n", cfgPtr->devPtr->protoPtr->name);
             Writen(socketfd, string, strlen(string));
-        } else if (strstr(readBuf, "device") == readBuf) {
+        } else if (strcmp(cmd, "device") == 0) {
             memset(string, 0, sizeof(string));
             snprintf(string, sizeof(string), "%s (ID=%s) (Protocol=%s)\n", cfgPtr->devPtr->name,
                      cfgPtr->devPtr->id,
                      cfgPtr->devPtr->protoPtr->name);
             Writen(socketfd, string, strlen(string));
-        } else if (strstr(readBuf, "version") == readBuf) {
+        } else if (strcmp(cmd, "version") == 0) {
             memset(string, 0, sizeof(string));
             snprintf(string, sizeof(string), "Version: %s\n", VERSION);
             Writen(socketfd, string, strlen(string));
         } else if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, cmd)) && (cPtr->addr)) {
             // The command is defined in XML, so we take care of it ...
+            if (cfgPtr->readonly && (!cPtr->pcmd || strcmp(cPtr->pcmd, "getaddr") != 0)) {
+                snprintf(string, sizeof(string),
+                         "ERR: command %s disabled by readonly configuration\n", cPtr->name);
+                Writen(socketfd, string, strlen(string));
+                continue;
+            }
             memset(string, 0, sizeof(string));
             memset(recvBuf, 0, sizeof(recvBuf));
             memset(sendBuf, 0, sizeof(sendBuf));
@@ -365,7 +388,9 @@ int interactive(int socketfd, char *device)
                     if (! Writen(socketfd, PROMPT, strlen(PROMPT))) {
                         sendErrMsg(socketfd);
                         framer_closeDevice(fd);
-                        vcontrol_semrelease();
+                        if (lockOwned) {
+                            vcontrol_semrelease();
+                        }
                         return 0;
                     }
                     continue;
@@ -393,13 +418,19 @@ int interactive(int socketfd, char *device)
                  * This is related to a accept/close on a server socket
                  */
                 // everything on link is a transaction - all commands
-                vcontrol_semget();
+                if (!vcontrol_semget()) {
+                    logIT1(LOG_ERR, "Could not acquire device lock");
+                    sendErrMsg(socketfd);
+                    continue;
+                }
+                lockOwned = 1;
 
                 if ((fd = framer_openDevice(device, cfgPtr->devPtr->protoPtr->id)) == -1) {
                     logIT(LOG_ERR, "Error opening %s", device);
                     sendErrMsg(socketfd);
                     framer_closeDevice(fd);
                     vcontrol_semrelease();
+                    lockOwned = 0;
                     if (!Writen(socketfd, PROMPT, strlen(PROMPT))) {
                         sendErrMsg(socketfd);
                         return 0;
@@ -425,7 +456,7 @@ int interactive(int socketfd, char *device)
                     break;
                 } else {
                     memset(buffer, 0, sizeof(buffer));
-                    char2hex(buffer, pRecvBuf, pcPtr->len);
+                    char2hex(buffer, sizeof(buffer), pRecvBuf, pcPtr->len);
                     logIT(LOG_INFO, "Result of pre command: %s", buffer);
                 }
             }
@@ -442,8 +473,8 @@ int interactive(int socketfd, char *device)
             } else if (*recvBuf && (count == 0)) {
                 // Unit converted
                 logIT1(LOG_INFO, recvBuf);
-                snprintf(string, sizeof(string), "%s\n", recvBuf);
-                Writen(socketfd, string, strlen(string));
+                    Writen(socketfd, recvBuf, strlen(recvBuf));
+                    Writen(socketfd, "\n", 1);
             } else {
                 int n;
                 char *ptr;
@@ -461,15 +492,15 @@ int interactive(int socketfd, char *device)
                     }
                 }
                 if (count) {
-                    snprintf(string, sizeof(string), "%s\n", buffer);
-                    Writen(socketfd, string, strlen(string));
+                    Writen(socketfd, buffer, strlen(buffer));
+                    Writen(socketfd, "\n", 1);
                     logIT(LOG_INFO, "Received: %s", buffer);
                 }
             }
             if (iniFD) {
                 fflush(iniFD);
             }
-        } else if (strstr(readBuf, "detail") == readBuf) {
+        } else if (strcmp(cmd, "detail") == 0) {
             readPtr = readBuf + strlen("detail");
             while (isspace(*readPtr)) {
                 readPtr++;
@@ -482,9 +513,10 @@ int interactive(int socketfd, char *device)
                 // Error String defined
                 char buf[MAXBUF];
                 memset(buf, 0, sizeof(buf));
-                if (cPtr->errStr && char2hex(buf, cPtr->errStr, cPtr->len)) {
-                    snprintf(string, sizeof(string), "\tError at (Hex): %s", buf);
-                    Writen(socketfd, string, strlen(string));
+                if (cPtr->errStr && char2hex(buf, sizeof(buf), cPtr->errStr, cPtr->len)) {
+                    Writen(socketfd, "\tError at (Hex): ", 17);
+                    Writen(socketfd, buf, strlen(buf));
+                    Writen(socketfd, "\n", 1);
                 }
                 // recvTimeout?
                 if (cPtr->recvTimeout) {
@@ -540,17 +572,20 @@ int interactive(int socketfd, char *device)
                         if (cmpPtr->uPtr->ePtr) {
                             enumPtr ePtr;
                             ePtr = cmpPtr->uPtr->ePtr;
-                            char dummy[20];
+                            char dummy[MAXBUF];
                             while (ePtr) {
                                 memset(dummy, 0, sizeof(dummy));
                                 if (!ePtr->bytes) {
                                     strcpy(dummy, "<default>");
                                 } else {
-                                    char2hex(dummy, ePtr->bytes, ePtr->len);
+                                    char2hex(dummy, sizeof(dummy), ePtr->bytes, ePtr->len);
                                 }
-                                snprintf(string, sizeof(string), "\t  Enum Bytes: %s Text: %s\n",
-                                         dummy, ePtr->text);
-                                Writen(socketfd, string, strlen(string));
+                                Writen(socketfd, "\t  Enum Bytes: ", 15);
+                                Writen(socketfd, dummy, strlen(dummy));
+                                Writen(socketfd, " Text: ", 7);
+                                Writen(socketfd, ePtr->text,
+                                       strlen(ePtr->text));
+                                Writen(socketfd, "\n", 1);
                                 ePtr = ePtr->next;
                             }
                         }
@@ -559,14 +594,17 @@ int interactive(int socketfd, char *device)
                 }
             } else {
                 memset(string, 0, sizeof(string));
-                snprintf(string, sizeof(string), "ERR: command %s unknown\n", readPtr);
-                Writen(socketfd, string, strlen(string));
+                Writen(socketfd, "ERR: command ", 13);
+                Writen(socketfd, readPtr, strlen(readPtr));
+                Writen(socketfd, " unknown\n", 9);
             }
         } else if (*readBuf) {
             if (!Writen(socketfd, UNKNOWN, strlen(UNKNOWN))) {
                 sendErrMsg(socketfd);
                 framer_closeDevice(fd);
-                vcontrol_semrelease();
+                if (lockOwned) {
+                    vcontrol_semrelease();
+                }
                 return 0;
             }
         }
@@ -574,47 +612,36 @@ int interactive(int socketfd, char *device)
         if (!Writen(socketfd, PROMPT, strlen(PROMPT))) {
             sendErrMsg(socketfd);
             framer_closeDevice(fd);
-            vcontrol_semrelease();
+            if (lockOwned) {
+                vcontrol_semrelease();
+            }
             return 0;
         }
         memset(readBuf, 0, sizeof(readBuf));
     }
     sendErrMsg(socketfd);
     framer_closeDevice(fd);
-    vcontrol_semrelease();
+    if (lockOwned) {
+        vcontrol_semrelease();
+    }
     return 0;
 }
 
-static void sigPipeHandler(int signo)
-{
-    logIT1(LOG_ERR, "Received SIGPIPE");
-    // FIXME: And we do nothing here? Why do we handle it then?
-}
+static volatile sig_atomic_t reloadRequested = 0;
+static volatile sig_atomic_t terminateRequested = 0;
 
 static void sigHupHandler(int signo)
 {
-    logIT1(LOG_NOTICE, "Received SIGHUP");
-    reloadConfig();
+    (void)signo;
+    reloadRequested = 1;
 }
 
 char *pidFile = NULL;
 
 static void sigTermHandler(int signo)
 {
-    if (signo == SIGTERM) {
-        logIT1(LOG_NOTICE, "Received SIGTERM");
-    } else if (signo == SIGINT) {
-        logIT1(LOG_NOTICE, "Received SIGINT");
-    } else if (signo == SIGQUIT) {
-        logIT1(LOG_NOTICE, "Received SIGQUIT");
-    } else {
-        logIT(LOG_NOTICE, "Received signal %d", signo);
-    }
-    vcontrol_semfree();
-    if (pidFile) {
-        unlink(pidFile);
-    }
-    exit(1);
+    (void)signo;
+    terminateRequested = 1;
 }
 
 // Here we go
@@ -791,20 +818,25 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (signal(SIGHUP, sigHupHandler) == SIG_ERR) {
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sigemptyset(&sa.sa_mask);
+    sa.sa_handler = sigHupHandler;
+    if (sigaction(SIGHUP, &sa, NULL) < 0) {
         logIT1(LOG_ERR, "Error handling SIGHUP");
         exit(1);
     }
 
-    if (signal(SIGQUIT, sigTermHandler) == SIG_ERR) {
+    sa.sa_handler = sigTermHandler;
+    if (sigaction(SIGQUIT, &sa, NULL) < 0) {
         logIT(LOG_ERR, "Error handling SIGQUIT: %s", strerror(errno));
         exit(1);
     }
-    if (signal(SIGINT, sigTermHandler) == SIG_ERR) {
+    if (sigaction(SIGINT, &sa, NULL) < 0) {
         logIT(LOG_ERR, "Error handling SIGINT: %s", strerror(errno));
         exit(1);
     }
-    if (signal(SIGTERM, sigTermHandler) == SIG_ERR) {
+    if (sigaction(SIGTERM, &sa, NULL) < 0) {
         logIT(LOG_ERR, "Error handling SIGTERM: %s", strerror(errno));
         exit(1);
     }
@@ -816,7 +848,9 @@ int main(int argc, char *argv[])
         if (! (iniFD = fopen(file, "w"))) {
             logIT(LOG_ERR, "Could not create simulator INI file %s", file);
         }
-        fprintf(iniFD, "[DATA]\n");
+        if (iniFD) {
+            fprintf(iniFD, "[DATA]\n");
+        }
     }
 
     // The macros are replaced and the strings to send are converted to bytecode
@@ -826,8 +860,8 @@ int main(int argc, char *argv[])
     char result[MAXBUF];
     int resultLen = sizeof(result);
     int sid;
-    int pidFD = 0;
-    char str[10];
+    int pidFD = -1;
+    char str[32];
 
     if (tcpport) {
         if (makeDaemon) {
@@ -875,8 +909,11 @@ int main(int argc, char *argv[])
                     exit(1);
                 }
 
-                sprintf(str, "%d\n", getpid());
-                write(pidFD, str, strlen(str));
+                snprintf(str, sizeof(str), "%d\n", getpid());
+                if (write(pidFD, str, strlen(str)) != (ssize_t)strlen(str)) {
+                    logIT(LOG_ERR, "Could not write PID file %s", pidFile);
+                    exit(1);
+                }
             }
         }
 
@@ -895,6 +932,10 @@ int main(int argc, char *argv[])
 
             if (username == NULL) {
                 username = strdup("nobody");
+                if (!username) {
+                    logIT1(LOG_ERR, "Could not allocate default username");
+                    exit(1);
+                }
             }
             pw = getpwnam(username);
             if (pw == NULL) {
@@ -904,6 +945,10 @@ int main(int argc, char *argv[])
             }
             if (groupname == NULL) {
                 groupname = strdup("dialout");
+                if (!groupname) {
+                    logIT1(LOG_ERR, "Could not allocate default groupname");
+                    exit(1);
+                }
             }
             grp = getgrnam(groupname);
             if (grp == NULL) {
@@ -916,13 +961,19 @@ int main(int argc, char *argv[])
             // Make logfile accessible to the anticipated user/group
             if ((logfd >= 0) && (fstat(logfd, &stb) == 0)) {
                 fchmod(logfd, stb.st_mode | S_IRGRP | S_IWGRP);
-                fchown(logfd, pw->pw_uid, grp->gr_gid);
+                if (fchown(logfd, pw->pw_uid, grp->gr_gid) != 0) {
+                    logIT(LOG_WARNING, "Could not change logfile ownership: %s",
+                          strerror(errno));
+                }
             }
             close(logfd);
             // Make lock file accessible to the anticipated user/group
             if (stat(tmpfilename, &stb) == 0) {
                 chmod(tmpfilename, stb.st_mode | S_IRGRP | S_IWGRP);
-                chown(tmpfilename, pw->pw_uid, grp->gr_gid);
+                if (chown(tmpfilename, pw->pw_uid, grp->gr_gid) != 0) {
+                    logIT(LOG_WARNING, "Could not change lockfile ownership: %s",
+                          strerror(errno));
+                }
             }
 
             if (setgroups(0, NULL) != 0) {
@@ -952,38 +1003,47 @@ int main(int argc, char *argv[])
 
         vcontrol_seminit();
 
-        while (1) {
+        signal(SIGPIPE, SIG_IGN);
+        while (!terminateRequested) {
+            int configReloaded = 0;
             sockfd = listenToSocket(listenfd, makeDaemon);
-            if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
-                logIT1(LOG_ERR, "Signal error");
-                exit(1);
+            if (reloadRequested) {
+                reloadRequested = 0;
+                logIT1(LOG_NOTICE, "Reloading configuration after SIGHUP");
+                configReloaded = reloadConfig();
             }
             if (sockfd >= 0) {
                 // Socket returned fd, the rest is done interactively
-                interactive(sockfd, device);
+                interactive(sockfd, cfgPtr->tty);
                 closeSocket(sockfd);
                 setDebugFD(-1);
                 if (makeDaemon) {
                     logIT(LOG_INFO, "Child process with PID %d terminated", getpid());
                     exit(0); // The child bids boodbye
                 }
-            } else {
+            } else if (!terminateRequested && !configReloaded) {
                 logIT1(LOG_ERR, "Error connecting");
             }
         }
+        close(listenfd);
     } else {
         vcontrol_seminit();
     }
 
-    if (*cmdfile) {
-        readCmdFile(cmdfile, result, &resultLen, device);
+    if (cmdfile && *cmdfile) {
+        readCmdFile(cmdfile, result, &resultLen,
+                    cfgPtr && cfgPtr->tty ? cfgPtr->tty : device);
     }
 
     vcontrol_semfree();
 
-    close(fd);
+    if (fd >= 0) {
+        close(fd);
+    }
     if (pidFile) {
-        close(pidFD);
+        if (pidFD >= 0) {
+            close(pidFD);
+        }
         unlink(pidFile);
     };
     logIT1(LOG_LOCAL0, "vcontrold terminated");

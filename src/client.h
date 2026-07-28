@@ -24,7 +24,7 @@ trPtr sendCmds(int sockfd, char *commands);
 
 typedef struct txRx {
     char *cmd;
-    float result;
+    double result;
     char *err;
     char *raw;
     time_t timestamp;
