@@ -11,6 +11,8 @@
 #include <libxml/parser.h>
 #include <libxml/xinclude.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "xmlconfig.h"
 #include "common.h"
@@ -39,6 +41,26 @@ unitPtr uPtr = NULL;
 devicePtr devPtr = NULL;
 configPtr cfgPtr = NULL;
 commandPtr cmdPtr = NULL;
+
+static int parse_long_range(const char *text, long min, long max,
+                            long *value, const char *field)
+{
+    char *end = NULL;
+    long parsed;
+    if (!text || !*text || !value) {
+        logIT(LOG_ERR, "Missing numeric XML value for %s", field);
+        return 0;
+    }
+    errno = 0;
+    parsed = strtol(text, &end, 10);
+    if (errno || end == text || *end != '\0' || parsed < min || parsed > max) {
+        logIT(LOG_ERR, "Invalid XML value for %s: %s (allowed %ld..%ld)",
+              field, text, min, max);
+        return 0;
+    }
+    *value = parsed;
+    return 1;
+}
 
 protocolPtr newProtocolNode(protocolPtr ptr)
 {
@@ -473,7 +495,7 @@ char *getTextNode(xmlNodePtr cur)
 
 char *getPropertyNode(xmlAttrPtr cur, xmlChar *name)
 {
-    if ((cur) && (cur->type == XML_ATTRIBUTE_NODE) && strstr((char *)cur->name, (char *)name)) {
+    if ((cur) && (cur->type == XML_ATTRIBUTE_NODE) && xmlStrEqual(cur->name, name)) {
         return (char *)getTextNode((xmlNodePtr) cur);
     } else if (cur && cur->next) {
         return (char *)getPropertyNode(cur->next, name);
@@ -495,12 +517,13 @@ configPtr parseConfig(xmlNodePtr cur)
     int logFound = 0;
     configPtr cfgPtr;
     char *chrPtr;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
 
     cfgPtr = calloc(1, sizeof(Config));
     cfgPtr->port = 0;
     cfgPtr->syslog = 0;
     cfgPtr->debug = 0;
+    cfgPtr->readonly = 0;
 
     while (cur) {
         logIT(LOG_INFO, "CONFIG:(%d) Node::Name=%s Type:%d Content=%s",
@@ -584,7 +607,11 @@ configPtr parseConfig(xmlNodePtr cur)
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
-                cfgPtr->port = atoi(chrPtr);
+                long value;
+                if (!parse_long_range(chrPtr, 1, 65535, &value, "port")) {
+                    return NULL;
+                }
+                cfgPtr->port = (int)value;
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
@@ -625,6 +652,12 @@ configPtr parseConfig(xmlNodePtr cur)
             ((*chrPtr == 'y') || (*chrPtr == '1')) ? (cfgPtr->debug = 1) : (cfgPtr->debug = 0);
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
+        } else if (strstr((char *)cur->name, "readonly")) {
+            chrPtr = getTextNode(cur);
+            ((*chrPtr == 'y') || (*chrPtr == '1'))
+                ? (cfgPtr->readonly = 1) : (cfgPtr->readonly = 0);
+            (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
+                ? (cur = cur->next) : (cur = prevPtr->next);
         } else {
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
@@ -636,12 +669,12 @@ configPtr parseConfig(xmlNodePtr cur)
 
 unitPtr parseUnit(xmlNodePtr cur)
 {
-    unitPtr uPtr;
+    unitPtr uPtr = NULL;
     unitPtr uStartPtr = NULL;
     char *unit;
     char *chrPtr;
     int unitFound = 0;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
     char string[256];
     enumPtr ePtr;
 
@@ -680,7 +713,7 @@ unitPtr parseUnit(xmlNodePtr cur)
                     uPtr->ePtr = ePtr;
                 }
                 ePtr->text = calloc(strlen(chrPtr) + 1, sizeof(char));
-                strncpy(ePtr->text, chrPtr, strlen(chrPtr));
+                memcpy(ePtr->text, chrPtr, strlen(chrPtr) + 1);
                 chrPtr = getPropertyNode(cur->properties, (xmlChar *)"bytes");
                 if (chrPtr) {
                     logIT(LOG_INFO, "          (%d) Node::Name=%s Type:%d Content=%s (bytes)",
@@ -793,7 +826,7 @@ macroPtr parseMacro(xmlNodePtr cur)
     char *macro;
     char *chrPtr;
     int macroFound = 0;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
 
     while (cur) {
         logIT(LOG_INFO, "MACRO: (%d) Node::Name=%s Type:%d Content=%s",
@@ -848,7 +881,7 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
     char *command;
     char *protocmd;
     char *chrPtr;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
     char string[256];    // TODO: get rid of that one
     char *id;
     int commandFound;
@@ -912,7 +945,8 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
                     return NULL;
                 }
                 // We take the description from the command entry
-                strncpy(string, cPtr->description, sizeof(string));
+                snprintf(string, sizeof(string), "%s",
+                         cPtr->description ? cPtr->description : "");
                 // Now again recursively parseCommand for all children
                 ncPtr = newCommandNode(NULL);
                 parseCommand(cur->children, ncPtr, dePtr);
@@ -1039,7 +1073,11 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
-                cPtr->len = atoi(chrPtr);
+                long value;
+                if (!parse_long_range(chrPtr, 1, 253, &value, "command len")) {
+                    return NULL;
+                }
+                cPtr->len = (unsigned char)value;
             }
             if (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next)) {
                 cur = cur->next;
@@ -1053,7 +1091,11 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
-                cPtr->bit = atoi(chrPtr);
+                long value;
+                if (!parse_long_range(chrPtr, 0, 7, &value, "command bit")) {
+                    return NULL;
+                }
+                cPtr->bit = (char)value;
             }
             if (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next)) {
                 cur = cur->next;
@@ -1078,7 +1120,7 @@ icmdPtr parseICmd(xmlNodePtr cur)
     char *command;
     char *chrPtr;
     int commandFound = 0;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
 
     while (cur) {
         logIT(LOG_INFO, "ICMD: (%d) Node::Name=%s Type:%d Content=%s",
@@ -1121,7 +1163,11 @@ icmdPtr parseICmd(xmlNodePtr cur)
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
-                icPtr->retry = atoi(chrPtr);
+                long value;
+                if (!parse_long_range(chrPtr, 0, 20, &value, "retry")) {
+                    return NULL;
+                }
+                icPtr->retry = (unsigned char)value;
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
@@ -1130,7 +1176,12 @@ icmdPtr parseICmd(xmlNodePtr cur)
             logIT(LOG_INFO, "   (%d) Node::Name=%s Type:%d Content=%s",
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
-                icPtr->recvTimeout = atoi(chrPtr);
+                long value;
+                if (!parse_long_range(chrPtr, 0, 60000, &value,
+                                      "recvTimeout")) {
+                    return NULL;
+                }
+                icPtr->recvTimeout = (unsigned short)value;
             }
             (cur->next && (! (cur->next->type == XML_TEXT_NODE) || cur->next->next))
                 ? (cur = cur->next) : (cur = prevPtr->next);
@@ -1150,7 +1201,7 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
     char *proto;
     char *name;
     char *id;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
 
     while (cur) {
         logIT(LOG_INFO, "DEVICE: (%d) Node::Name=%s Type:%d Content=%s",
@@ -1216,7 +1267,7 @@ protocolPtr parseProtocol(xmlNodePtr cur)
     icmdPtr icPtr;
     char *proto;
     char *chrPtr;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = cur;
 
     while (cur) {
         logIT(LOG_INFO, "PROT: (%d) Node::Name=%s Type:%d Content=%s",
@@ -1280,6 +1331,7 @@ protocolPtr parseProtocol(xmlNodePtr cur)
 void removeComments(xmlNodePtr node)
 {
     while (node) {
+        xmlNodePtr next = node->next;
         //printf("type:%d name=%s\n",node->type, node->name);
         if (node->children) {
             // if the node has children, process the children
@@ -1301,7 +1353,7 @@ int parseXMLFile(char *filename)
 {
     xmlDocPtr doc;
     xmlNodePtr cur, curStart;
-    xmlNodePtr prevPtr;
+    xmlNodePtr prevPtr = NULL;
     xmlNsPtr ns;
     //char string[256];
     devicePtr dPtr;
@@ -1313,12 +1365,13 @@ int parseXMLFile(char *filename)
     configPtr TcfgPtr = NULL;
 
     xmlKeepBlanksDefault(0);
-    doc = xmlParseFile(filename);
+    doc = xmlReadFile(filename, NULL, XML_PARSE_NONET);
     if (doc == NULL) {
         return 0;
     }
     curStart = xmlDocGetRootElement(doc);
     cur = curStart;
+    prevPtr = curStart;
     if (cur == NULL) {
         logIT(LOG_ERR, "empty document\n");
         xmlFreeDoc(doc);
@@ -1452,6 +1505,11 @@ int parseXMLFile(char *filename)
     }
 
     // We search the default device
+    if (!TcfgPtr || !TcfgPtr->devID || !TdevPtr) {
+        logIT1(LOG_ERR, "XML configuration lacks config/device definitions");
+        xmlFreeDoc(doc);
+        return 0;
+    }
     if (! (TcfgPtr->devPtr = getDeviceNode(TdevPtr, TcfgPtr->devID))) {
         logIT(LOG_ERR, "Device %s is not defined\n", TcfgPtr->devID);
         return 0;
@@ -1487,6 +1545,10 @@ void freeAllLists()
         free(cfgPtr->tty);
         free(cfgPtr->logfile);
         free(cfgPtr->devID);
+        free(cfgPtr->listenAddress);
+        free(cfgPtr->pidfile);
+        free(cfgPtr->username);
+        free(cfgPtr->groupname);
         free(cfgPtr);
         cfgPtr = NULL;
     }

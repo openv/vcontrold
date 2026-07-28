@@ -40,7 +40,7 @@ int initsem(key_t key, int nsems)
     struct sembuf sb;
     int semid;
 
-    semid = semget(key, nsems, IPC_CREAT | IPC_EXCL | 0666);
+    semid = semget(key, nsems, IPC_CREAT | IPC_EXCL | 0660);
 
     if (semid >= 0) { // we got it first
         sb.sem_op = 1;
@@ -89,16 +89,14 @@ int initsem(key_t key, int nsems)
     return semid;
 }
 
-int semid;
+int semid = -1;
 char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 
 int vcontrol_seminit()
 {
     key_t key;
-
     int tmpfile;
-
-    strncpy(tmpfilename, TMPFILENAME, sizeof(tmpfilename));
+    snprintf(tmpfilename, sizeof(tmpfilename), "%s", TMPFILENAME);
     if ((tmpfile = mkstemp(tmpfilename)) < 0) {
         perror("mkstemp");
         exit(1);
@@ -121,7 +119,8 @@ int vcontrol_seminit()
 int vcontrol_semfree()
 {
     // remove it:
-    if (semctl(semid, 0, IPC_RMID) == -1) {
+    if (semid >= 0 && semctl(semid, 0, IPC_RMID) == -1 &&
+            errno != EINVAL && errno != EIDRM) {
         perror("semctl");
         exit(1);
     }
@@ -138,9 +137,12 @@ int vcontrol_semget()
     sb.sem_num = 0;
     sb.sem_op = -1; // set to allocate resource
     sb.sem_flg = SEM_UNDO;
-    if (semop(semid, &sb, 1) == -1) {
+    while (semop(semid, &sb, 1) == -1) {
+        if (errno == EINTR) {
+            continue;
+        }
         perror("semop");
-        exit(1);
+        return 0;
     }
     logIT(LOG_INFO, "Process %d got lock", getpid());
     return 1;
@@ -155,9 +157,12 @@ int vcontrol_semrelease()
     sb.sem_num = 0;
     sb.sem_op = 1; // free resource
     sb.sem_flg = SEM_UNDO;
-    if (semop(semid, &sb, 1) == -1) {
+    while (semop(semid, &sb, 1) == -1) {
+        if (errno == EINTR) {
+            continue;
+        }
         perror("semop");
-        exit(1);
+        return 0;
     }
 
     return 1;

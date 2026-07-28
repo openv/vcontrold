@@ -45,6 +45,7 @@ typedef struct config {
     devicePtr devPtr;
     int syslog;
     int debug;
+    int readonly;
 } Config;
 
 typedef struct protocol {

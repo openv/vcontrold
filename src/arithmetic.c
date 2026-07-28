@@ -65,17 +65,17 @@
 
 int nextToken(char **str, char **c, int *count);
 void  pushBack(char **str, int n);
-float execExpression(char **str, unsigned char *bPtr, float floatV, char *err);
-float execTerm(char **str, unsigned char *bPtr, float floatV, char *err);
-float execFactor(char **str, unsigned  char *bPtr, float floatV, char *err);
+double execExpression(char **str, unsigned char *bPtr, double floatV, char *err);
+double execTerm(char **str, unsigned char *bPtr, double floatV, char *err);
+double execFactor(char **str, unsigned  char *bPtr, double floatV, char *err);
 int execIExpression(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
 
-float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
+double execExpression(char **str, unsigned char *bInPtr, double floatV, char *err)
 {
     int f = 1;
-    float term1, term2;
+    double term1, term2;
     //float exp1,exp2;
     char *item;
     //unsigned char bPtr[10];
@@ -137,9 +137,9 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     return term1;
 }
 
-float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
+double execTerm(char **str, unsigned char *bPtr, double floatV, char *err)
 {
-    float factor1, factor2;
+    double factor1, factor2;
     int op;
     char *item;
     int n;
@@ -173,16 +173,20 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
         if (op == MAL) {
             factor1 *= factor2;
         } else {
+            if (factor2 == 0.0) {
+                sprintf(err, "division by zero");
+                return 0;
+            }
             factor1 /= factor2;
         }
     }
 }
 
-float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
+double execFactor(char **str, unsigned char *bPtr, double floatV, char *err)
 {
     char nstring[100];
-    float expression;
-    float factor;
+    double expression;
+    double factor;
     char *nPtr;
     char *item;
     char token;
@@ -232,20 +236,32 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         nPtr += 2;
         token = nextToken(str, &item, &n);
         while ((token == DIGIT) || (token == HEXDIGIT)) {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
             token = nextToken(str, &item, &n);
         }
         pushBack(str, n);
-        sscanf(nstring, "%f", &factor);
+        factor = strtod(nstring, NULL);
         return factor;
     case DIGIT:
         nPtr = nstring;
         do {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
         // If a . follows, we have a decimal number
         if (token == PUNKT) {
             do {
+                if (nPtr >= nstring + sizeof(nstring) - 1) {
+                    sprintf(err, "numeric literal too long");
+                    return 0;
+                }
                 *nPtr++ = *item;
             } while ((token = nextToken(str, &item, &n)) == DIGIT);
         }
@@ -408,8 +424,16 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
         if (op == MAL) {
             factor1 *= factor2;
         } else if (op == GETEILT) {
+            if (factor2 == 0) {
+                sprintf(err, "division by zero");
+                return 0;
+            }
             factor1 /= factor2;
         } else if (op == MODULO) {
+            if (factor2 == 0) {
+                sprintf(err, "modulo by zero");
+                return 0;
+            }
             factor1 %= factor2;
         } else if (op == UND) {
             factor1 &= factor2;
@@ -418,8 +442,16 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
         } else if (op == XOR) {
             factor1 ^= factor2;
         } else if (op == SHL) {
+            if (factor2 < 0 || factor2 >= (int)(sizeof(int) * 8)) {
+                sprintf(err, "invalid shift count");
+                return 0;
+            }
             factor1 <<= factor2;
         } else if (op == SHR) {
+            if (factor2 < 0 || factor2 >= (int)(sizeof(int) * 8)) {
+                sprintf(err, "invalid shift count");
+                return 0;
+            }
             factor1 >>= factor2;
         } else {
             sprintf(err, "Error exec ITerm: Unknown token %d", op);
@@ -514,6 +546,10 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         nPtr += 2;
         token = nextToken(str, &item, &n);
         while ((token == DIGIT) || (token == HEXDIGIT)) {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
             token = nextToken(str, &item, &n);
         }
@@ -523,11 +559,19 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
     case DIGIT:
         nPtr = nstring;
         do {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
         // If a . follows, we have a decimal number
         if (token == PUNKT) {
             do {
+                if (nPtr >= nstring + sizeof(nstring) - 1) {
+                    sprintf(err, "numeric literal too long");
+                    return 0;
+                }
                 *nPtr++ = *item;
             } while ((token = nextToken(str, &item, &n)) == DIGIT);
         }
@@ -607,12 +651,14 @@ int nextToken(char **str, char **c, int *count)
         case '<' :
             return SHL;
         }
+        return ERROR;
     case '>':
         *count = 2;
         switch (*(*str)++) {
         case '>':
             return SHR;
         }
+        return ERROR;
     case 'B':
         *count = 2;
         switch (*(*str)++) {
@@ -651,6 +697,7 @@ int nextToken(char **str, char **c, int *count)
         case 'P':
             return BITPOS;
         }
+        return ERROR;
     case 'P':
         *count = 2;
         switch (*(*str)++) {
@@ -687,6 +734,7 @@ int nextToken(char **str, char **c, int *count)
         case 'F':
             return PBYTEF;
         }
+        return ERROR;
     case '1':
     case '2':
     case '3':

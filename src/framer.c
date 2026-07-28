@@ -89,13 +89,15 @@ static char framer_pid = 0;
 static void framer_set_actaddr(void *pdu)
 {
     uint16 framer_old_addr;
+    uint16 addr;
 
     if (framer_current_addr != FRAMER_NO_ADDR) {
         logIT(LOG_ERR, ">FRAMER: addr was still active %04X",
                  framer_current_addr);
     }
     framer_old_addr = framer_current_addr;
-    framer_current_addr = *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET);
+    memcpy(&addr, ((char *)pdu) + P300_ADDR_OFFSET, sizeof(addr));
+    framer_current_addr = addr;
     logIT(LOG_DEBUG, ">FRAMER: framer_set_actaddr framer_current_addr = %04X (was %04X)",
             framer_current_addr, framer_old_addr);
 }
@@ -109,10 +111,12 @@ static void framer_reset_actaddr(void)
 
 static int framer_check_actaddr(void *pdu)
 {
-    if (framer_current_addr != *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET)) {
+    uint16 addr;
+    memcpy(&addr, ((char *)pdu) + P300_ADDR_OFFSET, sizeof(addr));
+    if (framer_current_addr != addr) {
         logIT(LOG_ERR, ">FRAMER: addr corrupted stored %04X, now %04X",
                  framer_current_addr,
-                 *(uint16 *) (((char *) pdu) + P300_ADDR_OFFSET));
+                 addr);
         return -1;
     }
     return 0;
@@ -128,6 +132,9 @@ static void framer_set_result(char result)
 
 static int framer_preset_result(char *r_buf, int r_len, unsigned long *petime)
 {
+    if (!r_buf || r_len < 1 || !petime) {
+        return FRAMER_ERROR;
+    }
     if ((framer_pid == P300_LEADIN) &&
         ((framer_current_addr & FRAMER_LINK_STATUS(0)) == FRAMER_LINK_STATUS(0))) {
         r_buf[0] = (char) (framer_current_addr ^ FRAMER_LINK_STATUS(0));
@@ -264,11 +271,14 @@ int framer_send(int fd, char *s_buf, int len)
     } else if (len < 3) {
         logIT(LOG_ERR, ">FRAMER: too few for P300");
         return FRAMER_ERROR;
+    } else if (len > 253) {
+        logIT(LOG_ERR, ">FRAMER: payload too large: %d (maximum 253)", len);
+        return FRAMER_ERROR;
     } else {
-        int pos = 0;
         char l_buf[256];
         unsigned long etime;
         int rlen;
+        int attempt;
 
         // prepare a new message, fill buffer starting with leadin
         l_buf[P300_LEADIN_OFFSET] = P300_LEADIN;
@@ -276,23 +286,39 @@ int framer_send(int fd, char *s_buf, int len)
         memcpy(&l_buf[P300_TYPE_OFFSET], s_buf, len);
         l_buf[P300_LEADIN_LEN + P300_LEN_LEN + len] =
                 framer_chksum(l_buf + P300_LEADIN_LEN, len + P300_LEN_LEN);
-        if (! my_send(fd, l_buf, len + P300_EXTRA_BYTES)) {
-            logIT(LOG_ERR, ">FRAMER: write failure %d",
-                     len + P300_EXTRA_BYTES);
-            return FRAMER_ERROR;
-        }
-
-        etime = 0;
-        rlen = receive_nb(fd, l_buf, 1, &etime);
-        if (rlen < 0) {
-            logIT(LOG_ERR, ">FRAMER: read failure %d", pos + 1);
-            return FRAMER_ERROR;
-        } else if (rlen == 0) {
-            logIT(LOG_ERR, ">FRAMER: timeout for ack %d", pos + 1);
-            return FRAMER_ERROR;
-        } else if (*l_buf != P300_INIT_OK) {
-            logIT(LOG_ERR, ">FRAMER: Error 0x%02X != 0x%02X (P300_INIT_OK)",
-                     *l_buf, P300_INIT_OK);
+        for (attempt = 0; attempt < 2; attempt++) {
+            if (! my_send(fd, l_buf, len + P300_EXTRA_BYTES)) {
+                logIT(LOG_ERR, ">FRAMER: write failure %d",
+                      len + P300_EXTRA_BYTES);
+                return FRAMER_ERROR;
+            }
+            etime = 0;
+            rlen = receive_nb(fd, l_buf, 1, &etime);
+            if (rlen <= 0) {
+                logIT1(LOG_ERR, ">FRAMER: failed waiting for command ack");
+                return FRAMER_ERROR;
+            }
+            if (*l_buf == P300_INIT_OK) {
+                break;
+            }
+            if ((*l_buf == P300_ERROR || *l_buf == P300_NOT_INIT) &&
+                    attempt == 0) {
+                logIT(LOG_WARNING,
+                      ">FRAMER: link state 0x%02X, reinitializing once",
+                      (unsigned char)*l_buf);
+                if (!framer_open_p300(fd)) {
+                    return FRAMER_ERROR;
+                }
+                l_buf[P300_LEADIN_OFFSET] = P300_LEADIN;
+                l_buf[P300_LEN_OFFSET] = (char)len;
+                memcpy(&l_buf[P300_TYPE_OFFSET], s_buf, (size_t)len);
+                l_buf[P300_LEADIN_LEN + P300_LEN_LEN + len] =
+                    framer_chksum(l_buf + P300_LEADIN_LEN,
+                                  len + P300_LEN_LEN);
+                continue;
+            }
+            logIT(LOG_ERR, ">FRAMER: unexpected ack 0x%02X",
+                  (unsigned char)*l_buf);
             return FRAMER_ERROR;
         }
 
@@ -337,7 +363,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
     l_buf[P300_ADDR_OFFSET] = 0;
     l_buf[P300_ADDR_OFFSET + 1] = 0;
 
-    if ((r_len < 1) || (! r_buf)) {
+    if ((r_len < 1) || (! r_buf) || !petime) {
         logIT(LOG_ERR, ">FRAMER: invalid read buffer %d %p", r_len, r_buf);
         return FRAMER_ERROR;
     }
@@ -347,8 +373,13 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         return FRAMER_SUCCESS;
     }
 
+    if (r_len > (int)sizeof(l_buf)) {
+        logIT(LOG_ERR, ">FRAMER: requested read too large: %d", r_len);
+        return FRAMER_READ_ERROR;
+    }
     *petime = 0;
-    rtmp = receive_nb(fd, l_buf, r_len, petime);
+    int initial = (framer_pid == P300_LEADIN) ? 2 : r_len;
+    rtmp = receive_nb(fd, l_buf, initial, petime);
     if (rtmp < 0) {
         framer_reset_actaddr();
         logIT(LOG_ERR, ">FRAMER: read failure");
@@ -359,7 +390,7 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         return FRAMER_READ_TIMEOUT;
     } else if (framer_pid != P300_LEADIN) {
         // no P300 frame, just forward
-        memcpy(r_buf, l_buf, r_len);
+        memcpy(r_buf, l_buf, rtmp);
         return rtmp;
     }
 
@@ -381,17 +412,30 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         rtmp += rlen;
     }
 
-    total = l_buf[P300_LEN_OFFSET] + P300_EXTRA_BYTES;
+    total = (unsigned char)l_buf[P300_LEN_OFFSET] + P300_EXTRA_BYTES;
+    if (total > (int)sizeof(l_buf)) {
+        framer_reset_actaddr();
+        logIT(LOG_ERR, ">FRAMER: response frame too large: %d", total);
+        return FRAMER_READ_ERROR;
+    }
     rlen = total - rtmp;
-    if (rlen <= 0) {
+    if (rlen < 0) {
         framer_reset_actaddr();
         logIT(LOG_ERR, ">FRAMER: strange read %d", rlen);
-        return rtmp; // strange should not happen here
+        return FRAMER_READ_ERROR;
     }
 
     // now read what is extra
-    rtmp = receive_nb(fd, l_buf + rtmp, rlen, &etime);
-    *petime += etime;
+    int received = rtmp;
+    if (rlen > 0) {
+        rtmp = receive_nb(fd, l_buf + received, rlen, &etime);
+        *petime += etime;
+        if (rtmp > 0) {
+            received += rtmp;
+        }
+    } else {
+        rtmp = 0;
+    }
 
     // check for leadin
     if (l_buf[P300_LEADIN_OFFSET] != P300_LEADIN) {
@@ -452,10 +496,10 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         // if we have a P300 setaddr we do not get data back ...
         if (l_buf[P300_TYPE_OFFSET] == P300_RESPONSE) {
             // OK
-            r_buf[rtmp] = 0x00;
+            r_buf[0] = 0x00;
         } else {
             // NOT OK
-            r_buf[rtmp] = 0x01;
+            r_buf[0] = 0x01;
         }
     } else {
         if (r_len != (l_buf[P300_RESP_LEN_OFFSET])) {
@@ -467,6 +511,12 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         memcpy(r_buf, &l_buf[P300_BUFFER_OFFSET], r_len);
     }
 
+    if (received != total) {
+        framer_reset_actaddr();
+        logIT(LOG_ERR, ">FRAMER: incomplete frame %d of %d bytes",
+              received, total);
+        return FRAMER_READ_ERROR;
+    }
     framer_reset_actaddr();
     return r_len;
 }

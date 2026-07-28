@@ -10,8 +10,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
-#include <setjmp.h>
-#include <signal.h>
+#include <poll.h>
+#include <errno.h>
 #include <unistd.h>
 #include <ctype.h>
 
@@ -19,9 +19,6 @@
 #include "prompt.h"
 #include "common.h"
 #include "socket.h"
-
-static void sig_alrm(int);
-static jmp_buf  env_alrm;
 
 int sendTrList(int sockfd, trPtr ptr);
 
@@ -54,17 +51,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     ssize_t count;
     int rcount = 1;
 
-    if (signal(SIGALRM, sig_alrm) == SIG_ERR) {
-        logIT1(LOG_ERR, "SIGALRM error");
-    }
-
-    if (setjmp(env_alrm) != 0) {
-        logIT(LOG_ERR, "timeout wait:%s", wait);
-        return -1;
-    }
-
-    alarm(CL_TIMEOUT);
-
+    *recv = NULL;
     if (! (*recv = calloc(ALLOCSIZE, sizeof(char)))) {
         logIT1(LOG_ERR, "calloc error");
         exit(1);
@@ -72,16 +59,29 @@ ssize_t recvSync(int fd, char *wait, char **recv)
 
     rptr = *recv;
     size_t i = 0;
-    while ((count = readn(fd, &c, 1))) {
-        alarm(0);
+    for (;;) {
+        struct pollfd pfd = { .fd = fd, .events = POLLIN };
+        int ready;
+        do {
+            ready = poll(&pfd, 1, CL_TIMEOUT * 1000);
+        } while (ready < 0 && errno == EINTR);
+        if (ready <= 0) {
+            logIT(LOG_ERR, "timeout/error waiting for %s", wait);
+            free(*recv);
+            *recv = NULL;
+            return -1;
+        }
+        count = readn(fd, &c, 1);
+        if (count == 0) {
+            break;
+        }
         if (count < 0) {
-            continue;
+            free(*recv);
+            *recv = NULL;
+            return -1;
         }
 
-        *rptr++ = c;
-        *(rptr + 1) = '\0';
-        i++;
-        if (! ((rptr - *recv + 1) % ALLOCSIZE)) {
+        if (i + 1 >= (size_t)ALLOCSIZE * rcount) {
             char *tmp = realloc(*recv, ALLOCSIZE * sizeof(char) *  ++rcount);
             if (tmp == NULL) {
                 logIT1(LOG_ERR, "realloc error");
@@ -91,14 +91,15 @@ ssize_t recvSync(int fd, char *wait, char **recv)
                 rptr = *recv + i;
             }
         }
+        *rptr++ = c;
+        *rptr = '\0';
+        i++;
 
         if ((pptr = strstr(*recv, wait))) {
             *pptr = '\0';
             logIT(LOG_INFO, "recv:%s", *recv);
             break;
         }
-
-        alarm(CL_TIMEOUT);
 
     }
 
@@ -152,12 +153,17 @@ void disconnectServer(int sockfd)
 size_t sendServer(int fd, char *s_buf, size_t len)
 {
     char string[256];
+    int flags = fcntl(fd, F_GETFL, 0);
 
     // Empty buffer
     // As tcflush does not work correctly, we use nonblocking read
-    fcntl(fd, F_SETFL, O_NONBLOCK);
+    if (flags >= 0) {
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    }
     while (readn(fd, string, sizeof(string)) > 0) { }
-    fcntl(fd, F_SETFL, ! O_NONBLOCK);
+    if (flags >= 0) {
+        fcntl(fd, F_SETFL, flags);
+    }
     return Writen(fd, s_buf, len);
 }
 
@@ -180,15 +186,22 @@ trPtr sendCmdFile(int sockfd, const char *filename)
         if (! startPtr) {
             startPtr = ptr;
         }
-        ptr->cmd = calloc(strlen(line), sizeof(char));
-        strncpy(ptr->cmd, line, strlen(line) - 1);
+        size_t len = strcspn(line, "\r\n");
+        ptr->cmd = calloc(len + 1, sizeof(char));
+        if (!ptr->cmd) {
+            fclose(filePtr);
+            return NULL;
+        }
+        memcpy(ptr->cmd, line, len);
     }
 
     if (! sendTrList(sockfd, startPtr)) {
         // Something with the communication went wrong
+        fclose(filePtr);
         return NULL;
     }
 
+    fclose(filePtr);
     return startPtr;
 }
 
@@ -205,7 +218,11 @@ trPtr sendCmds(int sockfd, char *commands)
             startPtr = ptr;
         }
         ptr->cmd = calloc(strlen(sptr) + 1, sizeof(char));
-        strncpy(ptr->cmd, sptr, strlen(sptr));
+        if (!ptr->cmd) {
+            logIT1(LOG_ERR, "calloc error");
+            return NULL;
+        }
+        memcpy(ptr->cmd, sptr, strlen(sptr) + 1);
     } while ((sptr = strtok(NULL, ",")) != NULL);
 
     if (! sendTrList(sockfd, startPtr))
@@ -229,6 +246,8 @@ int sendTrList(int sockfd, trPtr ptr)
         free(sptr);
         return 0;
     }
+    free(sptr);
+    sptr = NULL;
 
     while (ptr) {
         //memset(string, 0,sizeof(string));
@@ -246,8 +265,9 @@ int sendTrList(int sockfd, trPtr ptr)
         }
 
         ptr->raw = sptr;
-        if (iscntrl(*(ptr->raw + strlen(ptr->raw) - 1))) {
-            *(ptr->raw + strlen(ptr->raw) - 1) = '\0';
+        size_t rawlen = strlen(ptr->raw);
+        if (rawlen > 0 && iscntrl((unsigned char)ptr->raw[rawlen - 1])) {
+            ptr->raw[rawlen - 1] = '\0';
         }
 
         dumPtr = calloc(strlen(sptr) + 20, sizeof(char));
@@ -275,9 +295,4 @@ int sendTrList(int sockfd, trPtr ptr)
     }
 
     return 1;
-}
-
-static void sig_alrm(int signo)
-{
-    longjmp(env_alrm, 1);
 }
