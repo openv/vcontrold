@@ -29,11 +29,14 @@
 #define SERVERPORT 6578
 int makeDaemon = 0;
 int inetversion = 0;
+static volatile sig_atomic_t stopRequested = 0;
+static int serverSocket = -1;
 int readCmdFile(char *filename, char *result, int *resultLen, char *device );
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
 static void sigPipeHandler(int signo);
+static void terminationHandler(int signo);
 
 void logIT(int class, const char *string, ...)
 {
@@ -55,6 +58,16 @@ static void sigPipeHandler(int signo)
 {
     (void)signo;
     logIT(LOG_ERR, "Received SIGPIPE");
+}
+
+static void terminationHandler(int signo)
+{
+    (void)signo;
+    stopRequested = 1;
+    if (serverSocket >= 0) {
+        close(serverSocket);
+        serverSocket = -1;
+    }
 }
 
 static void dump(const unsigned char *buf, size_t len, const char *txt)
@@ -99,6 +112,7 @@ ctable cmds[] = {
         11, { 0x06, 0x41, 0x07, 0x01, 0x01, 0x08, 0x04, 0x02, 0x00, 0x00, 0x17 }
     },
 };
+static const size_t cmdc = sizeof(cmds) / sizeof(cmds[0]);
 
 // The number of commands is derived from the table itself, so it can't get out of sync
 int cmdc = sizeof(cmds) / sizeof(cmds[0]);
@@ -130,7 +144,7 @@ static void handle(int fd)
                 dump(&input[inpidx], 1, "received char:");
                 inpidx++;
                 int possible = 0;
-                for (int j = 0; j < cmdc; j++) {
+                for (size_t j = 0; j < cmdc; j++) {
                     if (inpidx <= cmds[j].cmdlen &&
                             memcmp(cmds[j].cmd, input, inpidx) == 0) {
                         possible = 1;
@@ -149,7 +163,7 @@ static void handle(int fd)
                 if (!possible && inpidx != 0) {
                     unsigned char last = input[inpidx - 1];
                     inpidx = 0;
-                    for (int j = 0; j < cmdc; j++) {
+                    for (size_t j = 0; j < cmdc; j++) {
                         if (cmds[j].cmd[0] == last) {
                             input[0] = last;
                             inpidx = 1;
@@ -170,8 +184,15 @@ int main(int argc, char *argv[])
 
     (void)argc;
     (void)argv;
+    if (signal(SIGTERM, terminationHandler) == SIG_ERR ||
+            signal(SIGINT, terminationHandler) == SIG_ERR) {
+        logIT(LOG_ERR, "Could not install termination handler");
+        return 1;
+    }
     listenfd = openSocket(SERVERPORT);
-    while (1) {
+    if (listenfd < 0) return 1;
+    serverSocket = listenfd;
+    while (!stopRequested) {
         sockfd = listenToSocket(listenfd, makeDaemon);
         if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
             logIT(LOG_ERR, "Signal error");
@@ -184,7 +205,10 @@ int main(int argc, char *argv[])
             logIT(LOG_INFO, "\nvcontrold disconnected");
             closeSocket(sockfd);
         } else {
+            if (stopRequested) break;
             logIT(LOG_ERR, "Error during connection setup");
         }
     }
+    if (serverSocket >= 0) closeSocket(serverSocket);
+    return 0;
 }

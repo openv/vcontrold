@@ -254,8 +254,7 @@ int main(int argc, char *argv[])
             break;
         case 'V':
             printf("vclient version %s\n", VERSION);
-            exit(1);
-            break;
+            exit(0);
         case 'm':
             if (verbose) {
                 puts("option -m\n");

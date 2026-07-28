@@ -97,6 +97,7 @@ if(VSIM)
 endif()
 
 if(BUILD_TESTING)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
     add_executable(test_common
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_common.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
@@ -180,6 +181,41 @@ if(BUILD_TESTING)
     target_compile_definitions(test_cycle_time PRIVATE _XOPEN_SOURCE=700)
     target_link_libraries(test_cycle_time ${LIBS} m)
     add_test(NAME cycle_time COMMAND test_cycle_time)
+
+    if(VCLIENT)
+        add_test(
+            NAME vclient_integration
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_vclient_integration.py
+                $<TARGET_FILE:vclient>
+        )
+        set_tests_properties(vclient_integration PROPERTIES TIMEOUT 30)
+    endif()
+    if(VSIM)
+        add_test(
+            NAME vsim_integration
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_vsim_integration.py
+                $<TARGET_FILE:vsim>
+        )
+        set_tests_properties(vsim_integration PROPERTIES
+            TIMEOUT 20
+            RESOURCE_LOCK vsim_port
+        )
+
+        add_test(
+            NAME vcontrold_integration
+            COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_vcontrold_integration.py
+                $<TARGET_FILE:vcontrold>
+                $<TARGET_FILE:vsim>
+                ${CMAKE_CURRENT_SOURCE_DIR}/xml/300
+        )
+        set_tests_properties(vcontrold_integration PROPERTIES
+            TIMEOUT 40
+            RESOURCE_LOCK vsim_port
+        )
+    endif()
 endif()
 
 if(MANPAGES)

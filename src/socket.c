@@ -138,7 +138,7 @@ int listenToSocket(int listenfd, int makeChild)
         connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &cliaddrlen);
 
         if (connfd < 0) {
-            if (errno == EINTR) return -1;
+            if (errno == EINTR || errno == EBADF || errno == EINVAL) return -1;
             logIT(LOG_ERR, "accept failed: %s", strerror(errno));
             continue;
         }
