@@ -91,6 +91,12 @@ void framer_test_set_p300_address(const unsigned char address[2])
     framer_pid = P300_LEADIN;
     memcpy(&framer_current_addr, address, sizeof(framer_current_addr));
 }
+
+void framer_test_reset(void)
+{
+    framer_pid = 0;
+    framer_current_addr = FRAMER_NO_ADDR;
+}
 #endif
 
 // status handling of current command

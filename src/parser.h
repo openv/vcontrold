@@ -16,6 +16,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen, char *
                  short sendLen, short supressUnit, char bitpos, int retry, char *pRecvPtr,
                  unsigned short recvTimeout);
 int compileCommand(devicePtr dPtr, unitPtr uPtr);
+int expand(commandPtr cPtr, protocolPtr pPtr);
+compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr);
 
 // Token Definition
 #define WAIT    1

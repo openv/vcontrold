@@ -145,13 +145,61 @@ static int test_system_time(void)
     return procGetUnit(&unit, invalid, 4, result, 0, NULL) == -1;
 }
 
+static int test_unit_failures_and_integer_calculations(void)
+{
+    char previous[8] = {0};
+    char result[MAXBUF] = {0};
+    char byte = 3;
+    Unit integer = {
+        .name = "bits", .type = "uchar",
+        .gICalc = "B0+2", .sICalc = "5"
+    };
+    if (procGetUnit(&integer, &byte, 1, result, 0, previous) != 1 ||
+            strcmp(result, "05") != 0) return 0;
+    char input[32] = "ignored";
+    short length = (short)sizeof(input);
+    if (procSetUnit(&integer, input, &length, 0, previous) != 1 ||
+            length != 1 || input[0] != 5) return 0;
+
+    Unit small = {.name = "small", .type = "char", .sCalc = "V"};
+    snprintf(input, sizeof(input), "128");
+    length = (short)sizeof(input);
+    if (procSetUnit(&small, input, &length, 0, previous) != -1) return 0;
+    snprintf(input, sizeof(input), "not-a-number");
+    length = (short)sizeof(input);
+    if (procSetUnit(&small, input, &length, 0, previous) != -1) return 0;
+
+    Unit noCalculation = {.name = "none", .type = "uchar"};
+    snprintf(input, sizeof(input), "1");
+    length = (short)sizeof(input);
+    return procSetUnit(&noCalculation, input, &length, 0, previous) == -1;
+}
+
+static int test_special_unit_dispatch(void)
+{
+    char cycleBytes[8] = {0x30, 0x40, -1, -1, -1, -1, -1, -1};
+    char w01c[3] = {0x30, 0x40, 2};
+    char result[MAXBUF] = {0};
+    Unit cycle = {.name = "cycle", .type = "cycletime"};
+    Unit heating = {.name = "heating", .type = "heatingtime"};
+    Unit water = {.name = "water", .type = "watertime"};
+    return procGetUnit(&cycle, cycleBytes, 8, result, 0, NULL) == 1 &&
+        procGetUnit(&heating, w01c, 3, result, 0, NULL) == 1 &&
+        procGetUnit(&water, w01c, 3, result, 0, NULL) == 1;
+}
+
 int main(void)
 {
-    if (!test_legacy() || !test_extended() || !test_invalid() || !test_w01c() ||
-            !test_numeric_units() || !test_enum_units() ||
-            !test_system_time()) {
-        fputs("cycle time test failed\n", stderr);
-        return 1;
-    }
+    if (!test_legacy()) return fputs("legacy failed\n", stderr), 1;
+    if (!test_extended()) return fputs("extended failed\n", stderr), 1;
+    if (!test_invalid()) return fputs("invalid failed\n", stderr), 1;
+    if (!test_w01c()) return fputs("w01c failed\n", stderr), 1;
+    if (!test_numeric_units()) return fputs("numeric failed\n", stderr), 1;
+    if (!test_enum_units()) return fputs("enum failed\n", stderr), 1;
+    if (!test_system_time()) return fputs("system time failed\n", stderr), 1;
+    if (!test_unit_failures_and_integer_calculations())
+        return fputs("integer unit failed\n", stderr), 1;
+    if (!test_special_unit_dispatch())
+        return fputs("special dispatch failed\n", stderr), 1;
     return 0;
 }

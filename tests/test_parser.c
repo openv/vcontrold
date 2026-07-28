@@ -23,6 +23,66 @@ static int parse(const char *source, int expectedToken, int expectedLength)
     return token == expectedToken && length == expectedLength;
 }
 
+static int test_bytecode_parser(void)
+{
+    char line[256];
+    char bytes[MAXBUF] = {0};
+    char unit[32] = {0};
+    int length;
+
+    struct {
+        const char *line;
+        int token;
+        int length;
+    } cases[] = {
+        {"WAIT 05", WAIT, 1},
+        {"SEND 01 F7 12 34", SEND, 4},
+        {"SEND BYTES UT", BYTES, 1},
+        {"RECV 0", RECV, 0},
+        {"RECV 32767 UT", RECV, 32767},
+        {"PAUSE 0", PAUSE, 0},
+        {"UNKNOWN 1", 0, 0},
+        {"RECV text", 0, 0},
+        {"PAUSE 32768", 0, 0}
+    };
+    for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i) {
+        snprintf(line, sizeof(line), "%s", cases[i].line);
+        memset(bytes, 0, sizeof(bytes));
+        memset(unit, 0, sizeof(unit));
+        length = 0;
+        if (parseLine(line, bytes, &length, unit, sizeof(unit)) !=
+                cases[i].token || length != cases[i].length) return 0;
+    }
+    return 1;
+}
+
+static int test_expansion(void)
+{
+    Macro macro = {.name = "SYNC", .command = "SEND 04"};
+    iCmd instruction = {
+        .name = "getaddr",
+        .send = "SYNC;SEND $addr $hexlen;RECV $len $unit"
+    };
+    Protocol protocol = {
+        .name = "test", .mPtr = &macro, .icPtr = &instruction
+    };
+    Unit unit = {.name = "UT", .type = "short"};
+    Command command = {
+        .name = "getTest", .pcmd = "getaddr", .addr = "1234",
+        .unit = "UT", .len = 2
+    };
+    if (!expand(&command, &protocol) ||
+            strcmp(command.send, "SEND 04;SEND 12 34 02;RECV 2 UT") != 0 ||
+            !buildByteCode(&command, &unit)) return 0;
+    removeCompileList(command.cmpPtr);
+    free(command.send);
+
+    instruction.send = "SEND $unknown";
+    command.send = NULL;
+    command.cmpPtr = NULL;
+    return expand(&command, &protocol) == 0;
+}
+
 int main(void)
 {
     char line[512];
@@ -31,6 +91,7 @@ int main(void)
     int length = 0;
 
     initLog(0, "/tmp/vcontrold-test-parser.log", 1);
+    if (!test_bytecode_parser() || !test_expansion()) return 1;
     if (!parse("RECV 2 UT", RECV, 2)) return 1;
     if (!parse("PAUSE 100", PAUSE, 100)) return 1;
     if (!parse("RECV -1", 0, 0)) return 1;
