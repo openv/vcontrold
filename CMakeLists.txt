@@ -221,6 +221,12 @@ if(BUILD_TESTING)
     target_link_libraries(test_cycle_time ${LIBS} m)
     add_test(NAME cycle_time COMMAND test_cycle_time)
 
+    add_test(
+        NAME xml_profiles
+        COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_xml_profiles.py
+    )
+
     if(VCLIENT)
         add_test(
             NAME vclient_integration
