@@ -39,20 +39,20 @@
 
 int nextToken(char **str, char **c, int *count);
 void  pushBack(char **str, int n);
-double execExpression(char **str, unsigned char *bPtr, int bufferLen,
+double execExpression(char **str, const unsigned char *bPtr, int bufferLen,
                       double floatV, char *err);
-double execTerm(char **str, unsigned char *bPtr, int bufferLen,
+double execTerm(char **str, const unsigned char *bPtr, int bufferLen,
                 double floatV, char *err);
-double execFactor(char **str, unsigned char *bPtr, int bufferLen,
+double execFactor(char **str, const unsigned char *bPtr, int bufferLen,
                   double floatV, char *err);
-int execIExpression(char **str, unsigned char *bPtr, int bufferLen,
-                    char bitpos, char *pPtr, char *err);
-int execITerm(char **str, unsigned char *bPtr, int bufferLen,
-              char bitpos, char *pPtr, char *err);
-int execIFactor(char **str, unsigned char *bPtr, int bufferLen,
-                char bitpos, char *pPtr, char *err);
+int execIExpression(char **str, const unsigned char *bPtr, int bufferLen,
+                    char bitpos, const char *pPtr, char *err);
+int execITerm(char **str, const unsigned char *bPtr, int bufferLen,
+              char bitpos, const char *pPtr, char *err);
+int execIFactor(char **str, const unsigned char *bPtr, int bufferLen,
+                char bitpos, const char *pPtr, char *err);
 
-double execExpression(char **str, unsigned char *bPtr, int bufferLen,
+double execExpression(char **str, const unsigned char *bPtr, int bufferLen,
                       double floatV, char *err)
 {
     int f = 1;
@@ -107,7 +107,7 @@ double execExpression(char **str, unsigned char *bPtr, int bufferLen,
     return term1;
 }
 
-double execTerm(char **str, unsigned char *bPtr, int bufferLen,
+double execTerm(char **str, const unsigned char *bPtr, int bufferLen,
                 double floatV, char *err)
 {
     double factor1, factor2;
@@ -153,7 +153,7 @@ double execTerm(char **str, unsigned char *bPtr, int bufferLen,
     }
 }
 
-double execFactor(char **str, unsigned char *bPtr, int bufferLen,
+double execFactor(char **str, const unsigned char *bPtr, int bufferLen,
                   double floatV, char *err)
 {
     char nstring[100];
@@ -234,8 +234,8 @@ double execFactor(char **str, unsigned char *bPtr, int bufferLen,
     }
 }
 
-int execIExpression(char **str, unsigned char *bPtr, int bufferLen,
-                    char bitpos, char *pPtr, char *err)
+int execIExpression(char **str, const unsigned char *bPtr, int bufferLen,
+                    char bitpos, const char *pPtr, char *err)
 {
     int term1, term2;
     //int exp1, exp2;
@@ -308,8 +308,8 @@ int execIExpression(char **str, unsigned char *bPtr, int bufferLen,
     return term1;
 }
 
-int execITerm(char **str, unsigned char *bPtr, int bufferLen,
-              char bitpos, char *pPtr, char *err)
+int execITerm(char **str, const unsigned char *bPtr, int bufferLen,
+              char bitpos, const char *pPtr, char *err)
 {
     int factor1, factor2;
     int op;
@@ -409,8 +409,8 @@ int execITerm(char **str, unsigned char *bPtr, int bufferLen,
     }
 }
 
-int execIFactor(char **str, unsigned char *bPtr, int bufferLen,
-                char bitpos, char *pPtr, char *err)
+int execIFactor(char **str, const unsigned char *bPtr, int bufferLen,
+                char bitpos, const char *pPtr, char *err)
 {
     char nstring[100];
     int expression;

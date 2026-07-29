@@ -5,7 +5,10 @@
 #ifndef UNIT_H
 #define UNIT_H
 
-int procGetUnit(unitPtr uPtr, char *recvBuf, int len, char *result, char bitpos, char *pRecvPtr);
-int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *pRecvPtr);
+int procGetUnit(unitPtr uPtr, const char *recvBuf, int len,
+                char *result, size_t resultCapacity,
+                char bitpos, const char *pRecvPtr);
+int procSetUnit(unitPtr uPtr, char *sendBuf, size_t sendCapacity,
+                short *sendLen, char bitpos, const char *pRecvPtr);
 
 #endif // UNIT_H

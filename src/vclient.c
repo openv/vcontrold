@@ -130,7 +130,7 @@ static int parsePort(const char *text, int *port)
     return 1;
 }
 
-void usage()
+void usage(void)
 {
     //      1       10        20        30        40        50        60        70        80
 

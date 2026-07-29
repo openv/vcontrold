@@ -196,7 +196,7 @@ if(BUILD_TESTING)
     target_compile_definitions(test_semaphore PRIVATE _XOPEN_SOURCE=700)
     add_test(NAME semaphore COMMAND test_semaphore)
 
-    if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux|CYGWIN")
         add_executable(test_alloc_failures
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_alloc_failures.c
             ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
@@ -212,7 +212,10 @@ if(BUILD_TESTING)
         target_include_directories(test_alloc_failures PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBXML2_INCLUDE_DIR}
         )
-        target_compile_definitions(test_alloc_failures PRIVATE _XOPEN_SOURCE=700)
+        target_compile_definitions(test_alloc_failures PRIVATE
+            _XOPEN_SOURCE=700
+            VCONTROLD_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        )
         target_link_libraries(test_alloc_failures PRIVATE ${LIBS} m)
         target_link_options(test_alloc_failures PRIVATE
             -Wl,--wrap=calloc -Wl,--wrap=realloc
@@ -267,10 +270,7 @@ if(BUILD_TESTING)
                 ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_vsim_integration.py
                 $<TARGET_FILE:vsim>
         )
-        set_tests_properties(vsim_integration PROPERTIES
-            TIMEOUT 20
-            RESOURCE_LOCK vsim_port
-        )
+        set_tests_properties(vsim_integration PROPERTIES TIMEOUT 20)
 
         add_test(
             NAME vcontrold_integration
@@ -280,10 +280,7 @@ if(BUILD_TESTING)
                 $<TARGET_FILE:vsim>
                 ${CMAKE_CURRENT_SOURCE_DIR}/xml/300
         )
-        set_tests_properties(vcontrold_integration PROPERTIES
-            TIMEOUT 40
-            RESOURCE_LOCK vsim_port
-        )
+        set_tests_properties(vcontrold_integration PROPERTIES TIMEOUT 40)
     endif()
 endif()
 

@@ -101,7 +101,7 @@ static int test_exec_bytecode_transport(void)
     if (write(sockets[1], response, sizeof(response)) !=
             (ssize_t)sizeof(response) ||
             execByteCode(&sendNode, sockets[0], received, sizeof(received),
-                         parameter, 0, 1, 0, 1, NULL, 0) != 2) return 0;
+                         parameter, sizeof(parameter), 0, 1, 0, 1, NULL, 0) != 2) return 0;
     char sent[2] = {0};
     if (read(sockets[1], sent, sizeof(sent)) != (ssize_t)sizeof(sent) ||
             memcmp(sent, sendBytes, sizeof(sent)) != 0 ||
@@ -120,7 +120,7 @@ static int test_exec_bytecode_transport(void)
     };
     if (write(sockets[1], &waitByte, 1) != 1 ||
             execByteCode(&waitNode, sockets[0], received, sizeof(received),
-                         parameter, 0, 1, 0, 1, NULL, 0) != 0 ||
+                         parameter, sizeof(parameter), 0, 1, 0, 1, NULL, 0) != 0 ||
             read(sockets[1], sent, 1) != 1 || sent[0] != afterWait) return 0;
     close(sockets[0]);
     close(sockets[1]);
@@ -129,7 +129,7 @@ static int test_exec_bytecode_transport(void)
     char forwarded[] = {0x55, 0x66};
     Compile bytesNode = {.token = BYTES, .len = 2};
     if (execByteCode(&bytesNode, sockets[0], received, sizeof(received),
-                     forwarded, sizeof(forwarded), 1, 0, 1, NULL, 0) != 0 ||
+                     forwarded, sizeof(forwarded), sizeof(forwarded), 1, 0, 1, NULL, 0) != 0 ||
             read(sockets[1], sent, 2) != 2 ||
             memcmp(sent, forwarded, 2) != 0) return 0;
     free(bytesNode.send);
@@ -146,16 +146,16 @@ static int test_exec_bytecode_transport(void)
     if (write(sockets[1], replies, sizeof(replies)) !=
             (ssize_t)sizeof(replies) ||
             execByteCode(&retryNode, sockets[0], received, sizeof(received),
-                         parameter, 0, 1, 0, 2, NULL, 0) != 1 ||
+                         parameter, sizeof(parameter), 0, 1, 0, 2, NULL, 0) != 1 ||
             received[0] != good) return 0;
     close(sockets[0]);
     close(sockets[1]);
 
     Compile invalid = {.token = 99};
     return execByteCode(&invalid, -1, received, sizeof(received),
-                        parameter, 0, 1, 0, 1, NULL, 0) == -1 &&
+                        parameter, sizeof(parameter), 0, 1, 0, 1, NULL, 0) == -1 &&
         execByteCode(NULL, -1, received, sizeof(received),
-                     parameter, 0, 1, 0, 1, NULL, 0) == -1;
+                     parameter, sizeof(parameter), 0, 1, 0, 1, NULL, 0) == -1;
 }
 
 static int test_exec_command_transport(void)
@@ -198,7 +198,7 @@ static int test_exec_bytecode_units_and_failures(void)
     char value = 4;
     if (write(sockets[1], &value, 1) != 1 ||
             execByteCode(&getNode, sockets[0], received, sizeof(received),
-                         parameter, 0, 0, 0, 1, previous, 0) != 0 ||
+                         parameter, sizeof(parameter), 0, 0, 0, 1, previous, 0) != 0 ||
             strncmp(received, "8.000000", 8) != 0) return 0;
     close(sockets[0]);
     close(sockets[1]);
@@ -210,7 +210,7 @@ static int test_exec_bytecode_units_and_failures(void)
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
     snprintf(parameter, sizeof(parameter), "7");
     if (execByteCode(&setNode, sockets[0], received, sizeof(received),
-                     parameter, 1, 0, 0, 1, previous, 0) != 0) return 0;
+                     parameter, sizeof(parameter), 1, 0, 0, 1, previous, 0) != 0) return 0;
     char sent = 0;
     if (read(sockets[1], &sent, 1) != 1 || sent != 7) return 0;
     free(setNode.send);
@@ -222,7 +222,7 @@ static int test_exec_bytecode_units_and_failures(void)
         .token = SEND, .send = &sendByte, .len = 1
     };
     if (execByteCode(&sendFailure, -1, received, sizeof(received),
-                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+                     parameter, sizeof(parameter), 0, 1, 0, 1, previous, 0) != -1) return 0;
 
     Compile waitFailure = {
         .token = WAIT, .send = &sendByte, .len = 1
@@ -230,31 +230,31 @@ static int test_exec_bytecode_units_and_failures(void)
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
     close(sockets[1]);
     if (execByteCode(&waitFailure, sockets[0], received, sizeof(received),
-                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+                     parameter, sizeof(parameter), 0, 1, 0, 1, previous, 0) != -1) return 0;
     close(sockets[0]);
 
     Compile receiveFailure = {.token = RECV, .len = 1};
     if (socketpair(AF_UNIX, SOCK_STREAM, 0, sockets) != 0) return 0;
     close(sockets[1]);
     if (execByteCode(&receiveFailure, sockets[0], received, sizeof(received),
-                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+                     parameter, sizeof(parameter), 0, 1, 0, 1, previous, 0) != -1) return 0;
     close(sockets[0]);
 
     Compile wrongLength = {.token = BYTES, .len = 2};
     snprintf(parameter, sizeof(parameter), "x");
     if (execByteCode(&wrongLength, -1, received, sizeof(received),
-                     parameter, 1, 1, 0, 1, previous, 0) != -1) return 0;
+                     parameter, sizeof(parameter), 1, 1, 0, 1, previous, 0) != -1) return 0;
 
     char oversizedData[1025] = {0};
     Compile oversized = {
         .token = SEND, .send = oversizedData, .len = sizeof(oversizedData)
     };
     if (execByteCode(&oversized, -1, received, sizeof(received),
-                     parameter, 0, 1, 0, 1, previous, 0) != -1) return 0;
+                     parameter, sizeof(parameter), 0, 1, 0, 1, previous, 0) != -1) return 0;
 
     Compile pause = {.token = PAUSE, .len = 0};
     return execByteCode(&pause, -1, received, sizeof(received),
-                        parameter, 0, 1, 0, 1, previous, 0) == 0;
+                        parameter, sizeof(parameter), 0, 1, 0, 1, previous, 0) == 0;
 }
 
 static int test_simulation_output(void)
@@ -272,7 +272,7 @@ static int test_simulation_output(void)
     iniFD = tmpfile();
     if (!iniFD || write(sockets[1], &response, 1) != 1) return 0;
     int rc = execByteCode(&sendNode, sockets[0], received, sizeof(received),
-                          parameter, 0, 1, 0, 1, NULL, 0);
+                          parameter, sizeof(parameter), 0, 1, 0, 1, NULL, 0);
     long outputLength = -1;
     if (fflush(iniFD) == 0 && fseek(iniFD, 0, SEEK_END) == 0) {
         outputLength = ftell(iniFD);

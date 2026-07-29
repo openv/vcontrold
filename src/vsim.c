@@ -181,15 +181,28 @@ int main(int argc, char *argv[])
 {
     int sockfd = -1;
     int listenfd = -1;
+    int serverPort = SERVERPORT;
 
-    (void)argc;
-    (void)argv;
+    if (argc == 3 && strcmp(argv[1], "-p") == 0) {
+        char *end = NULL;
+        long parsed;
+        errno = 0;
+        parsed = strtol(argv[2], &end, 10);
+        if (errno || end == argv[2] || *end || parsed < 1 || parsed > 65535) {
+            fprintf(stderr, "Invalid simulator port: %s\n", argv[2]);
+            return 2;
+        }
+        serverPort = (int)parsed;
+    } else if (argc != 1) {
+        fprintf(stderr, "usage: vsim [-p port]\n");
+        return 2;
+    }
     if (signal(SIGTERM, terminationHandler) == SIG_ERR ||
             signal(SIGINT, terminationHandler) == SIG_ERR) {
         logIT(LOG_ERR, "Could not install termination handler");
         return 1;
     }
-    listenfd = openSocket(SERVERPORT);
+    listenfd = openSocket(serverPort);
     if (listenfd < 0) return 1;
     serverSocket = listenfd;
     while (!stopRequested) {

@@ -23,7 +23,7 @@ macroPtr getMacroNode(macroPtr ptr, const char *name);
 unitPtr getUnitNode(unitPtr ptr, const char *name);
 commandPtr getCommandNode(commandPtr ptr, const char *name);
 devicePtr getDeviceNode(devicePtr ptr, const char *id);
-enumPtr getEnumNode(enumPtr prt, char *search, int len);
+enumPtr getEnumNode(enumPtr prt, const char *search, int len);
 icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
 
 typedef struct compile {

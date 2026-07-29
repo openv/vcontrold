@@ -161,8 +161,9 @@ static int appendSimulation(char *destination, size_t destinationSize,
     return 1;
 }
 
-int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
-                 char *sendBuf, short sendLen, short supressUnit,
+int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, size_t recvCapacity,
+                 char *sendBuf, size_t sendCapacity, short sendLen,
+                 short supressUnit,
                  char bitpos, int retry,
                  char *pRecvPtr, unsigned short recvTimeout)
 {
@@ -176,7 +177,9 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     char out_buff[1024];
     int out_len;
 
-    if (!cmpPtr || !recvBuf || recvLen <= 0 || !sendBuf || sendLen < 0) {
+    if (!cmpPtr || !recvBuf || recvCapacity == 0 || !sendBuf ||
+            sendCapacity == 0 || sendLen < 0 ||
+            (size_t)sendLen > sendCapacity) {
         logIT1(LOG_ERR, "Invalid bytecode execution arguments");
         return -1;
     }
@@ -212,7 +215,8 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
             memcpy(cPtr->send, sendBuf, cPtr->len);
         } else if (cPtr->uPtr) {
             len = sendLen; // we need this in procSetUnit() to clear sendBuf
-            if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
+            if (procSetUnit(cPtr->uPtr, sendBuf, sendCapacity,
+                            &len, bitpos, pRecvPtr) <= 0) {
                 logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
                 return -1;
             }
@@ -289,14 +293,14 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 }
                 break;
             case RECV:
-                if (cmpPtr->len > recvLen) {
-                    // Hopefully, we don't end up here
-                    logIT(LOG_ERR, "Recv buffer too small. Is: %d, should be %d",
-                          recvLen, cmpPtr->len);
-                    cmpPtr->len = recvLen;
+                if (cmpPtr->len < 0 || (size_t)cmpPtr->len > recvCapacity) {
+                    logIT(LOG_ERR,
+                          "Recv buffer too small. Is: %zu, should be %d",
+                          recvCapacity, cmpPtr->len);
+                    return -1;
                 }
                 etime = 0;
-                memset(recvBuf, 0, recvLen);
+                memset(recvBuf, 0, recvCapacity);
                 if (framer_receive(fd, recvBuf, cmpPtr->len, &etime) <= 0) {
                     logIT1(LOG_ERR, "Error in recv, terminating");
                     return -1;
@@ -337,12 +341,17 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 // return the converted value to uPtr
                 memset(result, 0, sizeof(result));
                 if (! supressUnit && cmpPtr->uPtr) {
-                    if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
+                    if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len,
+                                    result, sizeof(result), bitpos, pRecvPtr)
                         <= 0) {
                         logIT(LOG_ERR, "Error in unit conversion: %s, terminating", result);
                         return -1;
                     }
-                    strncpy(recvBuf, result, recvLen);
+                    if (strlen(result) + 1 > recvCapacity) {
+                        logIT1(LOG_ERR, "Converted result exceeds receive buffer");
+                        return -1;
+                    }
+                    memcpy(recvBuf, result, strlen(result) + 1);
 
                     if (iniFD && *simIn && *simOut) {
                         // We already sent and received, now we output it.
@@ -516,6 +525,20 @@ static int append_bytes(char **dst, char *end, const char *src, size_t len)
     return 1;
 }
 
+static int replace_string(char **destination, const char *source)
+{
+    size_t length;
+    char *replacement;
+
+    if (!destination || !source) return 0;
+    length = strlen(source) + 1;
+    replacement = realloc(*destination, length);
+    if (!replacement) return 0;
+    memcpy(replacement, source, length);
+    *destination = replacement;
+    return 1;
+}
+
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
     if (! cPtr) {
@@ -667,15 +690,11 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     free(tmpPtr);
     logIT(LOG_INFO, "   after EXPAND:%s", eString);
-    char *expanded = calloc(strlen(eString) + 1, sizeof(char));
-    if (!expanded) {
-        logIT1(LOG_ERR, "calloc failed");
+    if (!replace_string(&cPtr->send, eString)) {
+        logIT1(LOG_ERR, "Could not allocate expanded command");
         return 0;
     }
 
-    strcpy(expanded, eString);
-    free(cPtr->send);
-    cPtr->send = expanded;
     return 1;
 }
 

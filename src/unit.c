@@ -62,14 +62,16 @@
 
 #endif
 
-int getCycleTime(char *recv, int len, char *result);
-int getW01CCycleTime(char *recv, int len, char *result, int waterMode);
-int setCycleTime(char *string, char *sendBuf);
-short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len);
-short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
-int getErrState(enumPtr ePtr, char *recv, int len, char *result);
-int getSysTime(char *recv, int len, char *result);
-int setSysTime(char *input, char *sendBuf);
+int getCycleTime(const char *recv, int len, char *result, size_t resultCapacity);
+int getW01CCycleTime(const char *recv, int len, char *result,
+                     size_t resultCapacity, int waterMode);
+int setCycleTime(char *string, char *sendBuf, size_t sendCapacity);
+short bytes2Enum(enumPtr ptr, const char *bytes, const char **text, short len);
+short text2Enum(enumPtr ptr, const char *text, const char **bytes, short *len);
+int getErrState(enumPtr ePtr, const char *recv, int len,
+                char *result, size_t resultCapacity);
+int getSysTime(const char *recv, int len, char *result, size_t resultCapacity);
+int setSysTime(const char *input, char *sendBuf, size_t sendCapacity);
 
 static int parseCycleTimeToken(const char *token, unsigned char emptyValue,
                                unsigned char *value)
@@ -91,16 +93,16 @@ static int parseCycleTimeToken(const char *token, unsigned char emptyValue,
     return 1;
 }
 
-int getCycleTime(char *recv, int len, char *result)
+int getCycleTime(const char *recv, int len, char *result, size_t resultCapacity)
 {
     int i;
     size_t used = 0;
 
-    if (!result) {
+    if (!result || resultCapacity == 0) {
         return 0;
     }
     if (!recv || (len != 8 && len != 15)) {
-        snprintf(result, MAXBUF, "Byte count is not 8 or 15");
+        snprintf(result, resultCapacity, "Byte count is not 8 or 15");
         return 0;
     }
     result[0] = '\0';
@@ -109,17 +111,17 @@ int getCycleTime(char *recv, int len, char *result)
         for (i = 0; i < len; i += 2) {
             int written;
             if ((unsigned char)recv[i] == 0xff) {
-                written = snprintf(result + used, MAXBUF - used,
+                written = snprintf(result + used, resultCapacity - used,
                                    "%d:An:--     Aus:--\n", i / 2 + 1);
             } else {
-                written = snprintf(result + used, MAXBUF - used,
+                written = snprintf(result + used, resultCapacity - used,
                                    "%d:An:%02d:%02d  Aus:%02d:%02d\n", i / 2 + 1,
                                    ((unsigned char)recv[i] & 0xf8) >> 3,
                                    ((unsigned char)recv[i] & 7) * 10,
                                    ((unsigned char)recv[i + 1] & 0xf8) >> 3,
                                    ((unsigned char)recv[i + 1] & 7) * 10);
             }
-            if (written < 0 || (size_t)written >= MAXBUF - used) return 0;
+            if (written < 0 || (size_t)written >= resultCapacity - used) return 0;
             used += (size_t)written;
         }
     } else {
@@ -140,14 +142,14 @@ int getCycleTime(char *recv, int len, char *result)
                          (off & 0xf8) >> 3, (off & 7) * 10);
             }
             if (on == 0 && off == 0) {
-                written = snprintf(result + used, MAXBUF - used,
+                written = snprintf(result + used, resultCapacity - used,
                                    "%d:An:--     Aus:--     Mod:--\n", i / 3 + 1);
             } else {
-                written = snprintf(result + used, MAXBUF - used,
+                written = snprintf(result + used, resultCapacity - used,
                                    "%d:An:%-5s  Aus:%-5s  Mod:%02u\n",
                                    i / 3 + 1, onTime, offTime, mode);
             }
-            if (written < 0 || (size_t)written >= MAXBUF - used) return 0;
+            if (written < 0 || (size_t)written >= resultCapacity - used) return 0;
             used += (size_t)written;
         }
     }
@@ -155,21 +157,23 @@ int getCycleTime(char *recv, int len, char *result)
     return 1;
 }
 
-int getW01CCycleTime(char *recv, int len, char *result, int waterMode)
+int getW01CCycleTime(const char *recv, int len, char *result,
+                     size_t resultCapacity, int waterMode)
 {
     const char *mode;
     unsigned char start;
     unsigned char end;
 
-    if (!recv || !result || len != 3) {
-        if (result) snprintf(result, MAXBUF, "Byte count is not 3");
+    if (!recv || !result || resultCapacity == 0 || len != 3) {
+        if (result && resultCapacity)
+            snprintf(result, resultCapacity, "Byte count is not 3");
         return 0;
     }
     start = (unsigned char)recv[0];
     end = (unsigned char)recv[1];
     if ((start & 7) > 5 || (end & 7) > 5 ||
             (start >> 3) > 23 || (end >> 3) > 23) {
-        snprintf(result, MAXBUF, "Invalid W01C cycle time");
+        snprintf(result, resultCapacity, "Invalid W01C cycle time");
         return 0;
     }
     switch ((unsigned char)recv[2]) {
@@ -186,28 +190,32 @@ int getW01CCycleTime(char *recv, int len, char *result, int waterMode)
         mode = "Aus";
         break;
     }
-    snprintf(result, MAXBUF, "%02u:%02u - %02u:%02u %s",
+    if (snprintf(result, resultCapacity, "%02u:%02u - %02u:%02u %s",
              (unsigned int)(start >> 3),
              (unsigned int)((start & 7) * 10),
              (unsigned int)(end >> 3),
-             (unsigned int)((end & 7) * 10), mode);
+             (unsigned int)((end & 7) * 10), mode) >= (int)resultCapacity)
+        return 0;
     return 1;
 }
 
-int setCycleTime(char *input, char *sendBuf)
+int setCycleTime(char *input, char *sendBuf, size_t sendCapacity)
 {
     char *tokens[15];
     char *save = NULL;
     char *token;
     int tokenCount = 0;
 
-    if (!input || !sendBuf) return 0;
+    if (!input || !sendBuf || sendCapacity == 0) return 0;
     for (token = strtok_r(input, " \t", &save); token && tokenCount < 15;
             token = strtok_r(NULL, " \t", &save)) {
         tokens[tokenCount++] = token;
     }
     if (token != NULL || (tokenCount != 8 && tokenCount != 15)) {
-        snprintf(sendBuf, 16, "BadCount");
+        snprintf(sendBuf, sendCapacity, "BadCount");
+        return 0;
+    }
+    if ((size_t)tokenCount > sendCapacity) {
         return 0;
     }
 
@@ -219,7 +227,7 @@ int setCycleTime(char *input, char *sendBuf)
             if (!parseCycleTimeToken(tokens[i], 0xff, &on) ||
                     !parseCycleTimeToken(tokens[i + 1], 0xff, &off) ||
                     ((on == 0xff) != (off == 0xff))) {
-                snprintf(sendBuf, 16, "BadTime");
+                snprintf(sendBuf, sendCapacity, "BadTime");
                 return 0;
             }
             sendBuf[i] = (char)on;
@@ -236,13 +244,13 @@ int setCycleTime(char *input, char *sendBuf)
         long mode;
         if (!parseCycleTimeToken(tokens[i], 0, &on) ||
                 !parseCycleTimeToken(tokens[i + 1], 0, &off)) {
-            snprintf(sendBuf, 16, "BadTime");
+            snprintf(sendBuf, sendCapacity, "BadTime");
             return 0;
         }
         if (on == 0 && off == 0) {
             if (strcmp(tokens[i + 2], "-") != 0 &&
                     strcmp(tokens[i + 2], "--") != 0) {
-                snprintf(sendBuf, 16, "BadMode");
+                snprintf(sendBuf, sendCapacity, "BadMode");
                 return 0;
             }
             mode = 0;
@@ -250,7 +258,7 @@ int setCycleTime(char *input, char *sendBuf)
             errno = 0;
             mode = strtol(tokens[i + 2], &end, 0);
             if (errno || end == tokens[i + 2] || *end || mode < 0 || mode > 0x7f) {
-                snprintf(sendBuf, 16, "BadMode");
+                snprintf(sendBuf, sendCapacity, "BadMode");
                 return 0;
             }
         }
@@ -266,19 +274,24 @@ int bcd2dec(int bcd) {
     return dec;
 }
 
-int getSysTime(char *recv, int len, char *result)
+int getSysTime(const char *recv, int len, char *result, size_t resultCapacity)
 {
     struct tm *t;
     time_t tt;
 
+    if (!recv || !result || resultCapacity == 0) return 0;
     if (len != 8) {
-        sprintf(result, "System time: Len <> 8 bytes");
+        snprintf(result, resultCapacity, "System time: Len <> 8 bytes");
         return 0;
     }
 
     // Use timezone information from the host system
     time(&tt);
     t = localtime(&tt);
+    if (!t) {
+        snprintf(result, resultCapacity, "Could not initialize system time");
+        return 0;
+    }
     t->tm_year = bcd2dec(recv[0]) * 100 + bcd2dec(recv[1]) - 1900;
     t->tm_mon = bcd2dec(recv[2]) - 1;
     t->tm_mday = bcd2dec(recv[3]);
@@ -291,12 +304,12 @@ int getSysTime(char *recv, int len, char *result)
     // that is not recognized by strptime for parsing dates has a symmetry impact that the
     // format for getTime is different from the format required by setTime.
     // I would consider the command symmetry more important for the future.
-    strftime(result, 48, "%FT%T%z", t);
+    if (strftime(result, resultCapacity, "%FT%T%z", t) == 0) return 0;
 
     return 1;
 }
 
-int setSysTime(char *input, char *sendBuf)
+int setSysTime(const char *input, char *sendBuf, size_t sendCapacity)
 {
     char systime[80];
     time_t tt;
@@ -304,10 +317,12 @@ int setSysTime(char *input, char *sendBuf)
     struct tm *t;
     struct tm *th;
 
+    if (!input || !sendBuf || sendCapacity < 8) return 0;
     memset(systime, 0, sizeof(systime));
 
     time(&tt);
     th = localtime(&tt);
+    if (!th) return 0;
 
     // No parameter, set the current system time
     if (!*input) {
@@ -349,19 +364,22 @@ int setSysTime(char *input, char *sendBuf)
     return string2chr(systime, sendBuf, 8);
 }
 
-int getErrState(enumPtr ePtr, char *recv, int len, char *result)
+int getErrState(enumPtr ePtr, const char *recv, int len,
+                char *result, size_t resultCapacity)
 {
     int i;
-    char *errtext = "Unknown error";
+    const char *errtext = "Unknown error";
     char systime[35];
     char string[300];
-    char *ptr;
+    const char *ptr;
+    size_t used = 0;
 
-    if (!recv || !result || len <= 0 || len % 9) {
-        if (!result) return 0;
-        sprintf(result, "Bytes count is not mod 9");
+    if (!recv || !result || resultCapacity == 0 || len <= 0 || len % 9) {
+        if (!result || resultCapacity == 0) return 0;
+        snprintf(result, resultCapacity, "Bytes count is not mod 9");
         return 0;
     }
+    result[0] = '\0';
 
     for (i = 0; i < len; i += 9) {
         ptr = recv + i;
@@ -371,25 +389,31 @@ int getErrState(enumPtr ePtr, char *recv, int len, char *result)
         // Error code: Byte 0
         if (bytes2Enum(ePtr, ptr, &errtext, 1))
             // Rest SysTime
-            if (getSysTime(ptr + 1, 8, systime)) {
-                snprintf(string, sizeof(string),
-                         "%s %s (%02X)\n", systime, errtext, (unsigned char) *ptr);
-                strcat(result, string);
+            if (getSysTime(ptr + 1, 8, systime, sizeof(systime))) {
+                int written = snprintf(string, sizeof(string),
+                                       "%s %s (%02X)\n", systime, errtext,
+                                       (unsigned char)*ptr);
+                if (written < 0 || (size_t)written >= sizeof(string) ||
+                        (size_t)written >= resultCapacity - used)
+                    return 0;
+                memcpy(result + used, string, (size_t)written + 1);
+                used += (size_t)written;
                 continue;
             }
         // Format error
-        sprintf(result, "%s %s", errtext, systime);
+        snprintf(result, resultCapacity, "%s %s", errtext, systime);
         return 0;
     }
 
-    result[strlen(result) - 1] = '\0'; // Remove \n
+    if (used == 0) return 0;
+    result[used - 1] = '\0'; // Remove \n
     return 1;
 }
 
-short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
+short bytes2Enum(enumPtr ptr, const char *bytes, const char **text, short len)
 {
     enumPtr ePtr = NULL;
-    char string[200];
+    char string[MAXBUF];
 
     if (! len) {
         return 0;
@@ -402,22 +426,18 @@ short bytes2Enum(enumPtr ptr, char *bytes, char **text, short len)
     }
     if (ePtr) {
         *text = ePtr->text;
-        memset(string, 0, sizeof(string));
-        char2hex(string, sizeof(string), bytes, len);
-        strcat(string, " -> ");
-        strcat(string, ePtr->text);
-        logIT1(LOG_INFO, string);
+        if (char2hex(string, sizeof(string), bytes, len))
+            logIT(LOG_INFO, "%s -> %s", string, ePtr->text);
         return 1;
     } else {
         return 0;
     }
 }
 
-short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
+short text2Enum(enumPtr ptr, const char *text, const char **bytes, short *len)
 {
     enumPtr ePtr = NULL;
-    char string[200];
-    char string2[1000];
+    char string[MAXBUF];
 
     // Search for the appropriate enum and return the value
     if (! (ePtr = getEnumNode(ptr, text, 0))) {
@@ -426,18 +446,15 @@ short text2Enum(enumPtr ptr, char *text, char **bytes, short *len)
 
     *bytes = ePtr->bytes;
     *len = ePtr->len;
-    memset(string, 0, sizeof(string));
-    snprintf(string, sizeof(string), "%s", text);
-    strcat(string, " -> ");
-    memset(string2, 0, sizeof(string2));
-    char2hex(string2, sizeof(string2), ePtr->bytes, ePtr->len);
-    strcat(string, string2);
-    logIT1(LOG_INFO, string);
+    if (char2hex(string, sizeof(string), ePtr->bytes, ePtr->len))
+        logIT(LOG_INFO, "%s -> %s", text, string);
 
     return *len;
 }
 
-int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bitpos, char *pRecvPtr)
+int procGetUnit(unitPtr uPtr, const char *recvBuf, int recvLen,
+                char *result, size_t resultCapacity,
+                char bitpos, const char *pRecvPtr)
 {
     char string[256];
     char error[1000];
@@ -449,7 +466,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     int hexWidth = 0;
     double floatV = 0;
     char *inPtr;
-    char *tPtr;
+    const char *tPtr;
     // Here the types for the conversion in <type> tags
     int8_t charV;
     uint8_t ucharV;
@@ -464,7 +481,8 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
 
     memset(errPtr, 0, sizeof(error));
 
-    if (!uPtr || !uPtr->type || !recvBuf || recvLen < 0 || !result) {
+    if (!uPtr || !uPtr->type || !recvBuf || recvLen < 0 ||
+            !result || resultCapacity == 0) {
         logIT1(LOG_ERR, "Invalid unit conversion arguments");
         return -1;
     }
@@ -472,25 +490,28 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     // We tread the different <type> entries
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
         // Cycle time
-        if (getCycleTime(recvBuf, recvLen, result)) {
+        if (getCycleTime(recvBuf, recvLen, result, resultCapacity)) {
             return 1;
         } else {
             return -1;
         }
     } else if (strstr(uPtr->type, "heatingtime") == uPtr->type) {
-        return getW01CCycleTime(recvBuf, recvLen, result, 0) ? 1 : -1;
+        return getW01CCycleTime(recvBuf, recvLen, result,
+                                resultCapacity, 0) ? 1 : -1;
     } else if (strstr(uPtr->type, "watertime") == uPtr->type) {
-        return getW01CCycleTime(recvBuf, recvLen, result, 1) ? 1 : -1;
+        return getW01CCycleTime(recvBuf, recvLen, result,
+                                resultCapacity, 1) ? 1 : -1;
     } else if (strstr(uPtr->type, "systime") == uPtr->type) {
         // System time
-        if (getSysTime(recvBuf, recvLen, result)) {
+        if (getSysTime(recvBuf, recvLen, result, resultCapacity)) {
             return 1;
         } else {
             return -1;
         }
     } else if (strstr(uPtr->type, "errstate") == uPtr->type) {
         // Error code + System time
-        if (getErrState(uPtr->ePtr, recvBuf, recvLen, result)) {
+        if (getErrState(uPtr->ePtr, recvBuf, recvLen,
+                        result, resultCapacity)) {
             return 1;
         } else {
             return -1;
@@ -498,10 +519,12 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     } else if (strstr(uPtr->type, "enum") == uPtr->type) {
         // enum
         if (bytes2Enum(uPtr->ePtr, recvBuf, &tPtr, recvLen)) {
-            strcpy(result, tPtr);
+            if (snprintf(result, resultCapacity, "%s", tPtr) >=
+                    (int)resultCapacity)
+                return -1;
             return 1;
         } else {
-            sprintf(result, "Didn't find an appropriate enum");
+            snprintf(result, resultCapacity, "Didn't find an appropriate enum");
             return -1;
         }
     }
@@ -558,7 +581,7 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
 
     // Some logging
     int n;
-    char *ptr;
+    const char *ptr;
     char res;
 
     ptr = recvBuf;
@@ -580,11 +603,14 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
                              floatV, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
-            strcpy(result, string);
+            snprintf(result, resultCapacity, "%s", string);
             return -1;
         }
-        sprintf(result, "%f%s%s", erg, uPtr->entity ? " " : "",
-                uPtr->entity ? uPtr->entity : "");
+        if (snprintf(result, resultCapacity, "%f%s%s", erg,
+                     uPtr->entity ? " " : "",
+                     uPtr->entity ? uPtr->entity : "") >=
+                (int)resultCapacity)
+            return -1;
     } else if (uPtr->gICalc && *uPtr->gICalc) {
         // icalc in XML and get defined within
         inPtr = uPtr->gICalc;
@@ -593,18 +619,23 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
                                bitpos, pRecvPtr, errPtr);
         if (*errPtr) {
             logIT(LOG_ERR, "Exec %s: %s", uPtr->gCalc, error);
-            strcpy(result, string);
+            snprintf(result, resultCapacity, "%s", string);
             return -1;
         }
         logIT(LOG_INFO, "Res: (Hex max. 4 bytes) %08x", ergI);
         res = (char)(ergI & 0xff);
         if (uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, 1)) {
-            strcpy(result, tPtr);
+            if (snprintf(result, resultCapacity, "%s", tPtr) >=
+                    (int)resultCapacity)
+                return -1;
             return 1;
         } else {
-            snprintf(result, MAXBUF, "%0*X%s%s", hexWidth, (unsigned int)ergI,
-                     uPtr->entity ? " " : "",
-                     uPtr->entity ? uPtr->entity : "");
+            if (snprintf(result, resultCapacity, "%0*X%s%s",
+                         hexWidth, (unsigned int)ergI,
+                         uPtr->entity ? " " : "",
+                         uPtr->entity ? uPtr->entity : "") >=
+                    (int)resultCapacity)
+                return -1;
             return 1;
         }
         // Probably do the enum search here
@@ -612,7 +643,8 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
     return 1;
 }
 
-int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *pRecvPtr)
+int procSetUnit(unitPtr uPtr, char *sendBuf, size_t sendCapacity,
+                short *sendLen, char bitpos, const char *pRecvPtr)
 {
     char string[256];
     char error[1000];
@@ -641,24 +673,26 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     memset(errPtr, 0, sizeof(error));
     // Some logging
     int n = 0;
-    char *ptr;
+    const char *ptr;
     char dumBuf[10];
     memset(dumBuf, 0, sizeof(dumBuf));
     memset(buffer, 0, sizeof(buffer));
-    if (!uPtr || !uPtr->type || !sendBuf || !sendLen || *sendLen < 0) {
+    if (!uPtr || !uPtr->type || !sendBuf || sendCapacity == 0 ||
+            !sendLen || *sendLen < 0 ||
+            strnlen(sendBuf, sendCapacity) == sendCapacity) {
         logIT1(LOG_ERR, "Invalid set-unit arguments");
         return -1;
     }
     // We copy the sendBuf, as this one is also used for return
     snprintf(input, sizeof(input), "%s", sendBuf);
-    memset(sendBuf, 0, *sendLen);
+    memset(sendBuf, 0, sendCapacity);
 
     if (strstr(uPtr->type, "cycletime") == uPtr->type) {
         // Cycle time
         if (! *input) {
             return -1;
         }
-        if (! (*sendLen = setCycleTime(input, sendBuf))) {
+        if (! (*sendLen = setCycleTime(input, sendBuf, sendCapacity))) {
             return -1;
         } else  {
             return 1;
@@ -666,7 +700,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     }
     if (strstr(uPtr->type, "systime") == uPtr->type) {
         // System time
-        if (! (*sendLen = setSysTime(input, sendBuf))) {
+        if (! (*sendLen = setSysTime(input, sendBuf, sendCapacity))) {
             return -1;
         } else  {
             return 1;
@@ -676,9 +710,10 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         if (! *input)
         { return -1; }
         if (!(count = text2Enum(uPtr->ePtr, input, &ptr, sendLen))) {
-            sprintf(sendBuf, "Did not find an appropriate enum");
+            snprintf(sendBuf, sendCapacity, "Did not find an appropriate enum");
             return -1;
         } else {
+            if (count < 0 || (size_t)count > sendCapacity) return -1;
             memcpy(sendBuf, ptr, count);
             return 1;
         }
@@ -716,9 +751,11 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
         if (uPtr->ePtr) {
             // There are enums
             if (! (count = text2Enum(uPtr->ePtr, input, &ptr, sendLen))) {
-                sprintf(sendBuf, "Did not find an appropriate enum");
+                snprintf(sendBuf, sendCapacity,
+                         "Did not find an appropriate enum");
                 return -1;
             } else {
+                if (count < 0 || (size_t)count > sizeof(dumBuf)) return -1;
                 memset(dumBuf, 0, sizeof(dumBuf));
                 memcpy(dumBuf, ptr, count);
             }
@@ -753,12 +790,14 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             // Conversion to Short 2Byte
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (charV = erg) : (charV = ergI);
+            if (sendCapacity < 1) return -1;
             memcpy(sendBuf, &charV, 1);
             *sendLen = 1;
         } else if (strstr(uPtr->type, "uchar") == uPtr->type) {
             if (value < 0 || value > UINT8_MAX) return -1;
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (ucharV = erg) : (ucharV = ergI);
+            if (sendCapacity < 1) return -1;
             memcpy(sendBuf, &ucharV, 1);
             *sendLen = 1;
         } else if (strstr(uPtr->type, "short") == uPtr->type) {
@@ -766,6 +805,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (tmpS = erg) : (tmpS = ergI);
             shortV = __cpu_to_le16(tmpS);
+            if (sendCapacity < 2) return -1;
             memcpy(sendBuf, &shortV, 2);
             *sendLen = 2;
         } else if (strstr(uPtr->type, "ushort") == uPtr->type) {
@@ -773,6 +813,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (tmpUS = erg) : (tmpUS = ergI);
             ushortV = __cpu_to_le16(tmpUS);
+            if (sendCapacity < 2) return -1;
             memcpy(sendBuf, &ushortV, 2);
             *sendLen = 2;
         } else if (strstr(uPtr->type, "int") == uPtr->type) {
@@ -780,6 +821,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (tmpI = erg) : (tmpI = ergI);
             intV = __cpu_to_le32(tmpI);
+            if (sendCapacity < 4) return -1;
             memcpy(sendBuf, &intV, 4);
             *sendLen = 4;
         } else if (strstr(uPtr->type, "uint") == uPtr->type) {
@@ -787,6 +829,7 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
             // According to the CPU, the conversion is done here
             (ergType == FLOAT) ? (tmpUI = erg) : (tmpUI = ergI);
             uintV = __cpu_to_le32(tmpUI);
+            if (sendCapacity < 4) return -1;
             memcpy(sendBuf, &uintV, 4);
             *sendLen = 4;
         } else if (uPtr->type) {
