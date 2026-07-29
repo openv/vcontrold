@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <poll.h>
 
 #include "io.h"
 #include "socket.h"
@@ -202,14 +203,12 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
     ssize_t len;
     char string[MAXBUF * 3 + 64];
 
-    fd_set rfds;
-    struct timeval tv;
     int retval;
 
     struct tms tms_t;
     clock_t start, end, mid, mid1;
     unsigned long clktck;
-    if (fd < 0 || fd >= FD_SETSIZE || !r_buf || r_len <= 0 || !etime) {
+    if (fd < 0 || !r_buf || r_len <= 0 || !etime) {
         errno = EINVAL;
         return -1;
     }
@@ -224,11 +223,8 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
 
     i = 0;
     while ( i < r_len ) {
-        FD_ZERO(&rfds);
-        FD_SET(fd, &rfds);
-        tv.tv_sec = TIMEOUT;
-        tv.tv_usec = 0;
-        retval = select(fd + 1, &rfds, NULL, NULL, &tv);
+        struct pollfd pfd = { .fd = fd, .events = POLLIN };
+        retval = poll(&pfd, 1, TIMEOUT * 1000);
         if (retval == 0) {
             logIT(LOG_ERR, "<RECV: read timeout");
             logIT(LOG_INFO, "%s", dump(string, sizeof(string),
@@ -236,15 +232,15 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
             return -1;
         } else if (retval < 0) {
             if (errno == EINTR) {
-                logIT(LOG_INFO, "<RECV: select interrupted - redo");
+                logIT(LOG_INFO, "<RECV: poll interrupted - redo");
                 continue;
             } else {
-                logIT(LOG_ERR, "<RECV: select error %d", retval);
+                logIT(LOG_ERR, "<RECV: poll error %d", retval);
                 logIT(LOG_INFO, "%s", dump(string, sizeof(string),
                                            "<RECV: received", r_buf, i));
                 return -1;
             }
-        } else if ( FD_ISSET(fd, &rfds)) {
+        } else if (pfd.revents & (POLLIN | POLLHUP)) {
             len = read(fd, &r_buf[i], r_len - i);
             if (len == 0) {
                 logIT(LOG_ERR, "<RECV: read eof");
@@ -268,8 +264,9 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
                 mid1 = mid;
                 i += len;
             }
-        } else {
-            continue;
+        } else if (pfd.revents & (POLLERR | POLLNVAL)) {
+            logIT(LOG_ERR, "<RECV: poll descriptor error 0x%x", pfd.revents);
+            return -1;
         }
     }
 
