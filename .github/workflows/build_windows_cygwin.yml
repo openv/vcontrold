@@ -59,7 +59,7 @@ jobs:
       run: |
         git config --global core.autocrlf input
         mkdir build
-        cmake -S . -B ./build  -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON -DMANPAGES=ON
+        cmake -S . -B ./build -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON -DMANPAGES=ON -DBUILD_TESTING=ON
         ls -laF build
 
     - name: Cmake build
@@ -69,6 +69,7 @@ jobs:
         export PATH=/usr/bin:$(cygpath ${SYSTEMROOT})/system32
         git config --global --add safe.directory $(pwd)
         cmake --build build
+        ctest --test-dir build --output-on-failure
         ls -laF build
 
     - name: Set env vars

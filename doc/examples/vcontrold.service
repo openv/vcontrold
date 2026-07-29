@@ -2,16 +2,17 @@
 Description=Viessmann heating systems interface
 Documentation=https://github.com/openv/vcontrold
 After=syslog.target systemd-udev-settle.service
- 
+
 [Service]
 Type=forking
 User=vcontrol
 Group=vcontrol
-ExecStart=/usr/sbin/vcontrold -x /etc/vcontrold/vcontrold.xml
+PIDFile=/run/vcontrold.pid
+ExecStart=/usr/sbin/vcontrold -P /run/vcontrold.pid -x /etc/vcontrold/vcontrold.xml
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=120
 StandardOutput=null
- 
+
 [Install]
 WantedBy=multi-user.target
