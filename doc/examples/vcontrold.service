@@ -4,15 +4,33 @@ Documentation=https://github.com/openv/vcontrold
 After=syslog.target systemd-udev-settle.service
 
 [Service]
-Type=forking
-User=vcontrol
-Group=vcontrol
-PIDFile=/run/vcontrold.pid
-ExecStart=/usr/sbin/vcontrold -P /run/vcontrold.pid -x /etc/vcontrold/vcontrold.xml
+Type=simple
+User=vcontrold
+Group=vcontrold
+ExecStart=/usr/sbin/vcontrold -n -x /etc/vcontrold/vcontrold.xml
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 RestartSec=120
 StandardOutput=null
+NoNewPrivileges=true
+CapabilityBoundingSet=
+PrivateIPC=true
+PrivateTmp=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectSystem=strict
+ReadWritePaths=/var/log/vcontrold
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+SystemCallArchitectures=native
+UMask=0027
 
 [Install]
 WantedBy=multi-user.target
