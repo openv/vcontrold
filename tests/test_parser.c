@@ -408,6 +408,13 @@ int main(void)
                                       invalidConfigurations[i].replacement,
                                       validConfiguration)) return 1;
     }
+    if (!parseXMLFile("xml/20c8/vcontrold.xml") ||
+            !cfgPtr || !cfgPtr->devPtr ||
+            strcmp(cfgPtr->devPtr->id, "20C8") != 0 ||
+            !getCommandNode(cfgPtr->devPtr->cmdPtr, "getTempA") ||
+            !getCommandNode(cfgPtr->devPtr->cmdPtr, "setTempWWSoll")) {
+        return 1;
+    }
     freeAllLists();
     return 0;
 }
