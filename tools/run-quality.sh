@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-project_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+project_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 build_dir=${1:-"$project_dir/build-quality"}
 
 for program in clang-18 clang-tidy run-clang-tidy scan-build cppcheck valgrind; do
@@ -48,6 +48,8 @@ scan-build --status-bugs cmake --build "$scan_dir" --clean-first --parallel
 
 # Valgrind 3.22 cannot initialize its private descriptors with the unusually
 # large soft descriptor limit used by some containers and CI runners.
+# Linux is the supported environment for this quality script.
+# shellcheck disable=SC3045
 ulimit -n 1024
 
 for test_binary in \
