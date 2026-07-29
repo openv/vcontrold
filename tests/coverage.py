@@ -81,7 +81,7 @@ def main():
     parser.add_argument("--core-min", type=float, default=80.0)
     parser.add_argument("--module-min", type=float, default=65.0)
     parser.add_argument("--vcontrold-min", type=float, default=65.0)
-    parser.add_argument("--overall-min", type=float)
+    parser.add_argument("--overall-min", type=float, default=80.0)
     args = parser.parse_args()
 
     source_dir = pathlib.Path(__file__).resolve().parents[1]
@@ -134,10 +134,7 @@ def main():
     if ratio(core_covered, core_total) < args.core_min:
         print(f"ERROR: core aggregate is below {args.core_min:.2f}%")
         failed = True
-    if (
-        args.overall_min is not None
-        and ratio(overall_covered, overall_total) < args.overall_min
-    ):
+    if ratio(overall_covered, overall_total) < args.overall_min:
         print(f"ERROR: overall coverage is below {args.overall_min:.2f}%")
         failed = True
     return 1 if failed else 0

@@ -37,9 +37,13 @@ class FakeServer:
                         "temp": b"12.5 C\n",
                         "bad": b"ERR: unavailable\n",
                         "quoted": b"7.0 quote\\\"\\\\tab\\t\n",
+                        "text": b"not-a-number value\n",
+                        "control": b"1.0 a\b\f\r\t\x01\n",
                     }
                     connection.sendall(responses.get(
                         command, b"ERR: command unknown\n") + PROMPT)
+        except ConnectionResetError:
+            pass
         except Exception as error:  # surfaced in finish()
             self.error = error
         finally:
@@ -80,6 +84,8 @@ def main():
 
     plain = invoke(binary, ["-c", "temp"], 0)
     assert "temp:\n12.5 C" in plain.stdout
+    plain_error = invoke(binary, ["-c", "bad"], 3)
+    assert "server error" in plain_error.stderr
 
     short_json = invoke(binary, ["-j", "-c", "temp,bad"], 3)
     assert json.loads(short_json.stdout) == {"temp": 12.5, "bad": None}
@@ -91,6 +97,9 @@ def main():
     assert parsed[0]["error"] is None
     assert parsed[1]["value"] is None
     assert parsed[1]["error"].startswith("ERR:")
+
+    control_json = invoke(binary, ["-J", "-c", "control"], 0)
+    assert json.loads(control_json.stdout)[0]["raw"].startswith("1.0 a")
 
     munin = invoke(binary, ["-m", "-c", "temp,bad"], 3)
     assert "temp.value 12.500000" in munin.stdout
@@ -115,6 +124,9 @@ def main():
         csv_file = directory / "values.csv"
         invoke(binary, ["-s", str(csv_file), "-c", "temp"], 0)
         assert csv_file.read_text(encoding="utf-8") == "12.500000\n"
+        invoke(binary, ["-s", str(csv_file), "-c", "text,bad"], 3)
+        csv_lines = csv_file.read_text(encoding="utf-8").splitlines()
+        assert csv_lines[-1] == "not-a-number value;"
 
         template = directory / "template.txt"
         template.write_text(
@@ -127,13 +139,66 @@ def main():
         assert "bad err=ERR: unavailable" in rendered.stdout
         assert "escaped=$1" in rendered.stdout
 
+        edge_template = directory / "edge-template.txt"
+        edge_template.write_text(
+            "$R99 $C99 $E99 $99 $R0 "
+            "$variable-name-that-is-far-too-long\n",
+            encoding="utf-8",
+        )
+        edged = invoke(
+            binary, ["-v", "-t", str(edge_template), "-c", "temp"], 0)
+        assert "$R0" in edged.stdout
+
+        executable_template = directory / "execute-template.txt"
+        executable_template.write_text("#!/bin/sh\nexit 0\n", encoding="ascii")
+        executable = directory / "generated-command.sh"
+        executed = invoke(
+            binary,
+            ["-t", str(executable_template), "-x", str(executable),
+             "-c", "temp"],
+            0,
+        )
+        assert executed.returncode == 0 and executable.stat().st_mode & 0o100
+
         output = directory / "output.txt"
         invoke(binary, ["-o", str(output), "-c", "temp"], 0)
         assert "temp:\n12.5 C" in output.read_text(encoding="utf-8")
 
+        missing_parent = directory / "missing" / "output.txt"
+        invoke(binary, ["-o", str(missing_parent), "-c", "temp"], 1)
+        invoke(binary, ["-s", str(missing_parent), "-c", "temp"], 1)
+        invoke(binary, ["-t", str(missing_parent), "-c", "temp"], 1)
+        invoke(binary, ["-f", str(missing_parent)], 1)
+
     version = subprocess.run(
         [binary, "-V"], text=True, capture_output=True, timeout=5, check=False)
     assert version.returncode == 0 and "vclient" in version.stdout
+
+    help_result = subprocess.run(
+        [binary, "--help"], text=True, capture_output=True, timeout=5,
+        check=False)
+    assert help_result.returncode == 1 and "usage:" in help_result.stdout
+
+    no_commands = subprocess.run(
+        [binary], text=True, capture_output=True, timeout=5, check=False)
+    assert no_commands.returncode == 1 and "usage:" in no_commands.stdout
+
+    invalid_separate_port = subprocess.run(
+        [binary, "-p", "0", "-c", "temp"],
+        text=True, capture_output=True, timeout=5, check=False)
+    assert invalid_separate_port.returncode == 1
+
+    unreachable = subprocess.run(
+        [binary, "-h", "127.0.0.1:1", "-c", "temp"],
+        text=True, capture_output=True, timeout=5, check=False)
+    assert unreachable.returncode == 1
+
+    verbose_flags = invoke(
+        binary,
+        ["-v", "-m", "-k", "-j", "-J", "-4", "-6", "-c", "temp"],
+        0,
+    )
+    assert "option -m" in verbose_flags.stdout
 
     invalid_port = subprocess.run(
         [binary, "-h", "127.0.0.1:70000", "-c", "temp"],
