@@ -667,12 +667,15 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     free(tmpPtr);
     logIT(LOG_INFO, "   after EXPAND:%s", eString);
-    if (! (cPtr->send = calloc(strlen(eString) + 1, sizeof(char)))) {
+    char *expanded = calloc(strlen(eString) + 1, sizeof(char));
+    if (!expanded) {
         logIT1(LOG_ERR, "calloc failed");
         return 0;
     }
 
-    strcpy(cPtr->send, eString);
+    strcpy(expanded, eString);
+    free(cPtr->send);
+    cPtr->send = expanded;
     return 1;
 }
 
