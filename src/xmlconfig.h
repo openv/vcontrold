@@ -5,6 +5,7 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 #include <arpa/inet.h>
+#include <stdint.h>
 
 typedef struct config *configPtr;
 typedef struct protocol *protocolPtr;
@@ -92,9 +93,9 @@ typedef struct command {
     char *unit;
     char *errStr;
     char *precmd;
-    unsigned char len;
+    uint8_t len;
     int retry;
-    unsigned short recvTimeout;
+    uint16_t recvTimeout;
     char bit;
     char nodeType;
     // 0: everything copied
@@ -108,8 +109,8 @@ typedef struct command {
 typedef struct icmd {
     char *name;
     char *send;
-    unsigned char retry;
-    unsigned short recvTimeout;
+    uint8_t retry;
+    uint16_t recvTimeout;
     icmdPtr next;
 } iCmd;
 
