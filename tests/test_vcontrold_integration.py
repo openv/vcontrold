@@ -80,6 +80,7 @@ def main():
     vsim = str(pathlib.Path(sys.argv[2]).resolve())
     source_xml = pathlib.Path(sys.argv[3]).resolve()
     control_port = free_port()
+    simulator_port = free_port()
 
     version = subprocess.run(
         [vcontrold, "-V"], capture_output=True, text=True, timeout=5)
@@ -87,12 +88,12 @@ def main():
         raise AssertionError(f"invalid -V result: {version}")
     help_result = subprocess.run(
         [vcontrold, "--help"], capture_output=True, text=True, timeout=5)
-    if help_result.returncode == 0 or "usage: vcontrold" not in help_result.stdout:
+    if help_result.returncode != 0 or "usage: vcontrold" not in help_result.stdout:
         raise AssertionError(f"invalid --help result: {help_result}")
     short_help_result = subprocess.run(
         [vcontrold, "-h"], capture_output=True, text=True, timeout=5)
     if (
-        short_help_result.returncode == 0
+        short_help_result.returncode != 0
         or "usage: vcontrold" not in short_help_result.stdout
     ):
         raise AssertionError(f"invalid -h result: {short_help_result}")
@@ -136,7 +137,8 @@ def main():
         shutil.copy2(source_xml / "vito.xml", work / "vito.xml")
         config_text = (source_xml / "vcontrold.xml").read_text(encoding="utf-8")
         config_text = config_text.replace(
-            "<tty>/dev/ttySAC1</tty>", "<tty>127.0.0.1:6578</tty>")
+            "<tty>/dev/ttySAC1</tty>",
+            f"<tty>127.0.0.1:{simulator_port}</tty>")
         config_text = config_text.replace(
             "<config>", "<config>\n      <readonly>y</readonly>", 1)
         config.write_text(config_text, encoding="utf-8")
@@ -150,11 +152,12 @@ def main():
             raise AssertionError(f"invalid XML was accepted: {invalid_config}")
 
         simulator = subprocess.Popen(
-            [vsim], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+            [vsim, "-p", str(simulator_port)],
+            stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
         daemon = None
         try:
             # Ensure the simulator is ready, then release the probe connection.
-            with connect_with_retry(6578, simulator, "vsim"):
+            with connect_with_retry(simulator_port, simulator, "vsim"):
                 pass
 
             daemon = subprocess.Popen(
@@ -164,7 +167,7 @@ def main():
                     "-4",
                     "-p", str(control_port),
                     "-L", "127.0.0.1",
-                    "-d", "127.0.0.1:6578",
+                    "-d", f"127.0.0.1:{simulator_port}",
                     "-l", str(work / "vcontrold.log"),
                     "-x", str(config),
                 ],
@@ -193,7 +196,7 @@ def main():
                     "detail no-such-command": b"ERR: command",
                     "does-not-exist": b"ERR:",
                     "raw": b"raw mode disabled",
-                    "close": b"127.0.0.1:6578 closed",
+                    "close": f"127.0.0.1:{simulator_port} closed".encode(),
                 }
                 for request, expected in checks.items():
                     response = command(client, request)
@@ -286,7 +289,7 @@ def main():
                     "-p", str(batch_port),
                     "-L", "127.0.0.1",
                     "-c", str(command_file),
-                    "-d", "127.0.0.1:6578",
+                    "-d", f"127.0.0.1:{simulator_port}",
                     "-l", str(work / "batch.log"),
                     "-x", str(config),
                 ],
@@ -339,7 +342,7 @@ def main():
                     "-p", str(daemon_port),
                     "-L", "127.0.0.1",
                     "-P", str(pidfile),
-                    "-d", "127.0.0.1:6578",
+                    "-d", f"127.0.0.1:{simulator_port}",
                     "-l", str(work / "daemon.log"),
                     "-x", str(config),
                 ],

@@ -66,9 +66,9 @@ int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
 static void sigHupHandler(int signo);
-int reloadConfig();
+int reloadConfig(void);
 
-void usage()
+void usage(int status)
 {
     //      1       10        20        30        40        50        60        70        80
 
@@ -78,13 +78,13 @@ void usage()
     printf("                 [-n|--nodaemon] [-v|--verbose] [-V|--Version]\n");
     printf("                 [-c|--commandfile <command-file>] [-P|--pidfile <pid-file>]\n");
     printf("                 [-U|--username <username>] [-G|--groupname <groupname>]\n");
-    printf("                 [-?|--help] [-i|--vsim] [-g|--debug]\n");
+    printf("                 [-h|--help] [-i|--vsim] [-g|--debug]\n");
     printf("                 [-4|--inet4] [-6|--inet6]\n\n");
 
-    exit(1);
+    exit(status);
 }
 
-int reloadConfig()
+int reloadConfig(void)
 {
     if (parseXMLFile(xmlfile)) {
         logIT(LOG_NOTICE, "XML file %s reloaded", xmlfile);
@@ -485,7 +485,10 @@ int interactive(int socketfd, char *device)
                     sendLen = strlen(sendBuf);
                 }
 
-                if (execByteCode(pcPtr->cmpPtr, fd, pRecvBuf, sizeof(pRecvBuf), sendBuf, sendLen, 1, pcPtr->bit, pcPtr->retry, pRecvBuf, pcPtr->recvTimeout) == -1) {
+                if (execByteCode(pcPtr->cmpPtr, fd, pRecvBuf, sizeof(pRecvBuf),
+                                 sendBuf, sizeof(sendBuf), sendLen, 1,
+                                 pcPtr->bit, pcPtr->retry, pRecvBuf,
+                                 pcPtr->recvTimeout) == -1) {
                     logIT(LOG_ERR, "Error executing %s", readBuf);
                     sendErrMsg(socketfd);
                     break;
@@ -500,7 +503,10 @@ int interactive(int socketfd, char *device)
             // -1: Error
             //  0: Preformatted string
             //  n: raw bytes
-            count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf), sendBuf, sendLen, noUnit, cPtr->bit, cPtr->retry, pRecvBuf, cPtr->recvTimeout);
+            count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf),
+                                 sendBuf, sizeof(sendBuf), sendLen, noUnit,
+                                 cPtr->bit, cPtr->retry, pRecvBuf,
+                                 cPtr->recvTimeout);
 
             if (count == -1) {
                 logIT(LOG_ERR, "Error executing %s", readBuf);
@@ -755,7 +761,7 @@ int main(int argc, char *argv[])
                 printf("\n");
             }
             if (strcmp("help", long_options[option_index].name) == 0) {
-                usage();
+                usage(0);
             }
             break;
         case '4':
@@ -815,9 +821,11 @@ int main(int argc, char *argv[])
             xmlfile = optarg;
             break;
         case 'h':
+            usage(0);
+            break;
         case '?':
             // getopt_long already printed an error message.
-            usage();
+            usage(2);
             break;
         default:
             abort();

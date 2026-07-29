@@ -12,11 +12,12 @@ void *__real_realloc(void *pointer, size_t size);
 
 static int fail_calloc;
 static int fail_realloc;
+static int calloc_failure_triggered;
 
 void *__wrap_calloc(size_t count, size_t size)
 {
-    if (fail_calloc) {
-        fail_calloc = 0;
+    if (fail_calloc > 0 && --fail_calloc == 0) {
+        calloc_failure_triggered = 1;
         return NULL;
     }
     return __real_calloc(count, size);
@@ -80,5 +81,25 @@ int main(void)
     int result = recvSync(descriptors[0], "prompt", &received);
     close(descriptors[0]);
     free(received);
-    return result == 0 ? 0 : 1;
+    if (result != 0) return 1;
+
+    /*
+     * Walk every application calloc reached while parsing, expanding and
+     * compiling a complete configuration. Every injected failure must be
+     * reported transactionally; the first index not reached marks the end.
+     */
+    int tested_failures = 0;
+    for (int failure_index = 1; failure_index < 2000; ++failure_index) {
+        fail_calloc = failure_index;
+        calloc_failure_triggered = 0;
+        int loaded = parseXMLFile(
+            VCONTROLD_SOURCE_DIR "/xml/300/vcontrold.xml");
+        if (!calloc_failure_triggered) {
+            if (!loaded) return 1;
+            break;
+        }
+        if (loaded) return 1;
+        tested_failures++;
+    }
+    return tested_failures >= 50 ? 0 : 1;
 }

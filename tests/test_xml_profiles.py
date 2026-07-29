@@ -5,6 +5,15 @@ import pathlib
 import sys
 import xml.etree.ElementTree as ET
 
+TYPE_LENGTHS = {
+    "char": 1,
+    "uchar": 1,
+    "short": 2,
+    "ushort": 2,
+    "int": 4,
+    "uint": 4,
+}
+
 
 def fail(message):
     print(message, file=sys.stderr)
@@ -25,7 +34,8 @@ def validate(profile):
         return fail(f"{profile}: selected device is not defined")
 
     units = {
-        node.findtext("abbrev") for node in config.findall("./units/unit")
+        node.findtext("abbrev"): node.findtext("type")
+        for node in config.findall("./units/unit")
     }
     names = set()
     getters = {}
@@ -43,6 +53,28 @@ def validate(profile):
             ok = fail(f"{profile}: {name} lacks address or length")
         if unit and unit not in units:
             ok = fail(f"{profile}: {name} references unknown unit {unit}")
+        if strict and address:
+            try:
+                if len(address) not in (2, 4):
+                    raise ValueError
+                int(address, 16)
+            except ValueError:
+                ok = fail(f"{profile}: {name} has invalid address {address!r}")
+        try:
+            numeric_length = int(length) if length is not None else None
+        except ValueError:
+            numeric_length = None
+            ok = fail(f"{profile}: {name} has invalid length {length!r}")
+        if (
+            strict
+            and unit in units
+            and units[unit] in TYPE_LENGTHS
+            and numeric_length != TYPE_LENGTHS[units[unit]]
+        ):
+            ok = fail(
+                f"{profile}: {name} length {numeric_length} conflicts with "
+                f"{unit}/{units[unit]} ({TYPE_LENGTHS[units[unit]]} bytes)"
+            )
         key = (address, length, unit)
         if name.startswith("get"):
             getters[key] = name

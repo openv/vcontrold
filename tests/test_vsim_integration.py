@@ -7,14 +7,20 @@ import sys
 import time
 
 
-def connect_with_retry():
+def free_port():
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def connect_with_retry(port):
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
         try:
-            return socket.create_connection(("127.0.0.1", 6578), timeout=1)
+            return socket.create_connection(("127.0.0.1", port), timeout=1)
         except OSError:
             time.sleep(0.05)
-    raise AssertionError("vsim did not open port 6578")
+    raise AssertionError(f"vsim did not open port {port}")
 
 
 def exchange(connection, request, expected):
@@ -32,10 +38,22 @@ def exchange(connection, request, expected):
 
 def main():
     binary = str(pathlib.Path(sys.argv[1]).resolve())
+    for arguments in (["unexpected"], ["-p", "0"], ["-p", "65536"],
+                      ["-p", "not-a-port"]):
+        result = subprocess.run(
+            [binary, *arguments], stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE, text=True, check=False)
+        if result.returncode != 2:
+            raise AssertionError(
+                f"vsim accepted invalid arguments {arguments}: "
+                f"exit {result.returncode}")
+
+    port = free_port()
     process = subprocess.Popen(
-        [binary], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        [binary, "-p", str(port)],
+        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
     try:
-        with connect_with_retry() as connection:
+        with connect_with_retry(port) as connection:
             exchange(connection, b"\x04", b"\x05")
             exchange(connection, b"\xff\xaa\x04", b"\x05")
             exchange(
