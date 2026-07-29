@@ -16,7 +16,7 @@ function (git_get_description DESCVAR)
     find_package (Git QUIET)
 
     if (NOT GIT_FOUND)
-        message (${severity} "git_get_description: could not find package git!")
+        message (${_severity} "git_get_description: could not find package git!")
         set (${DESCVAR} "-NOTFOUND" PARENT_SCOPE)
         return()
     endif()
