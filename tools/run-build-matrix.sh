@@ -3,7 +3,7 @@
 
 set -eu
 
-source_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+source_dir=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 matrix_root=${TMPDIR:-/tmp}/vcontrold-build-matrix-$$
 trap 'rm -rf "$matrix_root"' EXIT HUP INT TERM
 
