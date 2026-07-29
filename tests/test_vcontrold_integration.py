@@ -181,6 +181,7 @@ def main():
                     "protocol": b"P300",
                     "commands": b"getTempA",
                     "detail getTempA": b"getTempA",
+                    "detail setTempWWsoll": b"SetReturnStatus",
                     "detail getBetriebArt": b"Enum Bytes:",
                     "detail no-such-command": b"ERR: command",
                     "does-not-exist": b"ERR:",
@@ -192,6 +193,11 @@ def main():
                     if expected not in response:
                         raise AssertionError(
                             f"{request!r}: expected {expected!r}, got {response!r}")
+
+                denied_write = command(client, "setTempWWsoll 50")
+                if b"disabled by readonly" not in denied_write:
+                    raise AssertionError(
+                        f"readonly write was not rejected: {denied_write!r}")
 
                 # This is a simulated read. It exercises the complete parser,
                 # semaphore, socket-device, P300 framer and unit pipeline.
@@ -229,6 +235,24 @@ def main():
                     raise AssertionError(f"valid reload failed: {response!r}")
                 if b"26.300000 Grad Celsius" not in command(client, "getTempA"):
                     raise AssertionError("read failed after successful reload")
+
+                # Exercise raw command collection against vsim only. The raw
+                # file contains only the P300 reset/read handshake used by
+                # the existing command-file test; it performs no controller
+                # write.
+                writable_config = valid_config.decode("utf-8").replace(
+                    "<readonly>y</readonly>", "<readonly>n</readonly>")
+                config.write_text(writable_config, encoding="utf-8")
+                if b"reloaded" not in command(client, "reload"):
+                    raise AssertionError("could not enable simulated raw mode")
+                client.sendall(b"raw\nSEND 04\nRECV 1\nEND\n")
+                raw_response = receive_until(client)
+                if PROMPT not in raw_response:
+                    raise AssertionError(
+                        f"raw mode response was incomplete: {raw_response!r}")
+                config.write_bytes(valid_config)
+                if b"reloaded" not in command(client, "reload"):
+                    raise AssertionError("could not restore readonly mode")
 
                 client.sendall(b"quit\n")
                 goodbye = client.recv(4096)

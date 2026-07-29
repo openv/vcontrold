@@ -357,6 +357,14 @@ int interactive(int socketfd, char *device)
                 snprintf(string, sizeof(string), "ERR: raw mode disabled by readonly configuration\n");
                 Writen(socketfd, string, strlen(string));
             } else {
+                if (fd >= 0) {
+                    framer_closeDevice(fd);
+                    fd = -1;
+                }
+                if (lockOwned) {
+                    vcontrol_semrelease();
+                    lockOwned = 0;
+                }
                 rawModus(socketfd, device);
             }
         } else if (strcmp(cmd, "close") == 0) {
@@ -399,6 +407,7 @@ int interactive(int socketfd, char *device)
                 snprintf(string, sizeof(string),
                          "ERR: command %s disabled by readonly configuration\n", cPtr->name);
                 Writen(socketfd, string, strlen(string));
+                Writen(socketfd, PROMPT, strlen(PROMPT));
                 continue;
             }
             memset(string, 0, sizeof(string));
