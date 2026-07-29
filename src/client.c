@@ -128,11 +128,11 @@ ssize_t recvSync(int fd, char *wait, char **recv)
 }
 
 // port is never 0, which is a bad number for a tcp port
-int connectServer(char *host, int port)
+int connectServer(const char *host, int port)
 {
     int sockfd;
 
-    if (host[0] != '/' ) {
+    if (host && host[0] != '/' ) {
         sockfd = openCliSocket(host, port, 0);
         if (sockfd >= 0) {
             logIT(LOG_INFO, "Setup connection to %s port %d", host, port);
@@ -156,22 +156,32 @@ void disconnectServer(int sockfd)
     sendServer(sockfd, string, strlen(string));
     recvSync(sockfd, BYE, &ptr);
     free(ptr);
-    close(sockfd);
+    if (close(sockfd) < 0) {
+        logIT(LOG_ERR, "Closing server connection failed: %s",
+              strerror(errno));
+    }
 }
 
-size_t sendServer(int fd, char *s_buf, size_t len)
+ssize_t sendServer(int fd, const char *s_buf, size_t len)
 {
     char string[256];
     int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0) {
+        logIT(LOG_ERR, "Reading socket flags failed: %s", strerror(errno));
+        return -1;
+    }
 
     // Empty buffer
     // As tcflush does not work correctly, we use nonblocking read
-    if (flags >= 0) {
-        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        logIT(LOG_ERR, "Setting socket nonblocking failed: %s",
+              strerror(errno));
+        return -1;
     }
     while (readn(fd, string, sizeof(string)) > 0) { }
-    if (flags >= 0) {
-        fcntl(fd, F_SETFL, flags);
+    if (fcntl(fd, F_SETFL, flags) < 0) {
+        logIT(LOG_ERR, "Restoring socket flags failed: %s", strerror(errno));
+        return -1;
     }
     return Writen(fd, s_buf, len);
 }
@@ -230,9 +240,11 @@ trPtr sendCmdFile(int sockfd, const char *filename)
     return startPtr;
 }
 
-trPtr sendCmds(int sockfd, char *commands)
+trPtr sendCmds(int sockfd, const char *commands)
 {
     char *sptr;
+    char *saveptr = NULL;
+    char *commandCopy;
     trPtr ptr;
     trPtr startPtr = NULL;
 
@@ -240,15 +252,21 @@ trPtr sendCmds(int sockfd, char *commands)
         logIT1(LOG_ERR, "Empty command list");
         return NULL;
     }
-    sptr = strtok(commands, ",");
+    commandCopy = strdup(commands);
+    if (!commandCopy) {
+        logIT1(LOG_ERR, "strdup error");
+        return NULL;
+    }
+    sptr = strtok_r(commandCopy, ",", &saveptr);
     while (sptr) {
         if (!*sptr) {
-            sptr = strtok(NULL, ",");
+            sptr = strtok_r(NULL, ",", &saveptr);
             continue;
         }
         ptr = newTrNode(startPtr);
         if (!ptr) {
             freeTrList(startPtr);
+            free(commandCopy);
             return NULL;
         }
         if (! startPtr) {
@@ -258,11 +276,13 @@ trPtr sendCmds(int sockfd, char *commands)
         if (!ptr->cmd) {
             logIT1(LOG_ERR, "calloc error");
             freeTrList(startPtr);
+            free(commandCopy);
             return NULL;
         }
         memcpy(ptr->cmd, sptr, strlen(sptr) + 1);
-        sptr = strtok(NULL, ",");
+        sptr = strtok_r(NULL, ",", &saveptr);
     }
+    free(commandCopy);
 
     if (!startPtr) {
         logIT1(LOG_ERR, "Empty command list");

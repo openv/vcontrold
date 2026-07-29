@@ -10,7 +10,7 @@
 int openSocket(int tcpport);
 int openSocket2(int tcpport, const char* listenAddress);
 int listenToSocket(int listenfd, int makeChild);
-int openCliSocket(char *host, int port, int noTCPdelay);
+int openCliSocket(const char *host, int port, int noTCPdelay);
 void closeSocket(int sockfd);
 
 ssize_t writen(int fd, const void *vptr, size_t n);

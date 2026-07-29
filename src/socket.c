@@ -172,7 +172,7 @@ void closeSocket(int sockfd)
     close(sockfd);
 }
 
-int openCliSocket(char *host, int port, int noTCPdelay)
+int openCliSocket(const char *host, int port, int noTCPdelay)
 {
     struct addrinfo hints; // use hints for ipv46 address resolution
     struct addrinfo *res;
@@ -181,6 +181,10 @@ int openCliSocket(char *host, int port, int noTCPdelay)
     int sockfd;
     char port_string[16]; // the IPv6 world use a char* instead of an int in getaddrinfo
 
+    if (!host || !*host || port < 1 || port > 65535) {
+        errno = EINVAL;
+        return -1;
+    }
     memset(&hints, 0, sizeof(struct addrinfo));
 
     hints.ai_family   = PF_UNSPEC;
