@@ -6,6 +6,8 @@
 #define SEMAPHORE_H
 
 #include <sys/param.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
 
 #ifdef _CYGWIN__
 #define TMPFILENAME "vcontrol.lockXXXXXX"
@@ -15,6 +17,7 @@
 
 extern char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 
+int initsem(key_t key, int nsems);
 int vcontrol_seminit(void);
 int vcontrol_semfree(void);
 int vcontrol_semget(void);

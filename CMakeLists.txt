@@ -173,6 +173,29 @@ if(BUILD_TESTING)
     )
     add_test(NAME framer COMMAND test_framer)
 
+    add_executable(test_io
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_io.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
+    )
+    target_include_directories(test_io PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_compile_definitions(test_io PRIVATE _XOPEN_SOURCE=700)
+    add_test(NAME io COMMAND test_io)
+
+    add_executable(test_semaphore
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_semaphore.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/semaphore.c
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+    )
+    target_include_directories(test_semaphore PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+    target_compile_definitions(test_semaphore PRIVATE _XOPEN_SOURCE=700)
+    add_test(NAME semaphore COMMAND test_semaphore)
+
     add_executable(test_arithmetic
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_arithmetic.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
