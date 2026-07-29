@@ -89,6 +89,13 @@ def main():
         [vcontrold, "--help"], capture_output=True, text=True, timeout=5)
     if help_result.returncode == 0 or "usage: vcontrold" not in help_result.stdout:
         raise AssertionError(f"invalid --help result: {help_result}")
+    short_help_result = subprocess.run(
+        [vcontrold, "-h"], capture_output=True, text=True, timeout=5)
+    if (
+        short_help_result.returncode == 0
+        or "usage: vcontrold" not in short_help_result.stdout
+    ):
+        raise AssertionError(f"invalid -h result: {short_help_result}")
     invalid_port = subprocess.run(
         [vcontrold, "-p", "65536"], capture_output=True, text=True, timeout=5)
     if invalid_port.returncode != 2 or "Invalid TCP port" not in invalid_port.stderr:
