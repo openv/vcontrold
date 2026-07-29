@@ -196,6 +196,30 @@ if(BUILD_TESTING)
     target_compile_definitions(test_semaphore PRIVATE _XOPEN_SOURCE=700)
     add_test(NAME semaphore COMMAND test_semaphore)
 
+    if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        add_executable(test_alloc_failures
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_alloc_failures.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/unit.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/framer.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
+        )
+        target_include_directories(test_alloc_failures PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src ${LIBXML2_INCLUDE_DIR}
+        )
+        target_compile_definitions(test_alloc_failures PRIVATE _XOPEN_SOURCE=700)
+        target_link_libraries(test_alloc_failures PRIVATE ${LIBS} m)
+        target_link_options(test_alloc_failures PRIVATE
+            -Wl,--wrap=calloc -Wl,--wrap=realloc
+        )
+        add_test(NAME alloc_failures COMMAND test_alloc_failures)
+    endif()
+
     add_executable(test_arithmetic
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_arithmetic.c
         ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
