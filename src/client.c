@@ -64,7 +64,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     *recv = NULL;
     if (! (*recv = calloc(ALLOCSIZE, sizeof(char)))) {
         logIT1(LOG_ERR, "calloc error");
-        exit(1);
+        return -1;
     }
 
     rptr = *recv;
@@ -95,7 +95,9 @@ ssize_t recvSync(int fd, char *wait, char **recv)
             char *tmp = realloc(*recv, ALLOCSIZE * sizeof(char) *  ++rcount);
             if (tmp == NULL) {
                 logIT1(LOG_ERR, "realloc error");
-                exit(1);
+                free(*recv);
+                *recv = NULL;
+                return -1;
             } else {
                 *recv = tmp;
                 rptr = *recv + i;
@@ -114,10 +116,7 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     }
 
     char *tmp = realloc(*recv, strlen(*recv) + 1);
-    if (tmp == NULL) {
-        logIT1(LOG_ERR, "realloc error");
-        exit(1);
-    } else {
+    if (tmp != NULL) {
         *recv = tmp;
     }
 

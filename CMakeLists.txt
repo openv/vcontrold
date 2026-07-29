@@ -41,7 +41,7 @@ add_custom_target(
     COMMENT "Updating version header."
     BYPRODUCTS ${CMAKE_BINARY_DIR}/version.h
 )
-set(vcontrold_SRCS
+set(vcontrold_core_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/xmlconfig.c
@@ -51,20 +51,17 @@ set(vcontrold_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/framer.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/unit.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/arithmetic.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/vcontrold.c
 )
 
-set(vclient_SRCS
+set(vclient_core_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/common.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/io.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/client.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/vclient.c
 )
 
-set(vsim_SRCS
+set(vsim_core_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/socket.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/vsim.c
 )
 
 
@@ -76,21 +73,40 @@ set(LIBS
     ${CMAKE_DL_LIBS}
 )
 
-add_executable(vcontrold ${vcontrold_SRCS})
-target_link_libraries(vcontrold ${LIBS})
-target_include_directories(vcontrold PRIVATE ${CMAKE_BINARY_DIR} ${LIBXML2_INCLUDE_DIR})
+add_library(vcontrold_core STATIC ${vcontrold_core_SRCS})
+target_link_libraries(vcontrold_core PUBLIC ${LIBS} m)
+target_include_directories(vcontrold_core
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src
+    PRIVATE ${LIBXML2_INCLUDE_DIR}
+)
+target_compile_definitions(vcontrold_core PRIVATE _XOPEN_SOURCE=700)
+
+add_executable(vcontrold ${CMAKE_CURRENT_SOURCE_DIR}/src/vcontrold.c)
+target_link_libraries(vcontrold PRIVATE vcontrold_core)
+target_include_directories(vcontrold PRIVATE ${CMAKE_BINARY_DIR})
 target_compile_definitions(vcontrold PRIVATE _XOPEN_SOURCE=700)
 add_dependencies(vcontrold UpdateVersion)
 
 if(VCLIENT)
-    add_executable(vclient ${vclient_SRCS})
+    add_library(vclient_core STATIC ${vclient_core_SRCS})
+    target_link_libraries(vclient_core PUBLIC ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+    target_include_directories(vclient_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(vclient_core PRIVATE _XOPEN_SOURCE=700)
+
+    add_executable(vclient ${CMAKE_CURRENT_SOURCE_DIR}/src/vclient.c)
+    target_link_libraries(vclient PRIVATE vclient_core)
     target_include_directories(vclient PRIVATE ${CMAKE_BINARY_DIR})
     target_compile_definitions(vclient PRIVATE _XOPEN_SOURCE=700)
     add_dependencies(vclient UpdateVersion)
 endif()
 
 if(VSIM)
-    add_executable(vsim ${vsim_SRCS})
+    add_library(vsim_core STATIC ${vsim_core_SRCS})
+    target_include_directories(vsim_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_definitions(vsim_core PRIVATE _XOPEN_SOURCE=700)
+
+    add_executable(vsim ${CMAKE_CURRENT_SOURCE_DIR}/src/vsim.c)
+    target_link_libraries(vsim PRIVATE vsim_core)
     target_include_directories(vsim PRIVATE ${CMAKE_BINARY_DIR})
     target_compile_definitions(vsim PRIVATE _XOPEN_SOURCE=700)
     add_dependencies(vsim UpdateVersion)

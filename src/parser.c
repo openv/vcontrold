@@ -476,8 +476,8 @@ compilePtr newCompileNode(compilePtr ptr)
 
     nptr = calloc(1, sizeof(Compile));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -733,6 +733,10 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
             return NULL;
         }
         cmpPtr = newCompileNode(cmpStartPtr);
+        if (!cmpPtr) {
+            removeCompileList(cmpStartPtr);
+            return NULL;
+        }
 
         if (!cmpStartPtr) {
             cmpStartPtr = cmpPtr;

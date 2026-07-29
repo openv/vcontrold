@@ -1043,7 +1043,10 @@ int main(int argc, char *argv[])
             }
         }
 
-        vcontrol_seminit();
+        if (!vcontrol_seminit()) {
+            logIT1(LOG_ERR, "Could not initialize process semaphore");
+            exit(1);
+        }
 
         signal(SIGPIPE, SIG_IGN);
         while (!terminateRequested) {
@@ -1069,7 +1072,10 @@ int main(int argc, char *argv[])
         }
         close(listenfd);
     } else {
-        vcontrol_seminit();
+        if (!vcontrol_seminit()) {
+            logIT1(LOG_ERR, "Could not initialize process semaphore");
+            exit(1);
+        }
     }
 
     if (cmdfile && *cmdfile) {
@@ -1077,7 +1083,9 @@ int main(int argc, char *argv[])
                     cfgPtr && cfgPtr->tty ? cfgPtr->tty : device);
     }
 
-    vcontrol_semfree();
+    if (!vcontrol_semfree()) {
+        logIT1(LOG_ERR, "Could not remove process semaphore cleanly");
+    }
 
     if (fd >= 0) {
         close(fd);

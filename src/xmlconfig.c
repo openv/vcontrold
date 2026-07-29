@@ -105,8 +105,8 @@ protocolPtr newProtocolNode(protocolPtr ptr)
 
     nptr = calloc(1, sizeof(Protocol));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc protocol failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -154,8 +154,8 @@ unitPtr newUnitNode(unitPtr ptr)
 
     nptr = calloc(1, sizeof(Unit));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc unit failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -208,8 +208,8 @@ macroPtr newMacroNode(macroPtr ptr)
 
     nptr = calloc(1, sizeof(Macro));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc macro failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -256,8 +256,8 @@ commandPtr newCommandNode(commandPtr ptr)
 
     nptr = calloc(1, sizeof(Command));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc command failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -344,8 +344,8 @@ devicePtr newDeviceNode(devicePtr ptr)
 
     nptr = calloc(1, sizeof(Device));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc device failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -391,8 +391,8 @@ icmdPtr newIcmdNode(icmdPtr ptr)
 
     nptr = calloc(1, sizeof(iCmd));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc protocol command failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -437,8 +437,8 @@ enumPtr newEnumNode(enumPtr ptr)
 
     nptr = calloc(1, sizeof(Enumerate));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc enumeration failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -734,6 +734,10 @@ unitPtr parseUnit(xmlNodePtr cur)
                 // read new unit
                 logIT(LOG_INFO, "New unit: %s", unit);
                 uPtr = newUnitNode(uStartPtr);
+                if (!uPtr) {
+                    removeUnitList(uStartPtr);
+                    return NULL;
+                }
                 if (! uStartPtr) {
                     uStartPtr = uPtr;
                 }
@@ -750,6 +754,10 @@ unitPtr parseUnit(xmlNodePtr cur)
                   cur->line, cur->name, cur->type, chrPtr);
             if (chrPtr) {
                 ePtr = newEnumNode(uPtr->ePtr);
+                if (!ePtr) {
+                    removeUnitList(uStartPtr);
+                    return NULL;
+                }
                 if (! uPtr->ePtr) {
                     uPtr->ePtr = ePtr;
                 }
@@ -889,6 +897,10 @@ macroPtr parseMacro(xmlNodePtr cur)
                 // Read new macro
                 logIT(LOG_INFO, "New macro: %s", macro);
                 mPtr = newMacroNode(mStartPtr);
+                if (!mPtr) {
+                    removeMacroList(mStartPtr);
+                    return NULL;
+                }
                 if (! mStartPtr) {
                     mStartPtr = mPtr;
                 }
@@ -959,6 +971,10 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
                 // Read new command
                 logIT(LOG_INFO, "New command: %s", command);
                 cPtr = newCommandNode(cStartPtr);
+                if (!cPtr) {
+                    removeCommandList(cStartPtr);
+                    return NULL;
+                }
                 if (! cStartPtr) {
                     cStartPtr = cPtr;
                 }
@@ -1003,6 +1019,9 @@ commandPtr parseCommand(xmlNodePtr cur, commandPtr cPtr, devicePtr dePtr)
                 }
                 // Now again recursively parseCommand for all children
                 ncPtr = newCommandNode(NULL);
+                if (!ncPtr) {
+                    return NULL;
+                }
                 parseCommand(cur->children, ncPtr, dePtr);
                 ncPtr->nodeType = 2;
                 if (! dPtr->cmdPtr) {
@@ -1216,6 +1235,10 @@ icmdPtr parseICmd(xmlNodePtr cur)
                 // Read new command
                 logIT(LOG_INFO, "New iCommand: %s", command);
                 icPtr = newIcmdNode(icStartPtr);
+                if (!icPtr) {
+                    removeIcmdList(icStartPtr);
+                    return NULL;
+                }
                 if (! icStartPtr) {
                     icStartPtr = icPtr;
                 }
@@ -1300,6 +1323,10 @@ devicePtr parseDevice(xmlNodePtr cur, protocolPtr pPtr)
                 // Read new protocol
                 logIT(LOG_INFO, "    Neues Device: name=%s ID=%s proto=%s", name, id, proto);
                 dPtr = newDeviceNode(dStartPtr);
+                if (!dPtr) {
+                    removeDeviceList(dStartPtr);
+                    return NULL;
+                }
                 if (! dStartPtr) {
                     dStartPtr = dPtr;
                 } // Remember anchor
@@ -1364,6 +1391,10 @@ protocolPtr parseProtocol(xmlNodePtr cur)
                 // Read new protocol
                 logIT(LOG_INFO, "New protocol %s", proto);
                 protoPtr = newProtocolNode(protoStartPtr);
+                if (!protoPtr) {
+                    removeProtocolList(protoStartPtr);
+                    return NULL;
+                }
                 if (! protoStartPtr) {
                     protoStartPtr = protoPtr;
                 } // Remember anchor
@@ -1561,6 +1592,9 @@ int parseXMLFile(char *filename)
                 // We don't know this one and copy the commands
                 logIT(LOG_INFO, "Copying command %s to device %s", cPtr->name, dPtr->id);
                 ncPtr = newCommandNode(dPtr->cmdPtr);
+                if (!ncPtr) {
+                    goto fail;
+                }
                 if (! dPtr->cmdPtr) {
                     dPtr->cmdPtr = ncPtr;
                 }
