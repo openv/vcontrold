@@ -92,43 +92,58 @@ int initsem(key_t key, int nsems)
 int semid = -1;
 char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 
-int vcontrol_seminit()
+int vcontrol_seminit(void)
 {
     key_t key;
     int tmpfile;
     snprintf(tmpfilename, sizeof(tmpfilename), "%s", TMPFILENAME);
     if ((tmpfile = mkstemp(tmpfilename)) < 0) {
-        perror("mkstemp");
-        exit(1);
+        logIT(LOG_ERR, "mkstemp failed: %s", strerror(errno));
+        return 0;
     }
-    close(tmpfile);
+    if (close(tmpfile) < 0) {
+        int saved_errno = errno;
+        unlink(tmpfilename);
+        errno = saved_errno;
+        logIT(LOG_ERR, "close semaphore key file failed: %s", strerror(errno));
+        return 0;
+    }
 
     if ((key = ftok(tmpfilename, 'V')) == -1) {
-        perror("ftok");
-        exit(1);
+        logIT(LOG_ERR, "ftok failed: %s", strerror(errno));
+        unlink(tmpfilename);
+        tmpfilename[0] = '\0';
+        return 0;
     }
 
     // grab the semaphore set created by seminit.c:
     if ((semid = initsem(key, 1)) == -1) {
-        perror("initsem");
-        exit(1);
+        logIT(LOG_ERR, "initsem failed: %s", strerror(errno));
+        unlink(tmpfilename);
+        tmpfilename[0] = '\0';
+        return 0;
     }
     return 1;
 }
 
-int vcontrol_semfree()
+int vcontrol_semfree(void)
 {
     // remove it:
     if (semid >= 0 && semctl(semid, 0, IPC_RMID) == -1 &&
             errno != EINVAL && errno != EIDRM) {
-        perror("semctl");
-        exit(1);
+        logIT(LOG_ERR, "semctl failed: %s", strerror(errno));
+        return 0;
     }
-    unlink(tmpfilename);
+    semid = -1;
+    if (tmpfilename[0] != '\0' && unlink(tmpfilename) < 0 && errno != ENOENT) {
+        logIT(LOG_ERR, "unlink semaphore key file failed: %s", strerror(errno));
+        return 0;
+    }
+    tmpfilename[0] = '\0';
     return 1; // what should we return?
 }
 
-int vcontrol_semget()
+int vcontrol_semget(void)
 {
     logIT(LOG_INFO, "Process %d tries to aquire lock", getpid());
 
@@ -148,7 +163,7 @@ int vcontrol_semget()
     return 1;
 }
 
-int vcontrol_semrelease()
+int vcontrol_semrelease(void)
 {
     struct sembuf sb;
 

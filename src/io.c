@@ -303,7 +303,7 @@ int waitfor(int fd, char *w_buf, int w_len)
         }
         if ( r_buf[0] != w_buf[i]) {
             logIT1(LOG_ERR, "Lost synchronization");
-            exit(1);
+            return 0;
         }
     }
 
