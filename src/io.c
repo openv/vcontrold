@@ -30,20 +30,32 @@
 
 void closeDevice(int fd)
 {
-    close(fd);
+    if (fd >= 0 && close(fd) < 0) {
+        logIT(LOG_ERR, "Could not close device: %s", strerror(errno));
+    }
 }
 
-int openDevice(char *device)
+int openDevice(const char *device)
 {
     // We differentiate TTY and Socket connections.
     // Socker: no / at the beginning and a :
     int fd;
-    char *dptr;
+    const char *dptr;
 
+    if (!device || !*device) {
+        errno = EINVAL;
+        return -1;
+    }
     if (device[0] != '/' && (dptr = strchr(device, ':'))) {
         char host[MAXBUF];
-        int port;
-        port = atoi(dptr + 1);
+        char *end = NULL;
+        errno = 0;
+        long parsedPort = strtol(dptr + 1, &end, 10);
+        if (errno || end == dptr + 1 || *end != '\0' ||
+                parsedPort < 1 || parsedPort > 65535) {
+            logIT1(LOG_ERR, "Invalid network device port");
+            return -1;
+        }
         // The dptr device gives us the length of the host
         memset(host, 0, sizeof(host));
         size_t hostlen = (size_t)(dptr - device);
@@ -54,7 +66,7 @@ int openDevice(char *device)
         memcpy(host, device, hostlen);
         host[hostlen] = '\0';
         // Third parameter == 1 --> noTCPDelay set
-        fd = openCliSocket(host, port, 1);
+        fd = openCliSocket(host, (int)parsedPort, 1);
     } else {
         fd = opentty(device);
     }
@@ -67,7 +79,7 @@ int openDevice(char *device)
     return fd;
 }
 
-int opentty(char *device)
+int opentty(const char *device)
 {
     int fd;
 
@@ -128,7 +140,7 @@ int opentty(char *device)
     return fd;
 }
 
-int my_send(int fd, char *s_buf, int len)
+int my_send(int fd, const char *s_buf, int len)
 {
     int i;
     int wr;
@@ -197,7 +209,16 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
     struct tms tms_t;
     clock_t start, end, mid, mid1;
     unsigned long clktck;
-    clktck = sysconf(_SC_CLK_TCK);
+    if (fd < 0 || fd >= FD_SETSIZE || !r_buf || r_len <= 0 || !etime) {
+        errno = EINVAL;
+        return -1;
+    }
+    long ticks = sysconf(_SC_CLK_TCK);
+    if (ticks <= 0) {
+        logIT1(LOG_ERR, "Could not determine clock tick rate");
+        return -1;
+    }
+    clktck = (unsigned long)ticks;
     start = times(&tms_t);
     mid1 = start;
 
@@ -260,7 +281,7 @@ int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime)
     return i;
 }
 
-int waitfor(int fd, char *w_buf, int w_len)
+int waitfor(int fd, const char *w_buf, int w_len)
 {
     int i;
     time_t start;
