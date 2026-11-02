@@ -40,7 +40,7 @@ int openSocket2(int tcpport, const char* listenAddress)
 {
     int listenfd;
     int n;
-    char *port;
+    char port[16];
     struct addrinfo hints, *res, *ressave;
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -61,11 +61,8 @@ int openSocket2(int tcpport, const char* listenAddress)
     hints.ai_protocol = IPPROTO_TCP;
     hints.ai_flags    = AI_PASSIVE;
 
-    asprintf(&port, "%d", tcpport);
-
+    snprintf(port, sizeof(port), "%d", tcpport);
     n = getaddrinfo(listenAddress, port, &hints, &res);
-
-    free(port);
 
     if (n != 0) {
         logIT(LOG_ERR, "getaddrinfo error: [%s]\n", gai_strerror(n));
@@ -83,10 +80,13 @@ int openSocket2(int tcpport, const char* listenAddress)
                           res->ai_socktype,
                           res->ai_protocol);
         int optval = 1;
-        if (listenfd > 0 && setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
+        if (listenfd >= 0 && setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,
                                        &optval, sizeof optval) < 0 ) {
             logIT1(LOG_ERR, "setsockopt failed!");
-            exit(1);
+            close(listenfd);
+            listenfd = -1;
+            res = res->ai_next;
+            continue;
         }
         if (! (listenfd < 0)) {
             if (bind(listenfd, res->ai_addr, res->ai_addrlen) == 0) {
@@ -101,13 +101,15 @@ int openSocket2(int tcpport, const char* listenAddress)
     if (listenfd < 0) {
         freeaddrinfo(ressave);
         fprintf(stderr, "socket error: could not open socket\n");
-        exit(1);
+        return -1;
     }
 
     if (listen(listenfd, LISTEN_QUEUE) != 0) {
         freeaddrinfo(ressave);
-        fprintf(stderr, "listen error: could not listen on %s:%d\n", listenAddress, tcpport);
-        exit(1);
+        fprintf(stderr, "listen error: could not listen on %s:%d\n",
+                listenAddress ? listenAddress : "*", tcpport);
+        close(listenfd);
+        return -1;
     }
     if (hints.ai_family == PF_INET6) {
         logIT(LOG_NOTICE, "TCP socket %s::%d opened", (listenAddress == NULL ? "" : listenAddress), tcpport);
@@ -132,14 +134,19 @@ int listenToSocket(int listenfd, int makeChild)
     signal(SIGCHLD, SIG_IGN);
 
     for (;;) {
+        cliaddrlen = sizeof(cliaddr);
         connfd = accept(listenfd, (struct sockaddr *) &cliaddr, &cliaddrlen);
-        getnameinfo((struct sockaddr *) &cliaddr, cliaddrlen, clienthost, sizeof(clienthost),
-                    clientservice, sizeof(clientservice), NI_NUMERICHOST);
 
         if (connfd < 0) {
-            logIT(LOG_NOTICE, "accept on host %s: port %s", clienthost, clientservice);
-            close(connfd);
+            if (errno == EINTR || errno == EBADF || errno == EINVAL) return -1;
+            logIT(LOG_ERR, "accept failed: %s", strerror(errno));
             continue;
+        }
+        if (getnameinfo((struct sockaddr *)&cliaddr, cliaddrlen,
+                    clienthost, sizeof(clienthost), clientservice,
+                    sizeof(clientservice), NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
+            snprintf(clienthost, sizeof(clienthost), "?");
+            snprintf(clientservice, sizeof(clientservice), "?");
         }
 
         logIT(LOG_NOTICE, "Client connected %s:%s (FD:%d)", clienthost, clientservice, connfd);
@@ -149,8 +156,10 @@ int listenToSocket(int listenfd, int makeChild)
             // unser Kind
             close(listenfd);
             return connfd;
-        } else {
+        } else if (childpid > 0) {
             logIT(LOG_INFO, "Child process started with pid %d", childpid);
+        } else {
+            logIT(LOG_ERR, "fork failed: %s", strerror(errno));
         }
 
         close(connfd);
@@ -163,7 +172,7 @@ void closeSocket(int sockfd)
     close(sockfd);
 }
 
-int openCliSocket(char *host, int port, int noTCPdelay)
+int openCliSocket(const char *host, int port, int noTCPdelay)
 {
     struct addrinfo hints; // use hints for ipv46 address resolution
     struct addrinfo *res;
@@ -172,6 +181,10 @@ int openCliSocket(char *host, int port, int noTCPdelay)
     int sockfd;
     char port_string[16]; // the IPv6 world use a char* instead of an int in getaddrinfo
 
+    if (!host || !*host || port < 1 || port > 65535) {
+        errno = EINVAL;
+        return -1;
+    }
     memset(&hints, 0, sizeof(struct addrinfo));
 
     hints.ai_family   = PF_UNSPEC;
@@ -180,9 +193,9 @@ int openCliSocket(char *host, int port, int noTCPdelay)
 
     snprintf(port_string, sizeof(port_string), "%d", port);
     n = getaddrinfo(host, port_string, &hints, &res);
-    if (n < 0) {
+    if (n != 0) {
         logIT(LOG_ERR, "Error in getaddrinfo: %s:%s", host, gai_strerror(n));
-        exit(1);
+        return -1;
     }
 
     ressave = res;
@@ -246,9 +259,9 @@ ssize_t writen(int fd, const void *vptr, size_t n)
 
 // end writen
 
-ssize_t Writen(int fd, void *ptr, size_t nbytes)
+ssize_t Writen(int fd, const void *ptr, size_t nbytes)
 {
-    if (writen(fd, ptr, nbytes) != nbytes) {
+    if (writen(fd, ptr, nbytes) != (ssize_t)nbytes) {
         logIT1(LOG_ERR, "Error writing to socket");
         return 0;
     }
@@ -338,7 +351,7 @@ again:
 
 ssize_t readline(int fd, void *vptr, size_t maxlen)
 {
-    int n;
+    size_t n;
     ssize_t rc;
     char c;
     char *ptr;

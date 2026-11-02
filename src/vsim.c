@@ -29,32 +29,50 @@
 #define SERVERPORT 6578
 int makeDaemon = 0;
 int inetversion = 0;
+static volatile sig_atomic_t stopRequested = 0;
+static int serverSocket = -1;
 int readCmdFile(char *filename, char *result, int *resultLen, char *device );
 int interactive(int socketfd, char *device);
 void printHelp(int socketfd);
 int rawModus (int socketfd, char *device);
 static void sigPipeHandler(int signo);
+static void terminationHandler(int signo);
 
-void logIT (int class, char *string, ...)
+void logIT(int class, const char *string, ...)
 {
     va_list arguments;
-    char *print_buffer;
+    char *print_buffer = NULL;
 
+    (void)class;
     va_start(arguments, string);
-    vasprintf(&print_buffer, string, arguments);
+    if (vasprintf(&print_buffer, string, arguments) < 0) {
+        print_buffer = NULL;
+    }
     va_end(arguments);
+    if (!print_buffer) return;
     printf("%s\n", print_buffer);
     free(print_buffer);
 }
 
 static void sigPipeHandler(int signo)
 {
+    (void)signo;
     logIT(LOG_ERR, "Received SIGPIPE");
 }
 
-static void dump(char *buf, int len, char *txt)
+static void terminationHandler(int signo)
 {
-    int i = 0;
+    (void)signo;
+    stopRequested = 1;
+    if (serverSocket >= 0) {
+        close(serverSocket);
+        serverSocket = -1;
+    }
+}
+
+static void dump(const unsigned char *buf, size_t len, const char *txt)
+{
+    size_t i = 0;
     printf("%s:\n", txt);
     for (i = 0; i < len; i++) {
         printf(" %02x", (unsigned char)buf[i]);
@@ -63,13 +81,12 @@ static void dump(char *buf, int len, char *txt)
 }
 
 typedef struct {
-    int cmdlen;
-    char cmd[20];
-    int rsplen;
-    char rsp[20];
+    size_t cmdlen;
+    unsigned char cmd[20];
+    size_t rsplen;
+    unsigned char rsp[20];
 } ctable;
 
-int cmdc = 9;
 ctable cmds[] = {
     { 1, { 0x04 }, 1, { 0x05 } },
     { 3, { 0x16, 0x00, 0x00 }, 1, { 0x06 } },
@@ -95,13 +112,14 @@ ctable cmds[] = {
         11, { 0x06, 0x41, 0x07, 0x01, 0x01, 0x08, 0x04, 0x02, 0x00, 0x00, 0x17 }
     },
 };
+static const size_t cmdc = sizeof(cmds) / sizeof(cmds[0]);
 
-char input[100];
-char inpidx = 0;
+unsigned char input[100];
+size_t inpidx = 0;
 
 static void handle(int fd)
 {
-    char buf[1] = "\0";
+    unsigned char buf[1] = {0};
     ssize_t len;
 
     while ( 1 ) {
@@ -113,21 +131,40 @@ static void handle(int fd)
             printf("eof read\n");
             return;
         } else {
-            int i = 0;
-            int j = 0;
+            ssize_t i = 0;
             while ( i < len ) {
+                if (inpidx == sizeof(input)) {
+                    logIT(LOG_ERR, "Simulator input buffer overflow avoided");
+                    inpidx = 0;
+                }
                 input[inpidx] = buf[i];
                 dump(&input[inpidx], 1, "received char:");
                 inpidx++;
-                for ( j = 0 ; j < cmdc; j++) {
-                    if ( cmds[j].cmd[0] == input[0] ) {
-                        if (( cmds[j].cmdlen == inpidx) && (!memcmp(cmds[j].cmd, input, inpidx))) {
+                int possible = 0;
+                for (size_t j = 0; j < cmdc; j++) {
+                    if (inpidx <= cmds[j].cmdlen &&
+                            memcmp(cmds[j].cmd, input, inpidx) == 0) {
+                        possible = 1;
+                        if (cmds[j].cmdlen == inpidx) {
                             dump(input, inpidx, "received cmd:");
                             dump(cmds[j].rsp, cmds[j].rsplen, "answer:");
-                            if (writen(fd, cmds[j].rsp, cmds[j].rsplen) != cmds[j].rsplen) {
+                            if (writen(fd, cmds[j].rsp, cmds[j].rsplen) !=
+                                    (ssize_t)cmds[j].rsplen) {
                                 printf("not completely written\n");
                             }
                             inpidx = 0;
+                            break;
+                        }
+                    }
+                }
+                if (!possible && inpidx != 0) {
+                    unsigned char last = input[inpidx - 1];
+                    inpidx = 0;
+                    for (size_t j = 0; j < cmdc; j++) {
+                        if (cmds[j].cmd[0] == last) {
+                            input[0] = last;
+                            inpidx = 1;
+                            break;
                         }
                     }
                 }
@@ -141,9 +178,31 @@ int main(int argc, char *argv[])
 {
     int sockfd = -1;
     int listenfd = -1;
+    int serverPort = SERVERPORT;
 
-    listenfd = openSocket(SERVERPORT);
-    while (1) {
+    if (argc == 3 && strcmp(argv[1], "-p") == 0) {
+        char *end = NULL;
+        long parsed;
+        errno = 0;
+        parsed = strtol(argv[2], &end, 10);
+        if (errno || end == argv[2] || *end || parsed < 1 || parsed > 65535) {
+            fprintf(stderr, "Invalid simulator port: %s\n", argv[2]);
+            return 2;
+        }
+        serverPort = (int)parsed;
+    } else if (argc != 1) {
+        fprintf(stderr, "usage: vsim [-p port]\n");
+        return 2;
+    }
+    if (signal(SIGTERM, terminationHandler) == SIG_ERR ||
+            signal(SIGINT, terminationHandler) == SIG_ERR) {
+        logIT(LOG_ERR, "Could not install termination handler");
+        return 1;
+    }
+    listenfd = openSocket(serverPort);
+    if (listenfd < 0) return 1;
+    serverSocket = listenfd;
+    while (!stopRequested) {
         sockfd = listenToSocket(listenfd, makeDaemon);
         if (signal(SIGPIPE, sigPipeHandler) == SIG_ERR) {
             logIT(LOG_ERR, "Signal error");
@@ -156,7 +215,10 @@ int main(int argc, char *argv[])
             logIT(LOG_INFO, "\nvcontrold disconnected");
             closeSocket(sockfd);
         } else {
+            if (stopRequested) break;
             logIT(LOG_ERR, "Error during connection setup");
         }
     }
+    if (serverSocket >= 0) closeSocket(serverSocket);
+    return 0;
 }

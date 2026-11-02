@@ -25,7 +25,7 @@ char errMsg[2000];
 int errClass = 99;
 int dbgFD = -1;
 
-int initLog(int useSyslog, char *logfile, int debugSwitch)
+int initLog(int useSyslog, const char *logfile, int debugSwitch)
 {
     // If needed, opes the syslog or log file
     if (useSyslog) {
@@ -40,6 +40,10 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
             return 0;
         }
 
+        if (logFD) {
+            fclose(logFD);
+            logFD = NULL;
+        }
         logFD = fopen(logfile, "a");
         if (! logFD) {
             printf("Could not open %s: %s", logfile, strerror (errno));
@@ -53,7 +57,7 @@ int initLog(int useSyslog, char *logfile, int debugSwitch)
     return 1;
 }
 
-void logIT (int class, char *string, ...)
+void logIT(int class, const char *string, ...)
 {
     va_list arguments;
     time_t t;
@@ -61,13 +65,18 @@ void logIT (int class, char *string, ...)
     char *cPtr;
     time(&t);
     tPtr = ctime(&t);
-    char *print_buffer;
+    char *print_buffer = NULL;
     int pid;
     long avail;
 
     va_start(arguments, string);
-    vasprintf(&print_buffer, string, arguments);
+    if (vasprintf(&print_buffer, string, arguments) < 0) {
+        print_buffer = NULL;
+    }
     va_end(arguments);
+    if (!print_buffer) {
+        return;
+    }
 
     if (class <= LOG_ERR)  {
         avail = sizeof(errMsg) - strlen(errMsg) - 2;
@@ -121,11 +130,12 @@ void logIT (int class, char *string, ...)
 
 void sendErrMsg(int fd)
 {
-    char string[256];
-
     if ((fd >= 0) && (errClass <= 3)) {
-        snprintf(string, sizeof(string), "ERR: %s", errMsg);
-        write(fd, string, strlen(string));
+        const char prefix[] = "ERR: ";
+        ssize_t ignored;
+        ignored = write(fd, prefix, sizeof(prefix) - 1);
+        ignored = write(fd, errMsg, strlen(errMsg));
+        (void)ignored;
         errClass = 99; // Thus it's only displayed once
         memset(errMsg, 0, sizeof(errMsg));
     }
@@ -140,29 +150,39 @@ void setDebugFD(int fd)
     dbgFD = fd;
 }
 
-char hex2chr(char *hex)
+char hex2chr(const char *hex)
 {
-    char buffer[16];
-    int hex_value = -1;
-
-    snprintf(buffer, sizeof(buffer), "0x%s", hex);
-    if (sscanf(hex, "%x", &hex_value) != 1) {
+    char *end = NULL;
+    unsigned long hex_value;
+    if (!hex || !*hex) {
+        return (char)-1;
+    }
+    errno = 0;
+    hex_value = strtoul(hex, &end, 16);
+    if (errno || end == hex || *end || hex_value > 0xff) {
         logIT(LOG_WARNING, "Invalid hex char in %s", hex);
+        return (char)-1;
     }
 
-    return hex_value;
+    return (char)hex_value;
 }
 
-int char2hex(char *outString, const char *charPtr, int len)
+int char2hex(char *outString, size_t outSize, const char *charPtr, int len)
 {
     int n;
-    char string[MAXBUF];
-
-    memset(string, 0, sizeof(string));
+    if (!outString || outSize == 0 || !charPtr || len <= 0) {
+        if (outString) *outString = '\0';
+        return 0;
+    }
+    if ((size_t)len > (outSize - 1) / 3) {
+        *outString = '\0';
+        logIT(LOG_ERR, "Hex output buffer too small for %d bytes", len);
+        return 0;
+    }
     for (n = 0; n < len; n++) {
         unsigned char byte = *charPtr++ & 255;
-        snprintf(string, sizeof(string), "%02X ", byte);
-        strcat(outString, string);
+        snprintf(outString + (size_t)n * 3, outSize - (size_t)n * 3,
+                 "%02X ", byte);
     }
 
     // Remove last space
@@ -173,18 +193,32 @@ int char2hex(char *outString, const char *charPtr, int len)
 
 short string2chr(char *line, char *buf, short bufsize)
 {
-    char *sptr;
+    char *sptr, *saveptr = NULL;
     short count;
 
     count = 0;
 
-    sptr = strtok(line, " ");
-    do {
-        if (*sptr == ' ') {
-            continue;
+    if (!line || !buf || bufsize <= 0) return -1;
+    sptr = strtok_r(line, " \t\r\n", &saveptr);
+    while (sptr && count < bufsize) {
+        char value = hex2chr(sptr);
+        if (value == (char)-1 && strcmp(sptr, "ff") && strcmp(sptr, "FF")) {
+            return -1;
         }
-        buf[count++] = hex2chr(sptr);
-    } while ((sptr = strtok(NULL, " ")) && (count < bufsize));
+        buf[count++] = value;
+        sptr = strtok_r(NULL, " \t\r\n", &saveptr);
+    }
+    if (sptr) return -1;
 
     return count;
+}
+
+size_t stripLineEnding(char *line, size_t length)
+{
+    if (!line) return 0;
+    while (length > 0 &&
+            (line[length - 1] == '\r' || line[length - 1] == '\n')) {
+        line[--length] = '\0';
+    }
+    return length;
 }

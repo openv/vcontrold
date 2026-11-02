@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
 
 #define HEX 8
 #define HEXDIGIT 10
@@ -22,74 +24,42 @@
 #define MODULO 104
 #define KAUF 110
 #define KZU 111
-#define BYTE0 200
-#define BYTE1 201
-#define BYTE2 202
-#define BYTE3 203
-#define BYTE4 204
-#define BYTE5 205
-#define BYTE6 206
-#define BYTE7 207
-#define BYTE8 208
-#define BYTE9 209
-#define BYTEA 210
-#define BYTEB 211
-#define BYTEC 212
-#define BYTED 213
-#define BYTEE 214
-#define BYTEF 215
-#define PBYTE0 216
-#define PBYTE1 217
-#define PBYTE2 218
-#define PBYTE3 219
-#define PBYTE4 220
-#define PBYTE5 221
-#define PBYTE6 222
-#define PBYTE7 223
-#define PBYTE8 224
-#define PBYTE9 225
-#define PBYTEA 226
-#define PBYTEB 227
-#define PBYTEC 228
-#define PBYTED 229
-#define PBYTEE 230
-#define PBYTEF 231
-#define BITPOS 232
-#define VALUE 300
-#define NICHT 400
-#define UND 401
-#define ODER 402
-#define XOR 403
-#define SHL 404
-#define SHR 405
+#define BYTE_FIRST 200
+#define BYTE_LAST 299
+#define PBYTE_FIRST 300
+#define PBYTE_LAST 399
+#define BITPOS 400
+#define VALUE 410
+#define NICHT 500
+#define UND 501
+#define ODER 502
+#define XOR 503
+#define SHL 504
+#define SHR 505
 
 int nextToken(char **str, char **c, int *count);
 void  pushBack(char **str, int n);
-float execExpression(char **str, unsigned char *bPtr, float floatV, char *err);
-float execTerm(char **str, unsigned char *bPtr, float floatV, char *err);
-float execFactor(char **str, unsigned  char *bPtr, float floatV, char *err);
-int execIExpression(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
-int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
-int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err);
+double execExpression(char **str, const unsigned char *bPtr, int bufferLen,
+                      double floatV, char *err);
+double execTerm(char **str, const unsigned char *bPtr, int bufferLen,
+                double floatV, char *err);
+double execFactor(char **str, const unsigned char *bPtr, int bufferLen,
+                  double floatV, char *err);
+int execIExpression(char **str, const unsigned char *bPtr, int bufferLen,
+                    char bitpos, const char *pPtr, char *err);
+int execITerm(char **str, const unsigned char *bPtr, int bufferLen,
+              char bitpos, const char *pPtr, char *err);
+int execIFactor(char **str, const unsigned char *bPtr, int bufferLen,
+                char bitpos, const char *pPtr, char *err);
 
-float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
+double execExpression(char **str, const unsigned char *bPtr, int bufferLen,
+                      double floatV, char *err)
 {
     int f = 1;
-    float term1, term2;
+    double term1, term2;
     //float exp1,exp2;
     char *item;
-    //unsigned char bPtr[10];
-    unsigned char bPtr[16];
     int n;
-
-    //printf("execExpression: %s\n",*str);
-
-    // Tweak bPtr Bytes 0..9 and copy them to nPtr
-    // We did not receive characters
-    for (n = 0; n <= 15; n++) {
-        //bPtr[n]=*bInPtr++ & 255;
-        bPtr[n] = *bInPtr++;
-    }
 
     switch (nextToken(str, &item, &n)) {
     case PLUS:
@@ -103,7 +73,7 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
         break;
     }
 
-    term1 = execTerm(str, bPtr, floatV, err) * f;
+    term1 = execTerm(str, bPtr, bufferLen, floatV, err) * f;
     if (*err) {
         return 0;
     }
@@ -125,7 +95,7 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
             return term1;
         }
 
-        term2 = execTerm(str, bPtr, floatV, err);
+        term2 = execTerm(str, bPtr, bufferLen, floatV, err);
         if (*err) {
             return 0;
         }
@@ -137,16 +107,17 @@ float execExpression(char **str, unsigned char *bInPtr, float floatV, char *err)
     return term1;
 }
 
-float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
+double execTerm(char **str, const unsigned char *bPtr, int bufferLen,
+                double floatV, char *err)
 {
-    float factor1, factor2;
+    double factor1, factor2;
     int op;
     char *item;
     int n;
 
     //printf("execTerm: %s\n",*str);
 
-    factor1 = execFactor(str, bPtr, floatV, err);
+    factor1 = execFactor(str, bPtr, bufferLen, floatV, err);
     if (*err) {
         return 0;
     }
@@ -165,7 +136,7 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
             //printf("  ret(%f)\n",factor1);
             return factor1;
         }
-        factor2 = execFactor(str, bPtr, floatV, err);
+        factor2 = execFactor(str, bPtr, bufferLen, floatV, err);
         //printf(" F2=%f\n",factor2);
         if (*err) {
             return 0;
@@ -173,56 +144,37 @@ float execTerm(char **str, unsigned char *bPtr, float floatV, char *err)
         if (op == MAL) {
             factor1 *= factor2;
         } else {
+            if (factor2 == 0.0) {
+                sprintf(err, "division by zero");
+                return 0;
+            }
             factor1 /= factor2;
         }
     }
 }
 
-float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
+double execFactor(char **str, const unsigned char *bPtr, int bufferLen,
+                  double floatV, char *err)
 {
     char nstring[100];
-    float expression;
-    float factor;
+    double expression;
+    double factor;
     char *nPtr;
     char *item;
-    char token;
+    int token;
     int n;
 
     //printf("execFactor: %s\n",*str);
 
-    switch (nextToken(str, &item, &n)) {
-    case BYTE0:
-        return bPtr[0];
-    case BYTE1:
-        return bPtr[1];
-    case BYTE2:
-        return bPtr[2];
-    case BYTE3:
-        return bPtr[3];
-    case BYTE4:
-        return bPtr[4];
-    case BYTE5:
-        return bPtr[5];
-    case BYTE6:
-        return bPtr[6];
-    case BYTE7:
-        return bPtr[7];
-    case BYTE8:
-        return bPtr[8];
-    case BYTE9:
-        return bPtr[9];
-    case BYTEA:
-        return bPtr[10];
-    case BYTEB:
-        return bPtr[11];
-    case BYTEC:
-        return bPtr[12];
-    case BYTED:
-        return bPtr[13];
-    case BYTEE:
-        return bPtr[14];
-    case BYTEF:
-        return bPtr[15];
+    int parsedToken = nextToken(str, &item, &n);
+    if (parsedToken >= BYTE_FIRST && parsedToken <= BYTE_LAST) {
+        int offset = parsedToken - BYTE_FIRST;
+        if (bPtr && offset < bufferLen) return bPtr[offset];
+        snprintf(err, 128, "factor B%d index out of bounds (size=%d)",
+                 offset, bufferLen);
+        return 0;
+    }
+    switch (parsedToken) {
     case VALUE:
         return floatV;
     case HEX:
@@ -232,20 +184,32 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         nPtr += 2;
         token = nextToken(str, &item, &n);
         while ((token == DIGIT) || (token == HEXDIGIT)) {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
             token = nextToken(str, &item, &n);
         }
         pushBack(str, n);
-        sscanf(nstring, "%f", &factor);
+        factor = strtod(nstring, NULL);
         return factor;
     case DIGIT:
         nPtr = nstring;
         do {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
         // If a . follows, we have a decimal number
         if (token == PUNKT) {
             do {
+                if (nPtr >= nstring + sizeof(nstring) - 1) {
+                    sprintf(err, "numeric literal too long");
+                    return 0;
+                }
                 *nPtr++ = *item;
             } while ((token = nextToken(str, &item, &n)) == DIGIT);
         }
@@ -255,7 +219,7 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         //printf("  Zahl: %s (f:%f)\n",nstring,factor);
         return factor;
     case KAUF:
-        expression = execExpression(str, bPtr, floatV, err);
+        expression = execExpression(str, bPtr, bufferLen, floatV, err);
         if (*err) {
             return 0;
         }
@@ -265,29 +229,19 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
         }
         return expression;
     default:
-        sprintf(err, "expected factor: B0..BF number ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..B99 number ( ) [%c]\n", *item);
         return 0;
     }
 }
 
-int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
+int execIExpression(char **str, const unsigned char *bPtr, int bufferLen,
+                    char bitpos, const char *pPtr, char *err)
 {
-    int f = 1;
     int term1, term2;
     //int exp1, exp2;
     int op;
     char *item;
-    unsigned char bPtr[16];
     int n;
-
-    //printf("execExpression: %s\n", *str);
-
-    // Tweak bPtr bytes 0..9 and copy them to nPtr
-    // We have received characters
-    for (n = 0; n <= 15; n++) {
-        //bPtr[n]=*bInPtr++ & 255;
-        bPtr[n] = *bInPtr++;
-    }
 
     op = ERROR;
     switch (nextToken(str, &item, &n)) {
@@ -306,11 +260,11 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     }
 
     if (op == MINUS) {
-        term1 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
+        term1 = execITerm(str, bPtr, bufferLen, bitpos, pPtr, err) * -1;
     } else if (op == NICHT) {
-        term1 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
+        term1 = ~(execITerm(str, bPtr, bufferLen, bitpos, pPtr, err));
     } else {
-        term1 = execITerm(str, bPtr, bitpos, pPtr, err);
+        term1 = execITerm(str, bPtr, bufferLen, bitpos, pPtr, err);
     }
 
     if (*err) {
@@ -321,7 +275,6 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     int t;
     op = ERROR;
     while ((t = nextToken(str, &item, &n)) != END) {
-        f = 1;
         switch (t) {
         case PLUS:
             op = PLUS;
@@ -339,11 +292,11 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
         }
 
         if (op == MINUS) {
-            term2 = execITerm(str, bPtr, bitpos, pPtr, err) * -1;
+            term2 = execITerm(str, bPtr, bufferLen, bitpos, pPtr, err) * -1;
         } else if (op == NICHT) {
-            term2 = ~(execITerm(str, bPtr, bitpos, pPtr, err));
+            term2 = ~(execITerm(str, bPtr, bufferLen, bitpos, pPtr, err));
         } else if (op == PLUS) {
-            term2 = execITerm(str, bPtr, bitpos, pPtr, err);
+            term2 = execITerm(str, bPtr, bufferLen, bitpos, pPtr, err);
         } if (*err) {
             return 0;
         }
@@ -355,7 +308,8 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     return term1;
 }
 
-int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
+int execITerm(char **str, const unsigned char *bPtr, int bufferLen,
+              char bitpos, const char *pPtr, char *err)
 {
     int factor1, factor2;
     int op;
@@ -364,7 +318,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
 
     //printf("execTerm: %s\n",*str);
 
-    factor1 = execIFactor(str, bPtr, bitpos, pPtr, err);
+    factor1 = execIFactor(str, bPtr, bufferLen, bitpos, pPtr, err);
     if (*err) {
         return 0;
     }
@@ -401,7 +355,7 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
             return factor1;
         }
 
-        factor2 = execIFactor(str, bPtr, bitpos, pPtr, err);
+        factor2 = execIFactor(str, bPtr, bufferLen, bitpos, pPtr, err);
 
         if (*err) {
             return 0;
@@ -410,8 +364,16 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
         if (op == MAL) {
             factor1 *= factor2;
         } else if (op == GETEILT) {
+            if (factor2 == 0) {
+                sprintf(err, "division by zero");
+                return 0;
+            }
             factor1 /= factor2;
         } else if (op == MODULO) {
+            if (factor2 == 0) {
+                sprintf(err, "modulo by zero");
+                return 0;
+            }
             factor1 %= factor2;
         } else if (op == UND) {
             factor1 &= factor2;
@@ -420,8 +382,25 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
         } else if (op == XOR) {
             factor1 ^= factor2;
         } else if (op == SHL) {
+            if (factor2 < 0 || factor2 >= (int)(sizeof(int) * 8)) {
+                sprintf(err, "invalid shift count");
+                return 0;
+            }
+            if (factor1 < 0 ||
+                    (factor2 > 0 && factor1 > (INT_MAX >> factor2))) {
+                sprintf(err, "invalid left shift operand");
+                return 0;
+            }
             factor1 <<= factor2;
         } else if (op == SHR) {
+            if (factor2 < 0 || factor2 >= (int)(sizeof(int) * 8)) {
+                sprintf(err, "invalid shift count");
+                return 0;
+            }
+            if (factor1 < 0) {
+                sprintf(err, "invalid right shift operand");
+                return 0;
+            }
             factor1 >>= factor2;
         } else {
             sprintf(err, "Error exec ITerm: Unknown token %d", op);
@@ -430,85 +409,37 @@ int execITerm(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *er
     }
 }
 
-int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *err)
+int execIFactor(char **str, const unsigned char *bPtr, int bufferLen,
+                char bitpos, const char *pPtr, char *err)
 {
     char nstring[100];
     int expression;
     int factor;
     char *nPtr;
     char *item;
-    char token;
+    int token;
     int n;
 
     //printf("execFactor: %s\n",*str);
 
-    switch (nextToken(str, &item, &n)) {
-    case BYTE0:
-        return ((int)bPtr[0]) & 0xff;
-    case BYTE1:
-        return ((int)bPtr[1]) & 0xff;
-    case BYTE2:
-        return ((int)bPtr[2]) & 0xff;
-    case BYTE3:
-        return ((int)bPtr[3]) & 0xff;
-    case BYTE4:
-        return ((int)bPtr[4]) & 0xff;
-    case BYTE5:
-        return ((int)bPtr[5]) & 0xff;
-    case BYTE6:
-        return ((int)bPtr[6]) & 0xff;
-    case BYTE7:
-        return ((int)bPtr[7]) & 0xff;
-    case BYTE8:
-        return ((int)bPtr[8]) & 0xff;
-    case BYTE9:
-        return ((int)bPtr[9]) & 0xff;
-    case BYTEA:
-        return ((int)bPtr[10]) & 0xff;
-    case BYTEB:
-        return ((int)bPtr[11]) & 0xff;
-    case BYTEC:
-        return ((int)bPtr[12]) & 0xff;
-    case BYTED:
-        return ((int)bPtr[13]) & 0xff;
-    case BYTEE:
-        return ((int)bPtr[14]) & 0xff;
-    case BYTEF:
-        return ((int)bPtr[15]) & 0xff;
+    int parsedToken = nextToken(str, &item, &n);
+    if (parsedToken >= BYTE_FIRST && parsedToken <= BYTE_LAST) {
+        int offset = parsedToken - BYTE_FIRST;
+        if (bPtr && offset < bufferLen) return ((int)bPtr[offset]) & 0xff;
+        snprintf(err, 128, "factor B%d index out of bounds (size=%d)",
+                 offset, bufferLen);
+        return 0;
+    }
+    if (parsedToken >= PBYTE_FIRST && parsedToken <= PBYTE_LAST) {
+        int offset = parsedToken - PBYTE_FIRST;
+        if (pPtr && offset < bufferLen) return ((int)pPtr[offset]) & 0xff;
+        snprintf(err, 128, "factor P%d index out of bounds (size=%d)",
+                 offset, bufferLen);
+        return 0;
+    }
+    switch (parsedToken) {
     case BITPOS:
         return ((int)bitpos) & 0xff;
-    case PBYTE0:
-        return ((int)pPtr[0]) & 0xff;
-    case PBYTE1:
-        return ((int)pPtr[1]) & 0xff;
-    case PBYTE2:
-        return ((int)pPtr[2]) & 0xff;
-    case PBYTE3:
-        return ((int)pPtr[3]) & 0xff;
-    case PBYTE4:
-        return ((int)pPtr[4]) & 0xff;
-    case PBYTE5:
-        return ((int)pPtr[5]) & 0xff;
-    case PBYTE6:
-        return ((int)pPtr[6]) & 0xff;
-    case PBYTE7:
-        return ((int)pPtr[7]) & 0xff;
-    case PBYTE8:
-        return ((int)pPtr[8]) & 0xff;
-    case PBYTE9:
-        return ((int)pPtr[9]) & 0xff;
-    case PBYTEA:
-        return ((int)pPtr[10]) & 0xff;
-    case PBYTEB:
-        return ((int)pPtr[11]) & 0xff;
-    case PBYTEC:
-        return ((int)pPtr[12]) & 0xff;
-    case PBYTED:
-        return ((int)pPtr[13]) & 0xff;
-    case PBYTEE:
-        return ((int)pPtr[14]) & 0xff;
-    case PBYTEF:
-        return ((int)pPtr[15]) & 0xff;
     case HEX:
         nPtr = nstring;
         memset(nstring, 0, sizeof(nstring));
@@ -516,29 +447,54 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         nPtr += 2;
         token = nextToken(str, &item, &n);
         while ((token == DIGIT) || (token == HEXDIGIT)) {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
             token = nextToken(str, &item, &n);
         }
         pushBack(str, n);
-        sscanf(nstring, "%i", &factor);
+        char *end = NULL;
+        long parsed;
+        errno = 0;
+        parsed = strtol(nstring, &end, 0);
+        if (errno || end == nstring || *end || parsed < INT_MIN ||
+                parsed > INT_MAX) {
+            snprintf(err, 128, "invalid integer literal");
+            return 0;
+        }
+        factor = (int)parsed;
         return factor;
     case DIGIT:
         nPtr = nstring;
         do {
+            if (nPtr >= nstring + sizeof(nstring) - 1) {
+                sprintf(err, "numeric literal too long");
+                return 0;
+            }
             *nPtr++ = *item;
         } while ((token = nextToken(str, &item, &n)) == DIGIT);
-        // If a . follows, we have a decimal number
         if (token == PUNKT) {
-            do {
-                *nPtr++ = *item;
-            } while ((token = nextToken(str, &item, &n)) == DIGIT);
+            snprintf(err, 128,
+                     "fractional literal not allowed in integer expression");
+            return 0;
         }
         pushBack(str, n);
         *nPtr = '\0';
-        factor = atof(nstring);
+        char *endDecimal = NULL;
+        long parsedDecimal;
+        errno = 0;
+        parsedDecimal = strtol(nstring, &endDecimal, 10);
+        if (errno || endDecimal == nstring || *endDecimal ||
+                parsedDecimal < INT_MIN || parsedDecimal > INT_MAX) {
+            snprintf(err, 128, "invalid integer literal");
+            return 0;
+        }
+        factor = (int)parsedDecimal;
         return factor;
     case KAUF:
-        expression = execIExpression(str, bPtr, bitpos, pPtr, err);
+        expression = execIExpression(str, bPtr, bufferLen, bitpos, pPtr, err);
         if (*err) {
             return 0;
         }
@@ -548,9 +504,9 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
         }
         return expression;
     case NICHT:
-        return ~execIFactor(str, bPtr, bitpos, pPtr, err);
+        return ~execIFactor(str, bPtr, bufferLen, bitpos, pPtr, err);
     default:
-        sprintf(err, "expected factor: B0..BF P0..PF BP number ( ) [%c]\n", *item);
+        sprintf(err, "expected factor: B0..B99 P0..P99 BP number ( ) [%c]\n", *item);
         return 0;
     }
 }
@@ -558,6 +514,7 @@ int execIFactor(char **str, unsigned char *bPtr, char bitpos, char *pPtr, char *
 int nextToken(char **str, char **c, int *count)
 {
     char item;
+    char first;
 
     //printf("\tInput String:%s\n",*str);
 
@@ -567,6 +524,10 @@ int nextToken(char **str, char **c, int *count)
     }
 
     *c = *str;
+    if (**c == '\0') {
+        *count = 0;
+        return END;
+    }
     (*str)++;
     //printf("\t  Token: %c   [ %s ] \n",**c,*str);
     *count = 1;
@@ -609,86 +570,45 @@ int nextToken(char **str, char **c, int *count)
         case '<' :
             return SHL;
         }
+        return ERROR;
     case '>':
         *count = 2;
         switch (*(*str)++) {
         case '>':
             return SHR;
         }
+        return ERROR;
     case 'B':
-        *count = 2;
-        switch (*(*str)++) {
-        case '0':
-            return BYTE0;
-        case '1':
-            return BYTE1;
-        case '2':
-            return BYTE2;
-        case '3':
-            return BYTE3;
-        case '4':
-            return BYTE4;
-        case '5':
-            return BYTE5;
-        case '6':
-            return BYTE6;
-        case '7':
-            return BYTE7;
-        case '8':
-            return BYTE8;
-        case '9':
-            return BYTE9;
-        case 'A':
-            return BYTEA;
-        case 'B':
-            return BYTEB;
-        case 'C':
-            return BYTEC;
-        case 'D':
-            return BYTED;
-        case 'E':
-            return BYTEE;
-        case 'F':
-            return BYTEF;
-        case 'P':
-            return BITPOS;
+        first = *(*str)++;
+        (*count)++;
+        if (first == 'P') return BITPOS;
+        if (first >= 'A' && first <= 'F') {
+            return BYTE_FIRST + 10 + first - 'A';
         }
+        if (isdigit((unsigned char)first)) {
+            int offset = first - '0';
+            if (isdigit((unsigned char)**str)) {
+                offset = offset * 10 + *(*str)++ - '0';
+                (*count)++;
+            }
+            return BYTE_FIRST + offset;
+        }
+        return ERROR;
     case 'P':
-        *count = 2;
-        switch (*(*str)++) {
-        case '0':
-            return PBYTE0;
-        case '1':
-            return PBYTE1;
-        case '2':
-            return PBYTE2;
-        case '3':
-            return PBYTE3;
-        case '4':
-            return PBYTE4;
-        case '5':
-            return PBYTE5;
-        case '6':
-            return PBYTE6;
-        case '7':
-            return PBYTE7;
-        case '8':
-            return PBYTE8;
-        case '9':
-            return PBYTE9;
-        case 'A':
-            return PBYTEA;
-        case 'B':
-            return PBYTEB;
-        case 'C':
-            return PBYTEC;
-        case 'D':
-            return PBYTED;
-        case 'E':
-            return PBYTEE;
-        case 'F':
-            return PBYTEF;
+        first = *(*str)++;
+        (*count)++;
+        if (first >= 'A' && first <= 'F') {
+            return PBYTE_FIRST + 10 + first - 'A';
         }
+        if (isdigit((unsigned char)first)) {
+            int offset = first - '0';
+            if (isdigit((unsigned char)**str)) {
+                offset = offset * 10 + *(*str)++ - '0';
+                (*count)++;
+            }
+            return PBYTE_FIRST + offset;
+        }
+        return ERROR;
     case '1':
     case '2':
     case '3':
@@ -708,8 +628,6 @@ int nextToken(char **str, char **c, int *count)
         return HEXDIGIT;
     case '.':
         return PUNKT;
-    case '\0':
-        return END;
     default:
         return ERROR;
     }

@@ -5,7 +5,7 @@
 # Generate classic *roff manual pages from ReStructuredText.
 # This requires Python's Docutils (http://docutils.sourceforge.net/)
 
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.2...3.31)
 
 set(RST2MAN_OPTS)
 

@@ -52,6 +52,7 @@
       <len>1</len>
       <unit>UTI</unit>
       <description>Setze die Warmwassersolltemperatur in Grad C</description>
+      <device ID="2053"/>
     </command>
     <command name="getTempStp2" protocmd="getaddr">
       <addr>0814</addr>
@@ -72,6 +73,7 @@
       <len>2</len>
       <unit>CO</unit>
       <description>Setze Warmwasserpumpennachlauf</description>
+      <device ID="2053"/>
     </command>
     <command name="getSpeichervorrang" protocmd="getaddr">
       <addr>27A2</addr>
@@ -84,6 +86,7 @@
       <len>1</len>
       <unit>ST</unit>
       <description>Setze den Status Speichervorrang Heizkreis ohne Mischer A1 bzw. mit Mischer M1</description>
+      <device ID="2053"/>
     </command>
     <command name="getSpeichervorrangM2" protocmd="getaddr">
       <addr>37A2</addr>
@@ -96,6 +99,7 @@
       <len>1</len>
       <unit>ST</unit>
       <description>Setze den Status Speichervorrang Heizkreis mit Mischer M2</description>
+      <device ID="2053"/>
     </command>
     <command name="getSpeichervorrangM3" protocmd="getaddr">
       <addr>47A2</addr>
@@ -108,6 +112,7 @@
       <len>1</len>
       <unit>ST</unit>
       <description>Setze den Status Speichervorrang Heizkreis mit Mischer M3</description>
+      <device ID="2053"/>
     </command>
     <!-- KESSEL -->
     <!-- Differenztemperatur Kesselkreis zu HKM(2) -->
@@ -123,6 +128,7 @@
       <len>1</len>
       <unit>UTI</unit>
       <description>Setze Kesseloffset KT ueber WWsoll in Grad C</description>
+      <device ID="2053"/>
     </command>
     <command name="getTempKist" protocmd="getaddr">
       <addr>0802</addr>
@@ -262,11 +268,8 @@
       <len>4</len>
       <unit>CO</unit>
       <description>Setze die Brennerstunden Stufe 1</description>
-      <device ID="2053" protocmd="setaddr">
-        <addr>17</addr>
-        <len>2</len>
-        <unit>BH</unit>
-      </device>
+      <!-- GWG defines no SETADDR operation; do not expose a broken write. -->
+      <device ID="2053"/>
     </command>
     <command name="getBrennerStunden2" protocmd="getaddr">
       <addr>08AB</addr>
@@ -293,6 +296,7 @@
       <len>4</len>
       <unit>CO</unit>
       <description>Oeldurchsatz Brenner in Dezi-Liter pro Stunde einstellen</description>
+      <device ID="2053"/>
     </command>
     <command name="getOelverbrauch" protocmd="getaddr">
       <addr>7574</addr>
@@ -555,11 +559,7 @@
       <len>1</len>
       <unit>UTI</unit>
       <description>Setze die Raumsolltemperatur normal M1 in Grad C</description>
-      <device ID="2053">
-        <addr>53</addr>
-        <len>1</len>
-        <unit>UTI</unit>
-      </device>
+      <device ID="2053"/>
     </command>
     <command name="getTempRaumNorSollM2" protocmd="getaddr">
       <addr>3306</addr>
@@ -592,11 +592,7 @@
       <len>1</len>
       <unit>UTI</unit>
       <description>Setze die Raumsolltemperatur reduziert M1 in Grad C</description>
-      <device ID="2053">
-        <addr>54</addr>
-        <len>1</len>
-        <unit>UTI</unit>
-      </device>
+      <device ID="2053"/>
     </command>
     <command name="getTempRaumRedSollM2" protocmd="getaddr">
       <addr>3307</addr>
@@ -1236,6 +1232,7 @@
       <unit>UTI</unit>
       <description>Setze die Heizkreispumpenlogik&#x2212;Funktion</description>
       <!-- KA5_KonfSommersparSchaltschwelle A5 0x27a5 1Byte -->
+      <device ID="2053"/>
     </command>
     <command name="getKA5M2" protocmd="getaddr">
       <addr>37A5</addr>
@@ -1250,6 +1247,7 @@
       <unit>UTI</unit>
       <description>Setze die Heizkreispumpenlogik&#x2212;Funktion M2</description>
       <!-- KA5_KonfSommersparSchaltschwelleM2 A5 0x37a5 1Byte -->
+      <device ID="2053"/>
     </command>
     <command name="getKA5M3" protocmd="getaddr">
       <addr>47A5</addr>
@@ -1264,6 +1262,7 @@
       <unit>UTI</unit>
       <description>Setze die Heizkreispumpenlogik&#x2212;Funktion M3</description>
       <!-- KA5_KonfSommersparSchaltschwelleM2 A5 0x47a5 1Byte -->
+      <device ID="2053"/>
     </command>
     <!-- xxx Konfiguration A6 Erweiterte Sparschaltung xxx -->
     <!-- KA6_KonfiAbsolutSommersparM2 A6 0x37a6 -->
@@ -1286,6 +1285,7 @@
       <unit>UTI</unit>
       <description>Setze die AbsolutSommersparschaltung</description>
       <!-- KA6_KonfiAbsolutSommerspar A6 0x27a6 -->
+      <device ID="2053"/>
     </command>
     <command name="getKA6M2" protocmd="getaddr">
       <addr>37A6</addr>
@@ -1300,6 +1300,7 @@
       <unit>UTI</unit>
       <description>Setze die AbsolutSommersparschaltung M2</description>
       <!-- KA6_KonfiAbsolutSommersparM2 A6 0x37a6 1Byte -->
+      <device ID="2053"/>
     </command>
     <command name="getKA6M3" protocmd="getaddr">
       <addr>47A6</addr>
@@ -1314,6 +1315,7 @@
       <unit>UTI</unit>
       <description>Setze die AbsolutSommersparschaltung M3</description>
       <!-- KA6_KonfiAbsolutSommersparM3 A6 0x47a6 1Byte -->
+      <device ID="2053"/>
     </command>
     <!-- Auswirkung Mischer auf interne Pumpe -->
     <command name="getKonfiWirkung_aufPumpe" protocmd="getaddr">
@@ -1331,6 +1333,7 @@
       <description>Setze Einfluss Mischer auf int UWP</description>
       <!-- 0 ohne 1 M2 setzt Anforderung an Int.Pumpe - nur sinnvoll bei Mischerkreis -->
       <!-- wenn nicht vorhanden Rückgabewert -1.0 -->
+      <device ID="2053"/>
     </command>
     <command name="getKA3_KonfiFrostgrenzeM1_GWG" protocmd="getaddr">
       <addr>27A3</addr>
@@ -1345,6 +1348,7 @@
       <unit>UTI</unit>
       <description>Setze die Frostgrenze A1M1</description>
       <!-- Range GradCelsius SByte 1 -9 15 -->
+      <device ID="2053"/>
     </command>
     <command name="getKA3_KonfiFrostgrenzeM2_GWG" protocmd="getaddr">
       <addr>37A3</addr>
@@ -1359,19 +1363,14 @@
       <unit>UTI</unit>
       <description>Setze die Frostgrenze</description>
       <!-- Range GradCelsius SByte 1 -9 15 -->
+      <device ID="2053"/>
     </command>
     <command name="setPumpeStatusZirku" protocmd="setaddr">
       <addr>0846</addr>
       <len>1</len>
       <unit>RT</unit>
       <description>Setze den Status der Zirkulationspumpe</description>
-      <device ID="2053">
-        <addr>01</addr>
-        <len>1</len>
-        <bit>2</bit>
-        <precommand>getPumpeStatusZirku</precommand>
-        <unit>BA</unit>
-      </device>
+      <device ID="2053"/>
     </command>
     <command name="setTimerM1Mo" protocmd="setaddr">
       <addr>2000</addr>
@@ -1723,12 +1722,7 @@
       <unit>USV</unit>
       <description>Setze den Status des Umschaltventils WW/Heizen</description>
       <device ID="2098"/>
-      <device ID="2053">
-        <addr>01</addr>
-        <len>1</len>
-        <bit>1</bit>
-        <unit>BST</unit>
-      </device>
+      <device ID="2053"/>
     </command>
     <command name="getHKPTyp" protocmd="geteaddr">
       <description>Ermittle Typ der Heizkreispumpe</description>
