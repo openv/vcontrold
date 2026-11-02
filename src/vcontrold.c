@@ -434,7 +434,8 @@ int interactive(int socketfd, char *device)
             // -1: Error
             //  0: Preformatted string
             //  n: raw bytes
-            count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf), sendBuf, sendLen, noUnit, cPtr->bit, cPtr->retry, pRecvBuf, cPtr->recvTimeout);
+            // Commands without a unit get their parameters as hex (see above), so treat them like "unit off"
+            count = execByteCode(cPtr->cmpPtr, fd, recvBuf, sizeof(recvBuf), sendBuf, sendLen, (noUnit || !cPtr->unit), cPtr->bit, cPtr->retry, pRecvBuf, cPtr->recvTimeout);
 
             if (count == -1) {
                 logIT(LOG_ERR, "Error executing %s", readBuf);

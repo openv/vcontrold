@@ -146,6 +146,11 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
         }
         if (supressUnit) {
             // No unit conversion needed, just copy the bytes
+            if (sendLen != cPtr->len && !cPtr->uPtr) {
+                // Command without a unit (raw hex bytes, e.g. a time program phase):
+                // take the length of the given hex string
+                cPtr->len = sendLen;
+            }
             if (sendLen != cPtr->len) {
                 // This should never happen!
                 logIT(LOG_ERR,
