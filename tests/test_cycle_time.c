@@ -63,13 +63,37 @@ static int test_extended(void)
 static int test_invalid(void)
 {
     char badTime[] = "06:05 08:00 - - - - - -";
+    char badEndOfDayStart[] = "24:00 00:00 - - - - - -";
+    char badEndOfDayMinute[] = "00:00 24:10 - - - - - -";
     char badMode[] = "06:00 08:00 128 - - - - - - - - - - - -";
     char encoded[MAXBUF] = {0};
 
     return setCycleTime(badTime, encoded, sizeof(encoded)) == 0 &&
+           setCycleTime(badEndOfDayStart, encoded, sizeof(encoded)) == 0 &&
+           setCycleTime(badEndOfDayMinute, encoded, sizeof(encoded)) == 0 &&
            setCycleTime(badMode, encoded, sizeof(encoded)) == 0 &&
            getCycleTime(encoded, 9, encoded + 64,
                         sizeof(encoded) - 64) == 0;
+}
+
+static int test_end_of_day(void)
+{
+    char input[] = "00:00 24:00 -- -- -- -- -- --";
+    char encoded[MAXBUF] = {0};
+    char decoded[MAXBUF] = {0};
+
+    if (setCycleTime(input, encoded, sizeof(encoded)) != 8 ||
+            (unsigned char)encoded[0] != 0x00 ||
+            (unsigned char)encoded[1] != 0xc0 ||
+            (unsigned char)encoded[2] != 0xff ||
+            (unsigned char)encoded[3] != 0xff ||
+            (unsigned char)encoded[4] != 0xff ||
+            (unsigned char)encoded[5] != 0xff ||
+            (unsigned char)encoded[6] != 0xff ||
+            (unsigned char)encoded[7] != 0xff) return 0;
+    if (!getCycleTime(encoded, 8, decoded, sizeof(decoded))) return 0;
+    return strstr(decoded, "1:An:00:00  Aus:24:00") != NULL &&
+           strstr(decoded, "2:An:--     Aus:--") != NULL;
 }
 
 static int test_w01c(void)
@@ -419,6 +443,7 @@ int main(void)
     if (!test_legacy()) return fputs("legacy failed\n", stderr), 1;
     if (!test_extended()) return fputs("extended failed\n", stderr), 1;
     if (!test_invalid()) return fputs("invalid failed\n", stderr), 1;
+    if (!test_end_of_day()) return fputs("end of day failed\n", stderr), 1;
     if (!test_w01c()) return fputs("w01c failed\n", stderr), 1;
     if (!test_numeric_units()) return fputs("numeric failed\n", stderr), 1;
     if (!test_enum_units()) return fputs("enum failed\n", stderr), 1;

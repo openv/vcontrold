@@ -74,7 +74,7 @@ int getSysTime(const char *recv, int len, char *result, size_t resultCapacity);
 int setSysTime(const char *input, char *sendBuf, size_t sendCapacity);
 
 static int parseCycleTimeToken(const char *token, unsigned char emptyValue,
-                               unsigned char *value)
+                               int allowEndOfDay, unsigned char *value)
 {
     unsigned int hour;
     unsigned int minute;
@@ -86,10 +86,11 @@ static int parseCycleTimeToken(const char *token, unsigned char emptyValue,
         return 1;
     }
     if (sscanf(token, "%u:%u%c", &hour, &minute, &trailing) != 2 ||
-            hour > 23 || minute > 59 || minute % 10 != 0) {
+            minute > 59 || minute % 10 != 0 ||
+            (hour > 23 && !(allowEndOfDay && hour == 24 && minute == 0))) {
         return 0;
     }
-    *value = (unsigned char)((hour << 3) + minute / 10);
+    *value = (hour == 24) ? 0xc0 : (unsigned char)((hour << 3) + minute / 10);
     return 1;
 }
 
@@ -224,8 +225,8 @@ int setCycleTime(char *input, char *sendBuf, size_t sendCapacity)
         for (int i = 0; i < 8; i += 2) {
             unsigned char on;
             unsigned char off;
-            if (!parseCycleTimeToken(tokens[i], 0xff, &on) ||
-                    !parseCycleTimeToken(tokens[i + 1], 0xff, &off) ||
+            if (!parseCycleTimeToken(tokens[i], 0xff, 0, &on) ||
+                    !parseCycleTimeToken(tokens[i + 1], 0xff, 1, &off) ||
                     ((on == 0xff) != (off == 0xff))) {
                 snprintf(sendBuf, sendCapacity, "BadTime");
                 return 0;
@@ -242,8 +243,8 @@ int setCycleTime(char *input, char *sendBuf, size_t sendCapacity)
         unsigned char off;
         char *end = NULL;
         long mode;
-        if (!parseCycleTimeToken(tokens[i], 0, &on) ||
-                !parseCycleTimeToken(tokens[i + 1], 0, &off)) {
+        if (!parseCycleTimeToken(tokens[i], 0, 0, &on) ||
+                !parseCycleTimeToken(tokens[i + 1], 0, 0, &off)) {
             snprintf(sendBuf, sendCapacity, "BadTime");
             return 0;
         }
