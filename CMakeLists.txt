@@ -1,8 +1,8 @@
-# SPDX-FileCopyrightText: 2017-2022 Tobias Leupold <tl at stonemx dot de>
+# SPDX-FileCopyrightText: 2017-2026 Tobias Leupold <tl@stonemx.de>
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-cmake_minimum_required(VERSION 3.2.0)
+cmake_minimum_required(VERSION 3.22.0)
 project(vcontrold C)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
