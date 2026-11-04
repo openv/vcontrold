@@ -272,7 +272,6 @@ float execFactor(char **str, unsigned char *bPtr, float floatV, char *err)
 
 int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, char *err)
 {
-    int f = 1;
     int term1, term2;
     //int exp1, exp2;
     int op;
@@ -321,7 +320,6 @@ int execIExpression(char **str, unsigned char *bInPtr, char bitpos, char *pPtr, 
     int t;
     op = ERROR;
     while ((t = nextToken(str, &item, &n)) != END) {
-        f = 1;
         switch (t) {
         case PLUS:
             op = PLUS;

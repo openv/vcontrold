@@ -262,13 +262,11 @@ int sendTrList(int sockfd, trPtr ptr)
         } else {
             // Here, we search the first word in raw and save it as result
             char *rptr;
-            char len;
             rptr = strchr(ptr->raw, ' ');
             if (! rptr) {
                 rptr = ptr->raw + strlen(ptr->raw);
             }
 
-            len = rptr - ptr->raw;
             ptr->result = atof(ptr->raw);
             ptr->err = NULL;
         }
