@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     // Get the command line options
     char *host = NULL;
     int port = 0;
-    char commands[512] = "";
+    char commands[5120] = "";
     const char *cmdfile = NULL;
     const char *csvfile = NULL;
     const char *tmplfile = NULL;
