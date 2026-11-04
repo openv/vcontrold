@@ -53,12 +53,6 @@ jobs:
         platform: ${{ inputs.platform }}
         packages: cygwin-devel,make,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel,python3-docutils
 
-    - name: Find rst2man
-      run: |
-        find /usr -iname '*rst2man*' 2>/dev/null
-        cygcheck -c python3-docutils
-        cygcheck -c python3
-
     - name: Cmake configure
       env:
         CYGWIN_NOWINPATH: 1
