@@ -469,8 +469,8 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
             return -1;
         }
         logIT(LOG_INFO, "Res: (Hex max. 4 bytes) %08x", ergI);
-        res = ergI;
-        if ( uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, recvLen)) {
+        res = ergI & 0xFF;  // Use only the lowest byte of ergI as input to enum lookup
+        if (uPtr->ePtr && bytes2Enum(uPtr->ePtr, &res, &tPtr, 1)) {
             strcpy(result, tPtr);
             return 1;
         } else {
