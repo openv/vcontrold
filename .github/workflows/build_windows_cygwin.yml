@@ -53,15 +53,11 @@ jobs:
         platform: ${{ inputs.platform }}
         packages: cygwin-devel,make,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel,python39-docutils
 
-    - name: Install Docutils
-      shell: C:\cygwin\bin\bash.exe --login -o igncr {0}
-      run: |
-        python3 -m pip install docutils
-
     - name: Cmake configure
       env:
         CYGWIN_NOWINPATH: 1
       run: |
+        export PATH=/usr/bin:$(cygpath ${SYSTEMROOT})/system32
         git config --global core.autocrlf input
         mkdir build
         cmake -S . -B ./build  -DCMAKE_C_FLAGS="-Wall" -DCMAKE_VERBOSE_MAKEFILE=ON -DMANPAGES=ON
