@@ -496,7 +496,6 @@ configPtr parseConfig(xmlNodePtr cur)
     configPtr cfgPtr;
     char *chrPtr;
     xmlNodePtr prevPtr;
-    char ip[16];
 
     cfgPtr = calloc(1, sizeof(Config));
     cfgPtr->port = 0;
@@ -1286,16 +1285,15 @@ void removeComments(xmlNodePtr node)
             // if the node has children, process the children
             removeComments(node->children);
         }
+        // We save the pointer to the next sibling, as the node might be freed below
+        xmlNodePtr nextNode = node->next;
         if (node->type == XML_COMMENT_NODE) {
-            // if the node is a comment?
+            // if the node is a comment, we unlink ...
             //printf("found comment\n");
-            if (node->next) {
-                removeComments(node->next);
-            }
             xmlUnlinkNode(node); // unlink
             xmlFreeNode(node);   // and free the node
         }
-        node = node->next;
+        node = nextNode;
     }
 }
 

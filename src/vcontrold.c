@@ -187,7 +187,8 @@ int rawModus(int socketfd, char *device)
 {
     // Here, we write all incoming commands in a temporary file, which is forwarded to readCmdFile
     char readBuf[MAXBUF];
-    char string[256];
+    // has to fit "Result: " plus hex dump and the newline
+    char string[MAXBUF + 16];
 
     // FIXME: I think we should be using some PID or such instead of "XXXXXX".
 #ifdef __CYGWIN__
@@ -248,7 +249,8 @@ int interactive(int socketfd, char *device)
     char readBuf[1000];
     char *readPtr;
     char bye[] = BYE;
-    char string[256];
+    // has to fit hex dump incl. prefix like "\tError at (Hex): "
+    char string[MAXBUF + 32];
     commandPtr cPtr;
     commandPtr pcPtr;
     int fd = -1;
@@ -475,7 +477,7 @@ int interactive(int socketfd, char *device)
                 readPtr++;
             }
             // Is the command defined in the XML?
-            if (readPtr && (cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
+            if ((cPtr = getCommandNode(cfgPtr->devPtr->cmdPtr, readPtr))) {
                 memset(string, 0, sizeof(string));
                 snprintf(string, sizeof(string), "%s: %s\n", cPtr->name, cPtr->send);
                 Writen(socketfd, string, strlen(string));
@@ -511,7 +513,7 @@ int interactive(int socketfd, char *device)
                 compilePtr cmpPtr;
                 cmpPtr = cPtr->cmpPtr;
                 while (cmpPtr) {
-                    if (cmpPtr && cmpPtr->uPtr) {
+                    if (cmpPtr->uPtr) {
                         // Unit gefunden
                         char *gcalc;
                         char *scalc;
@@ -757,34 +759,33 @@ int main(int argc, char *argv[])
     }
 
     // The global variables cfgPtr and protoPtr have been filled
-    if (cfgPtr) {
-        if (! tcpport) {
-            tcpport = cfgPtr->port;
-        }
-        if (! listenAddress) {
-            listenAddress = cfgPtr->listenAddress;
-        }
-        if (! device) {
-            device = cfgPtr->tty;
-        }
-        if (! logfile) {
-            logfile = cfgPtr->logfile;
-        }
-        if (! pidFile) {
-            pidFile = cfgPtr->pidfile;
-        }
-        if (! username) {
-            username = cfgPtr->username;
-        }
-        if (! groupname) {
-            groupname = cfgPtr->groupname;
-        }
-        if (! useSyslog) {
-            useSyslog = cfgPtr->syslog;
-        }
-        if (! debug) {
-            debug = cfgPtr->debug;
-        }
+    // (parseXMLFile has already dereferenced cfgPtr, so it can't be NULL here)
+    if (! tcpport) {
+        tcpport = cfgPtr->port;
+    }
+    if (! listenAddress) {
+        listenAddress = cfgPtr->listenAddress;
+    }
+    if (! device) {
+        device = cfgPtr->tty;
+    }
+    if (! logfile) {
+        logfile = cfgPtr->logfile;
+    }
+    if (! pidFile) {
+        pidFile = cfgPtr->pidfile;
+    }
+    if (! username) {
+        username = cfgPtr->username;
+    }
+    if (! groupname) {
+        groupname = cfgPtr->groupname;
+    }
+    if (! useSyslog) {
+        useSyslog = cfgPtr->syslog;
+    }
+    if (! debug) {
+        debug = cfgPtr->debug;
     }
 
     if (!initLog(useSyslog, logfile, debug)) {
