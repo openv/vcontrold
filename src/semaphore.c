@@ -95,20 +95,15 @@ char tmpfilename[MAXPATHLEN + 1]; // account for the leading '\0'
 int vcontrol_seminit()
 {
     key_t key;
-    struct sembuf sb;
 
     int tmpfile;
 
-    strncpy(tmpfilename, TMPFILENAME, sizeof(TMPFILENAME));
+    strncpy(tmpfilename, TMPFILENAME, sizeof(tmpfilename));
     if ((tmpfile = mkstemp(tmpfilename)) < 0) {
         perror("mkstemp");
         exit(1);
     }
     close(tmpfile);
-
-    sb.sem_num = 0;
-    sb.sem_op = -1; // set to allocate resource
-    sb.sem_flg = SEM_UNDO;
 
     if ((key = ftok(tmpfilename, 'V')) == -1) {
         perror("ftok");
