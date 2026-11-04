@@ -121,7 +121,8 @@ void logIT (int class, char *string, ...)
 
 void sendErrMsg(int fd)
 {
-    char string[256];
+    // has to fit "ERR: " plus the errMsg
+    char string[sizeof(errMsg) + 8];
 
     if ((fd >= 0) && (errClass <= 3)) {
         snprintf(string, sizeof(string), "ERR: %s", errMsg);
