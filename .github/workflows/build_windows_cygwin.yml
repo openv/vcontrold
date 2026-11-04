@@ -34,7 +34,7 @@ jobs:
         shell: C:\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
          fetch-depth: 0
     - name: Hack around https://github.com/actions/checkout/issues/290
@@ -48,7 +48,7 @@ jobs:
         git config --global core.autocrlf input
 
     - name: Install Cygwin environment
-      uses: cygwin/cygwin-install-action@cf17b9c15958a86fd5b0a53332b91f890aecadfd
+      uses: cygwin/cygwin-install-action@v4
       with:
         platform: ${{ inputs.platform }}
         packages: cygwin-devel,make,git,gcc-core,libxml2,libxml2-devel,cmake,p7zip,libiconv,libiconv-devel,python39-docutils
@@ -96,7 +96,7 @@ jobs:
         cd ./build && cp ../COPYING ../README.md . && 7z a ../artifact-upload/vcontrold_$(echo -n ${VERSION} | sed -e s/^v//)-${GITHUB_RUN_NUMBER}-cygwin_${ARCH}.zip *.exe COPYING VERSION README.md
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact_archive }}
         path: |

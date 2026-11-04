@@ -37,8 +37,10 @@ jobs:
   upload:
     needs: [build_linux_rpi, build_linux, build_linux_rpi64, build_cygwin_x86_64]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Hack around https://github.com/actions/checkout/issues/290

@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
          fetch-depth: 0
     - name: Hack around https://github.com/actions/checkout/issues/290
@@ -47,7 +47,7 @@ jobs:
         git fetch --tags --force
 
     - name: Build on RaspiOs
-      uses: pguyot/arm-runner-action@e04ca3becb581a2b52cabe31e53835ada344522f
+      uses: pguyot/arm-runner-action@v2.6.5
       with:
         image_additional_mb: 1024
         base_image: ${{ inputs.target }}
@@ -93,7 +93,7 @@ jobs:
         ls -laF ./artifact-upload/
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact_archive }}
         path: |
