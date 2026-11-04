@@ -456,7 +456,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     char *ptr, *bptr;
     macroPtr mFPtr;
     char string[256];
-    char *sendPtr, *sendStartPtr;
+    char *sendPtr;
     char *tmpPtr;
 
     icmdPtr iPtr;
@@ -471,7 +471,6 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     // 2. Parse the line and replace the variables with values from cPtr
     sendPtr = iPtr->send;
-    sendStartPtr = iPtr->send;
     if (! sendPtr) {
         return 0;
     }
@@ -539,7 +538,6 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     // 3. Expand the line as usual
     sendPtr = tmpPtr;
-    sendStartPtr = sendPtr;
 
     // We search for words and look if we have them as macros
     memset(eString, 0, sizeof(eString));
@@ -560,6 +558,9 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
         } else {
             strncpy(ePtr, sendPtr, ptr - sendPtr + 1);
             ePtr += ptr - sendPtr + 1;
+        }
+        if (*ptr == '\0') {
+            break;
         }
         sendPtr = ptr + 1;
     } while (*sendPtr);
@@ -603,9 +604,8 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     compilePtr cmpPtr, cmpStartPtr;
     cmpStartPtr = NULL;
 
-    char *sendPtr, *sendStartPtr;
+    char *sendPtr;
     sendPtr = cPtr->send;
-    sendStartPtr = cPtr->send;
 
     if (! sendPtr) {
         // Nothing to do here
@@ -643,6 +643,9 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
             exit(3);
         }
 
+        if (*ptr == '\0') {
+            break;
+        }
         sendPtr += strlen(cmd) + 1;
     } while (*sendPtr);
 
