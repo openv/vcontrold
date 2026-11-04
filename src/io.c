@@ -70,7 +70,7 @@ int opentty(char *device)
 {
     int fd;
 
-    logIT(LOG_LOCAL0, "Configuring serial interface %s", device);
+    logIT(LOG_INFO, "Configuring serial interface %s", device);
     if ((fd = open(device, O_RDWR)) < 0) {
         logIT(LOG_ERR, "cannot open %s:%m", device);
         exit(1);
