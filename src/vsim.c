@@ -69,7 +69,6 @@ typedef struct {
     char rsp[20];
 } ctable;
 
-int cmdc = 9;
 ctable cmds[] = {
     { 1, { 0x04 }, 1, { 0x05 } },
     { 3, { 0x16, 0x00, 0x00 }, 1, { 0x06 } },
@@ -96,8 +95,11 @@ ctable cmds[] = {
     },
 };
 
+// The number of commands is derived from the table itself, so it can't get out of sync
+int cmdc = sizeof(cmds) / sizeof(cmds[0]);
+
 char input[100];
-char inpidx = 0;
+int inpidx = 0;
 
 static void handle(int fd)
 {

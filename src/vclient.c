@@ -399,7 +399,6 @@ int main(int argc, char *argv[])
         unsigned short maxIdx;
         trPtr tPtr = resPtr;
         trPtr *idxPtr;
-        short varReplaced;
 
         // In array idxPtr, the particular results are referenced via the index
         for (count = 0; tPtr; tPtr = tPtr->next) {
@@ -429,7 +428,6 @@ int main(int argc, char *argv[])
             logIT(LOG_INFO, "Tmpl line: %s", line);
             lSptr = line;
             while ((lptr = strchr(lSptr, '$'))) {
-                varReplaced = 0;
                 if ((lptr > line) && (*(lptr - 1) == '\\')) { // $ is masked by a backslash
                     memset(string, 0, sizeof(string));
                     strncpy(string, lSptr, lptr - lSptr - 1);
