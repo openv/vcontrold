@@ -40,6 +40,11 @@
       <len>2</len>
       <unit>UT</unit>
       <description>Ermittle die Warmwassertemperatur in Grad C</description>
+      <device ID="2053">
+        <addr>42</addr>
+        <unit>UT1U</unit>
+        <len>1</len>
+      </device>
     </command>
     <command name="getTempWWsoll" protocmd="getaddr">
       <addr>6300</addr>
