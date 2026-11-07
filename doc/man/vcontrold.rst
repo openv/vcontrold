@@ -107,6 +107,20 @@ OPTIONS
 -?, \--help
     usage information
 
+SECURITY
+========
+
+The TCP protocol has no client authentication or transport encryption and is
+intended for trusted local networks. Any client that can reach the listener
+can invoke commands exposed by the active XML configuration. Bind to a
+suitable local address, restrict network access when necessary, and keep
+``readonly`` enabled unless write commands are explicitly required.
+
+``SIGHUP`` reloads device, protocol, command and unit data transactionally.
+An invalid candidate leaves the active configuration unchanged. Changes to
+the listener address, port, process user/group, PID file or logging
+destination require a daemon restart.
+
 FILES
 =====
 
