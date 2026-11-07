@@ -5,6 +5,8 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <time.h>
+
 #define CL_TIMEOUT 25
 
 #ifndef MAXBUF
@@ -16,15 +18,15 @@
 typedef struct txRx *trPtr;
 
 ssize_t recvSync(int fd, char *wait, char **recv);
-int connectServer(char *host, int port);
+int connectServer(const char *host, int port);
 void disconnectServer(int sockfd);
-size_t sendServer(int fd, char *s_buf, size_t len);
+ssize_t sendServer(int fd, const char *s_buf, size_t len);
 trPtr sendCmdFile(int sockfd, const char *tmpfile);
-trPtr sendCmds(int sockfd, char *commands);
+trPtr sendCmds(int sockfd, const char *commands);
 
 typedef struct txRx {
     char *cmd;
-    float result;
+    double result;
     char *err;
     char *raw;
     time_t timestamp;

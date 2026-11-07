@@ -10,8 +10,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
-#include <setjmp.h>
-#include <signal.h>
+#include <poll.h>
+#include <errno.h>
 #include <unistd.h>
 #include <ctype.h>
 
@@ -20,30 +20,37 @@
 #include "common.h"
 #include "socket.h"
 
-static void sig_alrm(int);
-static jmp_buf  env_alrm;
-
 int sendTrList(int sockfd, trPtr ptr);
 
 trPtr newTrNode(trPtr ptr)
 {
-    trPtr nptr;
-
-    if (ptr && ptr->next) {
-        return newTrNode(ptr->next);
+    trPtr tail = ptr;
+    while (tail && tail->next) {
+        tail = tail->next;
     }
 
-    nptr = calloc(1, sizeof(*ptr));
+    trPtr nptr = calloc(1, sizeof(*nptr));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc failed");
+        return NULL;
     }
 
-    if (ptr) {
-        ptr->next = nptr;
+    if (tail) {
+        tail->next = nptr;
     }
 
     return nptr;
+}
+
+static void freeTrList(trPtr ptr)
+{
+    while (ptr) {
+        trPtr next = ptr->next;
+        free(ptr->cmd);
+        free(ptr->raw);
+        free(ptr);
+        ptr = next;
+    }
 }
 
 ssize_t recvSync(int fd, char *wait, char **recv)
@@ -54,43 +61,51 @@ ssize_t recvSync(int fd, char *wait, char **recv)
     ssize_t count;
     int rcount = 1;
 
-    if (signal(SIGALRM, sig_alrm) == SIG_ERR) {
-        logIT1(LOG_ERR, "SIGALRM error");
-    }
-
-    if (setjmp(env_alrm) != 0) {
-        logIT(LOG_ERR, "timeout wait:%s", wait);
-        return -1;
-    }
-
-    alarm(CL_TIMEOUT);
-
+    *recv = NULL;
     if (! (*recv = calloc(ALLOCSIZE, sizeof(char)))) {
         logIT1(LOG_ERR, "calloc error");
-        exit(1);
+        return -1;
     }
 
     rptr = *recv;
     size_t i = 0;
-    while ((count = readn(fd, &c, 1))) {
-        alarm(0);
+    for (;;) {
+        struct pollfd pfd = { .fd = fd, .events = POLLIN };
+        int ready;
+        do {
+            ready = poll(&pfd, 1, CL_TIMEOUT * 1000);
+        } while (ready < 0 && errno == EINTR);
+        if (ready <= 0) {
+            logIT(LOG_ERR, "timeout/error waiting for %s", wait);
+            free(*recv);
+            *recv = NULL;
+            return -1;
+        }
+        count = readn(fd, &c, 1);
+        if (count == 0) {
+            break;
+        }
         if (count < 0) {
-            continue;
+            free(*recv);
+            *recv = NULL;
+            return -1;
         }
 
-        *rptr++ = c;
-        *(rptr + 1) = '\0';
-        i++;
-        if (! ((rptr - *recv + 1) % ALLOCSIZE)) {
+        if (i + 1 >= (size_t)ALLOCSIZE * rcount) {
             char *tmp = realloc(*recv, ALLOCSIZE * sizeof(char) *  ++rcount);
             if (tmp == NULL) {
                 logIT1(LOG_ERR, "realloc error");
-                exit(1);
+                free(*recv);
+                *recv = NULL;
+                return -1;
             } else {
                 *recv = tmp;
                 rptr = *recv + i;
             }
         }
+        *rptr++ = c;
+        *rptr = '\0';
+        i++;
 
         if ((pptr = strstr(*recv, wait))) {
             *pptr = '\0';
@@ -98,15 +113,10 @@ ssize_t recvSync(int fd, char *wait, char **recv)
             break;
         }
 
-        alarm(CL_TIMEOUT);
-
     }
 
     char *tmp = realloc(*recv, strlen(*recv) + 1);
-    if (tmp == NULL) {
-        logIT1(LOG_ERR, "realloc error");
-        exit(1);
-    } else {
+    if (tmp != NULL) {
         *recv = tmp;
     }
 
@@ -118,13 +128,13 @@ ssize_t recvSync(int fd, char *wait, char **recv)
 }
 
 // port is never 0, which is a bad number for a tcp port
-int connectServer(char *host, int port)
+int connectServer(const char *host, int port)
 {
     int sockfd;
 
-    if (host[0] != '/' ) {
+    if (host && host[0] != '/' ) {
         sockfd = openCliSocket(host, port, 0);
-        if (sockfd) {
+        if (sockfd >= 0) {
             logIT(LOG_INFO, "Setup connection to %s port %d", host, port);
         } else {
             logIT(LOG_INFO, "Setting up connection to %s port %d failed", host, port);
@@ -146,18 +156,33 @@ void disconnectServer(int sockfd)
     sendServer(sockfd, string, strlen(string));
     recvSync(sockfd, BYE, &ptr);
     free(ptr);
-    close(sockfd);
+    if (close(sockfd) < 0) {
+        logIT(LOG_ERR, "Closing server connection failed: %s",
+              strerror(errno));
+    }
 }
 
-size_t sendServer(int fd, char *s_buf, size_t len)
+ssize_t sendServer(int fd, const char *s_buf, size_t len)
 {
     char string[256];
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0) {
+        logIT(LOG_ERR, "Reading socket flags failed: %s", strerror(errno));
+        return -1;
+    }
 
     // Empty buffer
     // As tcflush does not work correctly, we use nonblocking read
-    fcntl(fd, F_SETFL, O_NONBLOCK);
+    if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+        logIT(LOG_ERR, "Setting socket nonblocking failed: %s",
+              strerror(errno));
+        return -1;
+    }
     while (readn(fd, string, sizeof(string)) > 0) { }
-    fcntl(fd, F_SETFL, ! O_NONBLOCK);
+    if (fcntl(fd, F_SETFL, flags) < 0) {
+        logIT(LOG_ERR, "Restoring socket flags failed: %s", strerror(errno));
+        return -1;
+    }
     return Writen(fd, s_buf, len);
 }
 
@@ -176,41 +201,98 @@ trPtr sendCmdFile(int sockfd, const char *filename)
 
     memset(line, 0, sizeof(line));
     while (fgets(line, MAXBUF - 1, filePtr)) {
+        size_t physicalLength = strlen(line);
+        if (physicalLength > 0 &&
+                line[physicalLength - 1] != '\n' &&
+                !feof(filePtr)) {
+            logIT(LOG_ERR, "Command file line exceeds %d bytes", MAXBUF - 2);
+            freeTrList(startPtr);
+            fclose(filePtr);
+            return NULL;
+        }
         ptr = newTrNode(startPtr);
+        if (!ptr) {
+            freeTrList(startPtr);
+            fclose(filePtr);
+            return NULL;
+        }
         if (! startPtr) {
             startPtr = ptr;
         }
-        ptr->cmd = calloc(strlen(line), sizeof(char));
-        strncpy(ptr->cmd, line, strlen(line) - 1);
+        size_t len = strcspn(line, "\r\n");
+        ptr->cmd = calloc(len + 1, sizeof(char));
+        if (!ptr->cmd) {
+            freeTrList(startPtr);
+            fclose(filePtr);
+            return NULL;
+        }
+        memcpy(ptr->cmd, line, len);
     }
 
     if (! sendTrList(sockfd, startPtr)) {
         // Something with the communication went wrong
+        freeTrList(startPtr);
+        fclose(filePtr);
         return NULL;
     }
 
+    fclose(filePtr);
     return startPtr;
 }
 
-trPtr sendCmds(int sockfd, char *commands)
+trPtr sendCmds(int sockfd, const char *commands)
 {
     char *sptr;
+    char *saveptr = NULL;
+    char *commandCopy;
     trPtr ptr;
     trPtr startPtr = NULL;
 
-    sptr = strtok(commands, ",");
-    do {
+    if (!commands || !*commands) {
+        logIT1(LOG_ERR, "Empty command list");
+        return NULL;
+    }
+    commandCopy = strdup(commands);
+    if (!commandCopy) {
+        logIT1(LOG_ERR, "strdup error");
+        return NULL;
+    }
+    sptr = strtok_r(commandCopy, ",", &saveptr);
+    while (sptr) {
+        if (!*sptr) {
+            sptr = strtok_r(NULL, ",", &saveptr);
+            continue;
+        }
         ptr = newTrNode(startPtr);
+        if (!ptr) {
+            freeTrList(startPtr);
+            free(commandCopy);
+            return NULL;
+        }
         if (! startPtr) {
             startPtr = ptr;
         }
         ptr->cmd = calloc(strlen(sptr) + 1, sizeof(char));
-        strncpy(ptr->cmd, sptr, strlen(sptr));
-    } while ((sptr = strtok(NULL, ",")) != NULL);
+        if (!ptr->cmd) {
+            logIT1(LOG_ERR, "calloc error");
+            freeTrList(startPtr);
+            free(commandCopy);
+            return NULL;
+        }
+        memcpy(ptr->cmd, sptr, strlen(sptr) + 1);
+        sptr = strtok_r(NULL, ",", &saveptr);
+    }
+    free(commandCopy);
+
+    if (!startPtr) {
+        logIT1(LOG_ERR, "Empty command list");
+        return NULL;
+    }
 
     if (! sendTrList(sockfd, startPtr))
     {
         // Something with the communication went wrong
+        freeTrList(startPtr);
         return NULL;
     }
 
@@ -229,9 +311,15 @@ int sendTrList(int sockfd, trPtr ptr)
         free(sptr);
         return 0;
     }
+    free(sptr);
+    sptr = NULL;
 
     while (ptr) {
-        //memset(string, 0,sizeof(string));
+        size_t commandLength = strlen(ptr->cmd);
+        if (commandLength + 2 > sizeof(string)) {
+            logIT(LOG_ERR, "Command is too long: %zu bytes", commandLength);
+            return 0;
+        }
         snprintf(string, sizeof(string), "%s\n", ptr->cmd);
 
         if (sendServer(sockfd, string, strlen(string)) <= 0) {
@@ -246,8 +334,9 @@ int sendTrList(int sockfd, trPtr ptr)
         }
 
         ptr->raw = sptr;
-        if (iscntrl(*(ptr->raw + strlen(ptr->raw) - 1))) {
-            *(ptr->raw + strlen(ptr->raw) - 1) = '\0';
+        size_t rawlen = strlen(ptr->raw);
+        if (rawlen > 0 && iscntrl((unsigned char)ptr->raw[rawlen - 1])) {
+            ptr->raw[rawlen - 1] = '\0';
         }
 
         dumPtr = calloc(strlen(sptr) + 20, sizeof(char));
@@ -275,9 +364,4 @@ int sendTrList(int sockfd, trPtr ptr)
     }
 
     return 1;
-}
-
-static void sig_alrm(int signo)
-{
-    longjmp(env_alrm, 1);
 }
