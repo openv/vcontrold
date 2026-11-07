@@ -5,6 +5,7 @@
 #ifndef XMLCONFIG_H
 #define XMLCONFIG_H
 #include <arpa/inet.h>
+#include <stdint.h>
 
 typedef struct config *configPtr;
 typedef struct protocol *protocolPtr;
@@ -21,7 +22,8 @@ int parseXMLFile(char *filename);
 macroPtr getMacroNode(macroPtr ptr, const char *name);
 unitPtr getUnitNode(unitPtr ptr, const char *name);
 commandPtr getCommandNode(commandPtr ptr, const char *name);
-enumPtr getEnumNode(enumPtr prt, char *search, int len);
+devicePtr getDeviceNode(devicePtr ptr, const char *id);
+enumPtr getEnumNode(enumPtr prt, const char *search, int len);
 icmdPtr getIcmdNode(icmdPtr ptr, const char *name);
 
 typedef struct compile {
@@ -45,6 +47,7 @@ typedef struct config {
     devicePtr devPtr;
     int syslog;
     int debug;
+    int readonly;
 } Config;
 
 typedef struct protocol {
@@ -90,14 +93,14 @@ typedef struct command {
     char *unit;
     char *errStr;
     char *precmd;
-    unsigned char len;
+    uint8_t len;
     int retry;
-    unsigned short recvTimeout;
+    uint16_t recvTimeout;
     char bit;
     char nodeType;
     // 0: everything copied
     // 1: everything orig
-    // 2: only address, unit len orig
+    // 2: device override; an empty address marks an explicit exclusion
     compilePtr cmpPtr;
     char *description;
     commandPtr next;
@@ -106,8 +109,8 @@ typedef struct command {
 typedef struct icmd {
     char *name;
     char *send;
-    unsigned char retry;
-    unsigned short recvTimeout;
+    uint8_t retry;
+    uint16_t recvTimeout;
     icmdPtr next;
 } iCmd;
 
