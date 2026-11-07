@@ -1,0 +1,652 @@
+<vito>
+
+  <!-- ===================== -->
+  <!-- DEVICE -->
+  <!-- ===================== -->
+
+  <devices>
+    <device ID="20C8" name="VPlusHO1" protocol="P300" />
+  </devices>
+
+  <!-- ===================== -->
+  <!-- COMMANDS -->
+  <!-- ===================== -->
+
+  <commands>
+
+    <!-- ===================== -->
+    <!-- SYSTEM INFORMATION -->
+    <!-- ===================== -->
+
+    <command name="getDeviceID" protocmd="getaddr">
+      <addr>00F8</addr>
+      <len>8</len>
+      <description>Geraeteidentifikation der Regelung</description>
+    </command>
+
+    <command name="getReglerkennung" protocmd="getaddr">
+      <addr>00F9</addr>
+      <len>1</len>
+      <description>Identifikationsbyte an 00F9; Bedeutung unbestaetigt</description>
+    </command>
+
+    <command name="getSoftwareIndex" protocmd="getaddr">
+      <addr>00FB</addr>
+      <len>2</len>
+      <description>Identifikationsbytes an 00FB; Bedeutung unbestaetigt</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- SYSTEMZEIT -->
+    <!-- ===================== -->
+
+    <command name="getVitoSystemzeit" protocmd="getaddr">
+      <addr>088E</addr>
+      <len>8</len>
+      <unit>TI</unit>
+      <description>Aktuelle Systemzeit der Heizungsregelung</description>
+    </command>
+
+    <command name="setVitoSystemzeit" protocmd="setaddr">
+      <addr>088E</addr>
+      <len>8</len>
+      <unit>TI</unit>
+      <description>Systemzeit der Heizungsregelung setzen</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- SOLAR -->
+    <!-- ===================== -->
+
+    <command name="getSolarFreigabe" protocmd="getaddr">
+      <addr>6550</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Zustandswert der Solarfunktion; genaue Semantik unbestaetigt</description>
+    </command>
+
+    <command name="getNachladeunterdrueckung" protocmd="getaddr">
+      <addr>6551</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Nachladeunterdrueckung durch Solaranlage</description>
+    </command>
+
+    <command name="getPumpeSolar" protocmd="getaddr">
+      <addr>6552</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status der Solarpumpe</description>
+    </command>
+
+    <command name="getSolarStatus" protocmd="getaddr">
+      <addr>656A</addr>
+      <len>1</len>
+      <unit>ST</unit>
+      <description>Rohstatus des Solarreglers; Enum unbestaetigt</description>
+    </command>
+
+    <command name="getTempSolarDach" protocmd="getaddr">
+      <addr>6564</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Temperatur der Solarkollektoren auf dem Dach</description>
+    </command>
+
+    <command name="getTempSolarZulauf" protocmd="getaddr">
+      <addr>6566</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Speichertemperatur der Solarregelung</description>
+    </command>
+
+    <command name="getSolarStundenGesamt" protocmd="getaddr">
+      <addr>6568</addr>
+      <len>2</len>
+      <unit>CO16</unit>
+      <description>Gesamtbetriebsstunden der Solaranlage</description>
+    </command>
+
+    <command name="getSolarkWHGesamt" protocmd="getaddr">
+      <addr>6560</addr>
+      <len>4</len>
+      <unit>KW</unit>
+      <description>Gesamtertrag der Solaranlage in Kilowattstunden</description>
+    </command>
+
+    <command name="getSolarkWHproTag" protocmd="getaddr">
+      <addr>CF30</addr>
+      <len>4</len>
+      <unit>KWS</unit>
+      <description>Solarertrag des aktuellen Tages; Rohwert Wh, Ausgabe kWh</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- AUSSENTEMPERATUR -->
+    <!-- ===================== -->
+
+    <command name="getTempA" protocmd="getaddr">
+      <addr>5525</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Aussentemperatur Tiefpass</description>
+    </command>
+
+    <command name="getTempAg" protocmd="getaddr">
+      <addr>5527</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Gedaempfte Aussentemperatur fuer Regelung</description>
+    </command>
+
+    <command name="getTempAbg" protocmd="getaddr">
+      <addr>0808</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Abgastemperatur des Brenners</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- WARMWASSER -->
+    <!-- ===================== -->
+
+    <command name="getTempWWSoll" protocmd="getaddr">
+      <addr>6300</addr>
+      <len>1</len>
+      <unit>UTI</unit>
+      <description>Solltemperatur fuer Warmwasser</description>
+    </command>
+
+    <command name="setTempWWSoll" protocmd="setaddr">
+      <addr>6300</addr>
+      <len>1</len>
+      <unit>UTI</unit>
+      <description>Solltemperatur fuer Warmwasser setzen</description>
+    </command>
+
+    <command name="getTempWWIst" protocmd="getaddr">
+      <addr>0812</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Aktuelle Warmwassertemperatur im Speicher</description>
+    </command>
+
+    <command name="getWWFreigabe" protocmd="getaddr">
+      <addr>6301</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Zustandswert Warmwasserbereitung; genaue Semantik unbestaetigt</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- KESSEL UND HEIZKREISE -->
+    <!-- ===================== -->
+
+    <command name="getVitoBetriebsartHK1" protocmd="getaddr">
+      <addr>2323</addr>
+      <len>1</len>
+      <unit>BA20C8</unit>
+      <description>Betriebsart Heizkreis eins; Adresse fuer 20C8/VPlusHO1</description>
+    </command>
+
+    <command name="getVitoBetriebsartHK2" protocmd="getaddr">
+      <addr>3323</addr>
+      <len>1</len>
+      <unit>BA20C8</unit>
+      <description>Betriebsart Heizkreis zwei; Adresse fuer 20C8/VPlusHO1</description>
+    </command>
+
+    <command name="setVitoBetriebsartHK1" protocmd="setaddr">
+      <addr>2323</addr>
+      <len>1</len>
+      <unit>BA20C8</unit>
+      <description>Betriebsart Heizkreis eins setzen; Adresse fuer 20C8/VPlusHO1</description>
+    </command>
+
+    <command name="setVitoBetriebsartHK2" protocmd="setaddr">
+      <addr>3323</addr>
+      <len>1</len>
+      <unit>BA20C8</unit>
+      <description>Betriebsart Heizkreis zwei setzen; Adresse fuer 20C8/VPlusHO1</description>
+    </command>
+
+    <command name="getVitoFroststatusHK1" protocmd="getaddr">
+      <addr>2500</addr>
+      <len>1</len>
+      <unit>ST</unit>
+      <description>Status Frostwarnung Heizkreis eins; nur lesend</description>
+    </command>
+
+    <command name="getVitoFroststatusHK2" protocmd="getaddr">
+      <addr>3500</addr>
+      <len>1</len>
+      <unit>ST</unit>
+      <description>Status Frostwarnung Heizkreis zwei; nur lesend</description>
+    </command>
+
+    <command name="getTempKesselSoll" protocmd="getaddr">
+      <addr>555A</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Solltemperatur des Kessels</description>
+    </command>
+
+    <command name="getTempKesselIst" protocmd="getaddr">
+      <addr>0810</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Kesseltemperatur Tiefpass; identisch mit getTempHC1</description>
+    </command>
+
+    <command name="getTempHC1" protocmd="getaddr">
+      <addr>0810</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Alias auf 0810; kein separater Sensorwert</description>
+    </command>
+
+    <command name="getTempHC2" protocmd="getaddr">
+      <addr>3900</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Vorlauftemperatur Heizkreis zwei</description>
+    </command>
+
+    <command name="getTempRaumHC1" protocmd="getaddr">
+      <addr>0896</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Raumtemperatur Heizkreis eins Tiefpass</description>
+    </command>
+
+    <command name="getTempRaumHC2" protocmd="getaddr">
+      <addr>0898</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Raumtemperatur Heizkreis zwei Tiefpass</description>
+    </command>
+
+    <command name="getTempReduRaumHC1" protocmd="getaddr">
+      <addr>2307</addr>
+      <len>1</len>
+      <unit>UTI</unit>
+      <description>Reduzierte Raumtemperatur Heizkreis eins</description>
+    </command>
+
+    <command name="getTempReduRaumHC2" protocmd="getaddr">
+      <addr>3307</addr>
+      <len>1</len>
+      <unit>UTI</unit>
+      <description>Reduzierte Raumtemperatur Heizkreis zwei</description>
+    </command>
+
+    <command name="setTempReduRaumHC1" protocmd="setaddr">
+      <addr>2307</addr>
+      <len>1</len>
+      <unit>UTI</unit>
+      <description>Reduzierte Raumtemperatur Heizkreis eins setzen</description>
+    </command>
+
+    <command name="setTempReduRaumHC2" protocmd="setaddr">
+      <addr>3307</addr>
+      <len>1</len>
+      <unit>UTI</unit>
+      <description>Reduzierte Raumtemperatur Heizkreis zwei setzen</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- HEIZKENNLINIE -->
+    <!-- ===================== -->
+
+    <command name="getVitoKennlinieNeigungHK1" protocmd="getaddr">
+      <addr>27D3</addr>
+      <len>1</len>
+      <unit>UN</unit>
+      <description>Neigung der Heizkennlinie Heizkreis eins</description>
+    </command>
+
+    <command name="setVitoKennlinieNeigungHK1" protocmd="setaddr">
+      <addr>27D3</addr>
+      <len>1</len>
+      <unit>UN</unit>
+      <description>Neigung der Heizkennlinie Heizkreis eins setzen</description>
+    </command>
+
+    <command name="getVitoKennlinieNiveauHK1" protocmd="getaddr">
+      <addr>27D4</addr>
+      <len>1</len>
+      <unit>NI1</unit>
+      <description>Niveau der Heizkennlinie Heizkreis eins</description>
+    </command>
+
+    <command name="setVitoKennlinieNiveauHK1" protocmd="setaddr">
+      <addr>27D4</addr>
+      <len>1</len>
+      <unit>NI1</unit>
+      <description>Niveau der Heizkennlinie Heizkreis eins setzen</description>
+    </command>
+
+    <command name="getVitoKennlinieNeigungHK2" protocmd="getaddr">
+      <addr>37D3</addr>
+      <len>1</len>
+      <unit>UN</unit>
+      <description>Neigung der Heizkennlinie Heizkreis zwei</description>
+    </command>
+
+    <command name="setVitoKennlinieNeigungHK2" protocmd="setaddr">
+      <addr>37D3</addr>
+      <len>1</len>
+      <unit>UN</unit>
+      <description>Neigung der Heizkennlinie Heizkreis zwei setzen</description>
+    </command>
+
+    <command name="getVitoKennlinieNiveauHK2" protocmd="getaddr">
+      <addr>37D4</addr>
+      <len>1</len>
+      <unit>NI1</unit>
+      <description>Niveau der Heizkennlinie Heizkreis zwei</description>
+    </command>
+
+    <command name="setVitoKennlinieNiveauHK2" protocmd="setaddr">
+      <addr>37D4</addr>
+      <len>1</len>
+      <unit>NI1</unit>
+      <description>Niveau der Heizkennlinie Heizkreis zwei setzen</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- BRENNER -->
+    <!-- ===================== -->
+
+    <command name="getBrennerStatus" protocmd="getaddr">
+      <addr>55D3</addr>
+      <len>1</len>
+      <!--unit>RT</unit-->
+      <description>Rohwert an 55D3; Bedeutung unbestaetigt</description>
+    </command>
+
+    <command name="getBrennerAnforderung" protocmd="getaddr">
+      <addr>55D0</addr>
+      <len>1</len>
+      <!--unit>RT</unit-->
+      <description>Bitfeld oder Rohwert an 55D0; nicht boolesch interpretieren</description>
+    </command>
+
+    <command name="getBrennerStarts" protocmd="getaddr">
+      <addr>088A</addr>
+      <len>4</len>
+      <unit>CO</unit>
+      <description>Anzahl der Brennerstarts</description>
+    </command>
+
+    <command name="getBrennerStunden" protocmd="getaddr">
+      <addr>08A7</addr>
+      <len>4</len>
+      <unit>CS</unit>
+      <description>Betriebsstunden des Brenners</description>
+    </command>
+
+    <command name="getModulationsgrad" protocmd="getaddr">
+      <addr>A305</addr>
+      <len>2</len>
+      <unit>PR</unit>
+      <description>Kesselleistung; Skalierung V/2 bei aktivem Brenner bestaetigen</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- PUMPEN -->
+    <!-- ===================== -->
+
+    <command name="getPumpeHC1" protocmd="getaddr">
+      <addr>2906</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status der Heizkreispumpe eins</description>
+    </command>
+
+    <command name="getPumpeHC2" protocmd="getaddr">
+      <addr>3906</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status der Heizkreispumpe zwei</description>
+    </command>
+
+    <command name="getPumpeWWSpeicher" protocmd="getaddr">
+      <addr>6513</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status der Warmwasser Ladepumpe</description>
+    </command>
+
+    <command name="getPumpeWWZirkulation" protocmd="getaddr">
+      <addr>6515</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status der Warmwasser Zirkulationspumpe</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- DIAGNOSE -->
+    <!-- ===================== -->
+
+    <command name="getHydraulikSchema" protocmd="getaddr">
+      <addr>7700</addr>
+      <len>1</len>
+      <unit>ST</unit>
+      <description>Hydraulisches Anlagenschema der Heizung</description>
+    </command>
+
+    <!-- ===================== -->
+    <!-- KONKRETE READ-ONLY-DIAGNOSE -->
+    <!-- Oeffentliche OpenV-Referenz; am Geraet noch zu bestaetigen -->
+    <!-- ===================== -->
+
+    <command name="diagTempAussen0800" protocmd="getaddr">
+      <addr>0800</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Aussentemperatur Sensorwert; auf diesem Geraet bestaetigt</description>
+    </command>
+
+    <command name="diagTempKessel0802" protocmd="getaddr">
+      <addr>0802</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Kesseltemperatur Sensorwert; auf diesem Geraet bestaetigt</description>
+    </command>
+
+    <command name="diagTempSpeicher0804" protocmd="getaddr">
+      <addr>0804</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Speichertemperatur Sensorwert; auf diesem Geraet bestaetigt</description>
+    </command>
+
+    <command name="diagBrennerStufe0842" protocmd="getaddr">
+      <addr>0842</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Zustand Brennerstufe; Adresse auf diesem Geraet bestaetigt</description>
+    </command>
+
+    <command name="diagAnlagenLeistung" protocmd="getaddr">
+      <addr>A38F</addr>
+      <len>2</len>
+      <unit>PR</unit>
+      <description>Diagnosekandidat Anlagenleistung in Prozent</description>
+    </command>
+
+    <command name="diagInternePumpe7660" protocmd="getaddr">
+      <addr>7660</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status interne Pumpe; Adresse und Laenge auf 20C8 bestaetigt</description>
+    </command>
+
+    <command name="diagHeizkreispumpe7663" protocmd="getaddr">
+      <addr>7663</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Status Heizkreispumpe A1; Adresse und Laenge auf 20C8 bestaetigt</description>
+    </command>
+
+    <!--
+      Nur lesende Diagnosepunkte aus einem oeffentlichen 20C8/VPlusHO1-Katalog.
+      Die Adressen und Kodierungen sind bis zu einem erfolgreichen Test auf diesem
+      konkreten Geraet ausdruecklich unbestaetigt.
+    -->
+    <command name="probeTempHydraulischeWeiche080C" protocmd="getaddr">
+      <addr>080C</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Oeffentlicher Katalog: Temperatur hydraulische Weiche; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeTempSpeicher20814" protocmd="getaddr">
+      <addr>0814</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Oeffentlicher Katalog: zweite Speichertemperatur; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeTempAbgas0816" protocmd="getaddr">
+      <addr>0816</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Oeffentlicher Katalog: Abgastemperatur; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeTempVorlauf081A" protocmd="getaddr">
+      <addr>081A</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Oeffentlicher Katalog: Vorlauftemperatur; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeSensorStatusAussen083A" protocmd="getaddr">
+      <addr>083A</addr>
+      <len>1</len>
+      <description>Oeffentlicher Katalog: Status Aussentemperatursensor, Rohwert; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeSensorStatusKessel083B" protocmd="getaddr">
+      <addr>083B</addr>
+      <len>1</len>
+      <description>Oeffentlicher Katalog: Status Kesseltemperatursensor, Rohwert; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeSensorStatusVorlauf0840" protocmd="getaddr">
+      <addr>0840</addr>
+      <len>1</len>
+      <description>Oeffentlicher Katalog: Status Vorlauftemperatursensor, Rohwert; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeFlowSwitch0883" protocmd="getaddr">
+      <addr>0883</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Oeffentlicher Katalog: Stroemungsschalter; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeBrennerStunden0886" protocmd="getaddr">
+      <addr>0886</addr>
+      <len>4</len>
+      <unit>CS</unit>
+      <description>Oeffentlicher Katalog: Brennerstunden; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeUmschaltventil0A10" protocmd="getaddr">
+      <addr>0A10</addr>
+      <len>1</len>
+      <description>Oeffentlicher Katalog: Stellung Umschaltventil, Rohwert; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeSparbetriebHK12302" protocmd="getaddr">
+      <addr>2302</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Oeffentlicher Katalog: Sparbetrieb Heizkreis 1; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probePartybetriebHK12303" protocmd="getaddr">
+      <addr>2303</addr>
+      <len>1</len>
+      <unit>RT</unit>
+      <description>Oeffentlicher Katalog: Partybetrieb Heizkreis 1; lokal unbestaetigt</description>
+    </command>
+
+    <command name="probeTempVorlaufHK12900" protocmd="getaddr">
+      <addr>2900</addr>
+      <len>2</len>
+      <unit>UT</unit>
+      <description>Oeffentlicher Katalog: Vorlauftemperatur Heizkreis 1; lokal unbestaetigt</description>
+    </command>
+
+    <!-- Lokal bestaetigte Read-Datenpunkte fuer 20C8/VPlusHO1. -->
+    <command name="getTempRuecklauf" protocmd="getaddr">
+      <addr>080A</addr><len>2</len><unit>UT</unit>
+      <description>Ruecklauftemperatur</description>
+    </command>
+    <command name="getStatusSpeicherladepumpe0845" protocmd="getaddr">
+      <addr>0845</addr><len>1</len><unit>RT</unit>
+      <description>Status Speicherladepumpe, alternatives internes Register</description>
+    </command>
+    <command name="getStatusZirkulationspumpe0846" protocmd="getaddr">
+      <addr>0846</addr><len>1</len><unit>RT</unit>
+      <description>Status Zirkulationspumpe, alternatives internes Register</description>
+    </command>
+    <command name="getStatusPumpeM27665" protocmd="getaddr">
+      <addr>7665</addr><len>1</len><unit>RT</unit>
+      <description>Status Heizkreispumpe M2</description>
+    </command>
+    <command name="getDrehzahlSollPumpeM2" protocmd="getaddr">
+      <addr>0A3B</addr><len>1</len><unit>PR1</unit>
+      <description>Soll-Drehzahl Heizkreispumpe M2; unter Heizbetrieb bestaetigen</description>
+    </command>
+    <command name="getDrehzahlSollPumpeIntern" protocmd="getaddr">
+      <addr>0A3C</addr><len>1</len><unit>PR1</unit>
+      <description>Soll-Drehzahl interne Pumpe; unter Brennerbetrieb bestaetigen</description>
+    </command>
+    <command name="getTempVorlaufSollM1" protocmd="getaddr">
+      <addr>2544</addr><len>2</len><unit>UT</unit>
+      <description>Vorlauftemperatur Soll Heizkreis M1</description>
+    </command>
+    <command name="getStatusFlamme20C8" protocmd="getaddr">
+      <addr>55DE</addr><len>1</len><unit>FLS20C8</unit>
+      <description>Flammenstatus</description>
+    </command>
+    <command name="getSammelstoerung20C8" protocmd="getaddr">
+      <addr>0A82</addr><len>1</len><unit>FS20C8</unit>
+      <description>Sammelstoerung</description>
+    </command>
+    <command name="getOelverbrauch7574" protocmd="getaddr">
+      <addr>7574</addr><len>4</len>
+      <description>Verbrauchszaehler, Rohwert; Einheit auf dieser Anlage unbestaetigt</description>
+    </command>
+    <command name="getBrennerStundenStufe2" protocmd="getaddr">
+      <addr>08AB</addr><len>4</len><unit>CS</unit>
+      <description>Betriebsstunden Brennerstufe zwei; aktuell null</description>
+    </command>
+    <command name="getTempRaumNormalSollHK1" protocmd="getaddr">
+      <addr>2306</addr><len>1</len><unit>UTI</unit>
+      <description>Normale Raumsolltemperatur Heizkreis eins</description>
+    </command>
+    <command name="getTempPartySollHK1" protocmd="getaddr">
+      <addr>2308</addr><len>1</len><unit>UTI</unit>
+      <description>Party-Raumsolltemperatur Heizkreis eins</description>
+    </command>
+    <command name="getFerienstatus2535" protocmd="getaddr">
+      <addr>2535</addr><len>1</len>
+      <description>Ferienstatus, Rohwert; Bitkodierung unbestaetigt</description>
+    </command>
+    <command name="getFehlerhistorie1" protocmd="getaddr">
+      <addr>7507</addr><len>9</len>
+      <description>Neuester Eintrag der Fehlerhistorie, Rohwert</description>
+    </command>
+    <command name="getMischerM2Zu" protocmd="getaddr">
+      <addr>084C</addr><len>1</len><unit>RT</unit>
+      <description>Ausgang Mischer M2 faehrt Zu; kein Positionswert</description>
+    </command>
+
+  </commands>
+</vito>
