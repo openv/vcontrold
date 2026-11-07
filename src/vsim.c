@@ -114,9 +114,6 @@ ctable cmds[] = {
 };
 static const size_t cmdc = sizeof(cmds) / sizeof(cmds[0]);
 
-// The number of commands is derived from the table itself, so it can't get out of sync
-int cmdc = sizeof(cmds) / sizeof(cmds[0]);
-
 unsigned char input[100];
 size_t inpidx = 0;
 
