@@ -21,10 +21,18 @@ There are three options for the build process with their defaults:
 * _VCLIENT=ON_  Build the `vclient` helper program (for communication with vcontrold)
 * _VSIM=OFF_ Build the `vsim` helper program (for development and testing purposes)
 
+The project default installation prefix on UNIX is `/usr`. It installs the
+daemon as `/usr/sbin/vcontrold`, the helpers below `/usr/bin`, and man pages
+below `/usr/share/man`. This layout matches the service example shipped in
+`doc/examples/vcontrold.service`.
+
 The installation path can be altered by
 
  * _CMAKE_INSTALL_PREFIX=`/usr/local`_
-   This directory is prepended onto all install directories. This variable defaults to `/usr` on UNIX and `c:/Program Files` on Windows
+   This directory is prepended onto all install directories. A source-local
+   installation therefore uses `/usr/local/sbin/vcontrold` and
+   `/usr/local/bin/vclient`; adjust service files accordingly. The platform
+   default is `c:/Program Files` on Windows.
 
 Invocation is e.g. as follows:
 
@@ -65,3 +73,23 @@ sudo make DESTDIR=<DESTDIR> install
 ```
 
 respectively. In this case, the entire package will be installed in a directory with the installation prefix prepended with the `DESTDIR` value, which finally gives `<DESTDIR>/<CMAKE_INSTALL_PREFIX>`.
+
+### Service configuration
+
+The systemd example assumes the `/usr` prefix and an XML configuration at
+`/etc/vcontrold/vcontrold.xml`. When using `/usr/local`, copy and adapt the
+example so `ExecStart` points to `/usr/local/sbin/vcontrold`.
+
+The example runs the daemon in the foreground as the unprivileged
+`vcontrold` account and applies a conservative systemd sandbox. Create that
+account, grant it access to the configured Optolink device (commonly through
+the `dialout` group), and make `/var/log/vcontrold` writable by the account.
+If `DevicePolicy=closed` is added locally, also add a matching rule such as
+`DeviceAllow=/dev/ttyUSB0 rw`. The generic example does not hard-code a device
+path because installations use different TTY names.
+
+Sending `SIGHUP` reloads device, protocol, command and unit definitions
+transactionally. Listener address, port, daemon user/group, PID file and log
+destination are established during process startup; restart the service after
+changing those values. Back up the active XML files before deploying a new
+controller profile.

@@ -5,7 +5,7 @@
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Initscript to start Viessmann vcontrold deamon
+# Short-Description: Init script to start the Viessmann vcontrold daemon
 # Description:       This file should be used to construct scripts to be
 #                    placed in /etc/init.d.
 ### END INIT INFO
@@ -19,12 +19,11 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="Viessmann vcontrold deamon"
+DESC="Viessmann vcontrold daemon"
 NAME=vcontrold
-DAEMON=/usr/local/sbin/$NAME
-#DAEMON_ARGS="--options args"
-DAEMON_ARGS=""
-PIDFILE=/var/run/$NAME.pid
+DAEMON=/usr/sbin/$NAME
+PIDFILE=/run/$NAME.pid
+DAEMON_ARGS="-x /etc/vcontrold/vcontrold.xml -P $PIDFILE"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
