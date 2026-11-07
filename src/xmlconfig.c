@@ -1396,7 +1396,6 @@ fail:
 void removeComments(xmlNodePtr node)
 {
     while (node) {
-        xmlNodePtr next = node->next;
         //printf("type:%d name=%s\n",node->type, node->name);
         if (node->children) {
             // if the node has children, process the children
