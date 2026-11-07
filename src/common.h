@@ -5,11 +5,15 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-int initLog(int useSyslog, char *logfile, int debugSwitch);
-void logIT (int class, char *string, ...);
-char hex2chr(char *hex);
-int char2hex(char *outString, const char *charPtr, int len);
+#include <stddef.h>
+#include <sys/types.h>
+
+int initLog(int useSyslog, const char *logfile, int debugSwitch);
+void logIT(int class, const char *string, ...);
+char hex2chr(const char *hex);
+int char2hex(char *outString, size_t outSize, const char *charPtr, int len);
 short string2chr(char *line, char *buf, short bufsize);
+size_t stripLineEnding(char *line, size_t length);
 void sendErrMsg(int fd);
 void setDebugFD(int fd);
 ssize_t readn(int fd, void *vptr, size_t n);

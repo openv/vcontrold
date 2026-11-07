@@ -15,6 +15,7 @@
 #include <time.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include "xmlconfig.h"
 #include "parser.h"
@@ -27,6 +28,7 @@ extern FILE *iniFD; // For creation of the Sim. INI Files
 
 void *getUnit(char *str)
 {
+    (void)str;
     // We parse the input for a known unit and return a pointer to the struct
     return NULL;
 }
@@ -89,14 +91,30 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                 ++*hexlen;
                 // If it's Pause or Reveice, we tread it as an integer
                 if (token == PAUSE || token == RECV) {
-                    *hexlen = atoi(pString);
+                    char *end = NULL;
+                    long parsed;
+                    errno = 0;
+                    parsed = strtol(pString, &end, 10);
+                    if (errno || end == pString || *end || parsed < 0 ||
+                            parsed > SHRT_MAX) {
+                        logIT(LOG_ERR, "Invalid bytecode length: %s", pString);
+                        *hexlen = 0;
+                        return 0;
+                    }
+                    *hexlen = (int)parsed;
                     // With RECV, one can give the unit to be converted
                     if (token == RECV) {
                         pPtr = pString;
                         while (*ptr && (isdigit(*ptr) || isspace(*ptr))) {
                             ptr++;
                         }
-                        strncpy(uSPtr, ptr, uSPtrLen);
+                        if (uSPtrLen <= 0 ||
+                                snprintf(uSPtr, (size_t)uSPtrLen, "%s", ptr) >=
+                                uSPtrLen) {
+                            logIT1(LOG_ERR, "Unit name too long");
+                            *hexlen = 0;
+                            return 0;
+                        }
                     }
                     return token;
                 } else if (token == BYTES ) {
@@ -105,7 +123,13 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
                     while (*ptr && (isdigit(*ptr) || isspace(*ptr))) {
                         ptr++;
                     }
-                    strncpy(uSPtr, ptr, uSPtrLen);
+                    if (uSPtrLen <= 0 ||
+                            snprintf(uSPtr, (size_t)uSPtrLen, "%s", ptr) >=
+                            uSPtrLen) {
+                        logIT1(LOG_ERR, "Unit name too long");
+                        *hexlen = 0;
+                        return 0;
+                    }
                     return token;
                 } else  {
                     *hex++ = hex2chr(pString);
@@ -118,8 +142,28 @@ int parseLine(char *line, char *hex, int *hexlen, char *uSPtr, ssize_t uSPtrLen)
     return token;
 }
 
-int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
-                 char *sendBuf, short sendLen, short supressUnit,
+static int appendSimulation(char *destination, size_t destinationSize,
+                            const char *value)
+{
+    size_t used;
+    size_t valueLength;
+
+    if (!destination || !destinationSize || !value) return 0;
+    used = strlen(destination);
+    valueLength = strlen(value);
+    if (used + valueLength + 2 > destinationSize) {
+        logIT1(LOG_ERR, "Simulation output buffer too small");
+        return 0;
+    }
+    memcpy(destination + used, value, valueLength);
+    destination[used + valueLength] = ' ';
+    destination[used + valueLength + 1] = '\0';
+    return 1;
+}
+
+int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, size_t recvCapacity,
+                 char *sendBuf, size_t sendCapacity, short sendLen,
+                 short supressUnit,
                  char bitpos, int retry,
                  char *pRecvPtr, unsigned short recvTimeout)
 {
@@ -132,6 +176,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
     unsigned long etime;
     char out_buff[1024];
     int out_len;
+
+    if (!cmpPtr || !recvBuf || recvCapacity == 0 || !sendBuf ||
+            sendCapacity == 0 || sendLen < 0 ||
+            (size_t)sendLen > sendCapacity) {
+        logIT1(LOG_ERR, "Invalid bytecode execution arguments");
+        return -1;
+    }
 
     memset(simIn, 0, sizeof(simIn));
     memset(simOut, 0, sizeof(simOut));
@@ -146,7 +197,7 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
         }
         if (supressUnit) {
             // No unit conversion needed, just copy the bytes
-            if (sendLen != cPtr->len) {
+            if (cPtr->len <= 0 || sendLen != cPtr->len) {
                 // This should never happen!
                 logIT(LOG_ERR,
                       "Error in length of the hex string (%d) != send length of the command (%d), terminating", sendLen, cPtr->len);
@@ -156,11 +207,16 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 free(cPtr->send);
             }
             cPtr->send = calloc(cPtr->len, sizeof(char));
+            if (!cPtr->send) {
+                logIT1(LOG_ERR, "Could not allocate command send buffer");
+                return -1;
+            }
             sendLen = 0; // We don't send the converted sendBuf
             memcpy(cPtr->send, sendBuf, cPtr->len);
         } else if (cPtr->uPtr) {
             len = sendLen; // we need this in procSetUnit() to clear sendBuf
-            if (procSetUnit(cPtr->uPtr, sendBuf, &len, bitpos, pRecvPtr) <= 0) {
+            if (procSetUnit(cPtr->uPtr, sendBuf, sendCapacity,
+                            &len, bitpos, pRecvPtr) <= 0) {
                 logIT(LOG_ERR, "Error in unit conversion: %s, terminating", sendBuf);
                 return -1;
             }
@@ -168,6 +224,10 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                 free(cPtr->send);
             }
             cPtr->send = calloc(len, sizeof(char));
+            if (!cPtr->send) {
+                logIT1(LOG_ERR, "Could not allocate converted send buffer");
+                return -1;
+            }
             cPtr->len = len;
             sendLen = 0; // We don't send the converted sendBuf
             memcpy(cPtr->send, sendBuf, len);
@@ -184,15 +244,18 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     logIT1(LOG_ERR, "Error in wait, terminating");
                     return -1;
                 }
-                memset(string, 0, sizeof(string));
-                char2hex(string, cmpPtr->send, cmpPtr->len);
-                strcat(simIn, string);
-                strcat(simIn, " ");
+                if (iniFD) {
+                    memset(string, 0, sizeof(string));
+                    if (!char2hex(string, sizeof(string), cmpPtr->send, cmpPtr->len) ||
+                            !appendSimulation(simIn, sizeof(simIn), string)) {
+                        return -1;
+                    }
+                }
                 break;
             case SEND:
                 out_len = 0;
                 while (1) {
-                    if (out_len + cmpPtr->len > sizeof(out_buff)) {
+                    if ((size_t)out_len + cmpPtr->len > sizeof(out_buff)) {
                         // Hopefully, we never end up here
                         logIT1(LOG_ERR, "Error out_buff buffer overflow, terminating");
                         return -1;
@@ -221,20 +284,23 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     memset(simIn, 0, sizeof(simIn));
                 }
 
-                memset(string, 0, sizeof(string));
-                char2hex(string, out_buff, out_len);
-                strcat(simOut, string);
-                strcat(simOut, " ");
+                if (iniFD) {
+                    memset(string, 0, sizeof(string));
+                    if (!char2hex(string, sizeof(string), out_buff, out_len) ||
+                            !appendSimulation(simOut, sizeof(simOut), string)) {
+                        return -1;
+                    }
+                }
                 break;
             case RECV:
-                if (cmpPtr->len > recvLen) {
-                    // Hopefully, we don't end up here
-                    logIT(LOG_ERR, "Recv buffer too small. Is: %d, should be %d",
-                          recvLen, cmpPtr->len);
-                    cmpPtr->len = recvLen;
+                if (cmpPtr->len < 0 || (size_t)cmpPtr->len > recvCapacity) {
+                    logIT(LOG_ERR,
+                          "Recv buffer too small. Is: %zu, should be %d",
+                          recvCapacity, cmpPtr->len);
+                    return -1;
                 }
                 etime = 0;
-                memset(recvBuf, 0, recvLen);
+                memset(recvBuf, 0, recvCapacity);
                 if (framer_receive(fd, recvBuf, cmpPtr->len, &etime) <= 0) {
                     logIT1(LOG_ERR, "Error in recv, terminating");
                     return -1;
@@ -263,21 +329,29 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                     }
                 }
 
-                memset(string, 0, sizeof(string));
-                char2hex(string, recvBuf, cmpPtr->len);
-                strcat(simIn, string);
-                strcat(simIn, " ");
+                if (iniFD) {
+                    memset(string, 0, sizeof(string));
+                    if (!char2hex(string, sizeof(string), recvBuf, cmpPtr->len) ||
+                            !appendSimulation(simIn, sizeof(simIn), string)) {
+                        return -1;
+                    }
+                }
 
                 // If we have a Unit (== uPtr), we convert the received value and also
                 // return the converted value to uPtr
                 memset(result, 0, sizeof(result));
                 if (! supressUnit && cmpPtr->uPtr) {
-                    if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len, result, bitpos, pRecvPtr)
+                    if (procGetUnit(cmpPtr->uPtr, recvBuf, cmpPtr->len,
+                                    result, sizeof(result), bitpos, pRecvPtr)
                         <= 0) {
                         logIT(LOG_ERR, "Error in unit conversion: %s, terminating", result);
                         return -1;
                     }
-                    strncpy(recvBuf, result, recvLen);
+                    if (strlen(result) + 1 > recvCapacity) {
+                        logIT1(LOG_ERR, "Converted result exceeds receive buffer");
+                        return -1;
+                    }
+                    memcpy(recvBuf, result, strlen(result) + 1);
 
                     if (iniFD && *simIn && *simOut) {
                         // We already sent and received, now we output it.
@@ -307,9 +381,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         logIT1(LOG_ERR, "Error in send, terminating");
                         return -1;
                     }
-                    char2hex(string, sendBuf, sendLen);
-                    strcat(simOut, string);
-                    strcat(simOut, " ");
+                    if (iniFD) {
+                        memset(string, 0, sizeof(string));
+                        if (!char2hex(string, sizeof(string), sendBuf, sendLen) ||
+                                !appendSimulation(simOut, sizeof(simOut), string)) {
+                            return -1;
+                        }
+                    }
                 } else if (cmpPtr->len) {
                     // A unit to use is already defined, and we already converted it
                     if (! my_send(fd, cmpPtr->send, cmpPtr->len)) {
@@ -319,10 +397,13 @@ int execByteCode(compilePtr cmpPtr, int fd, char *recvBuf, short recvLen,
                         cmpPtr->len = 0;
                         return -1;
                     }
-                    memset(string, 0, sizeof(string));
-                    char2hex(string, cmpPtr->send, cmpPtr->len);
-                    strcat(simOut, string);
-                    strcat(simOut, " ");
+                    if (iniFD) {
+                        memset(string, 0, sizeof(string));
+                        if (!char2hex(string, sizeof(string), cmpPtr->send, cmpPtr->len) ||
+                                !appendSimulation(simOut, sizeof(simOut), string)) {
+                            return -1;
+                        }
+                    }
                 }
                 break;
             default:
@@ -362,9 +443,9 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
         }
         break;
     case SEND:
-        if (! my_send(fd, hex, hexlen)) {
+        if (! framer_send(fd, hex, hexlen)) {
             logIT1(LOG_ERR, "Error send, terminating");
-            exit(1);
+            return -1;
         }
         break;
     case RECV:
@@ -373,9 +454,9 @@ int execCmd(char *cmd, int fd, char *recvBuf, int recvLen)
             hexlen = recvLen;
         }
         etime = 0;
-        if (receive(fd, recvBuf, hexlen, &etime) <= 0) {
+        if (framer_receive(fd, recvBuf, hexlen, &etime) <= 0) {
             logIT1(LOG_ERR, "Error recv, terminating");
-            exit(1);
+            return -1;
         }
         logIT(LOG_INFO, "Recv: %ld ms", etime);
         // If we have a unit (== uPtr), we convert the received value and also return it to uPtr
@@ -404,8 +485,8 @@ compilePtr newCompileNode(compilePtr ptr)
 
     nptr = calloc(1, sizeof(Compile));
     if (! nptr) {
-        fprintf(stderr, "malloc failed\n");
-        exit(1);
+        logIT1(LOG_ERR, "calloc failed");
+        return NULL;
     }
 
     if (ptr) {
@@ -430,18 +511,38 @@ void removeCompileList(compilePtr ptr)
         free(ptr->send);
         ptr->send = NULL;
         free(ptr);
-        ptr = NULL;
     }
+}
+
+static int append_bytes(char **dst, char *end, const char *src, size_t len)
+{
+    if (!dst || !*dst || !src || *dst > end || len >= (size_t)(end - *dst)) {
+        return 0;
+    }
+    memcpy(*dst, src, len);
+    *dst += len;
+    **dst = '\0';
+    return 1;
+}
+
+static int replace_string(char **destination, const char *source)
+{
+    size_t length;
+    char *replacement;
+
+    if (!destination || !source) return 0;
+    length = strlen(source) + 1;
+    replacement = realloc(*destination, length);
+    if (!replacement) return 0;
+    memcpy(replacement, source, length);
+    *destination = replacement;
+    return 1;
 }
 
 int expand(commandPtr cPtr, protocolPtr pPtr)
 {
-    // Recursion
     if (! cPtr) {
         return 0;
-    }
-    if (cPtr->next) {
-        expand(cPtr->next, pPtr);
     }
 
     // If no address has been set, we do nothing
@@ -451,6 +552,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
 
     char eString[2000];
     char *ePtr = eString;;
+    char *eEnd = eString + sizeof(eString);
     char var[100];
     char name[100];
     char *ptr, *bptr;
@@ -466,7 +568,7 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     // 1. Search command pcmd at the protocol's command
     if (! (iPtr = (icmdPtr) getIcmdNode( pPtr->icPtr, cPtr->pcmd))) {
         logIT(LOG_ERR, "Protocol command %s (at %s) not defined", cPtr->pcmd, cPtr->name);
-        exit(3);
+        return 0;
     }
 
     // 2. Parse the line and replace the variables with values from cPtr
@@ -479,24 +581,31 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     memset(eString, 0, sizeof(eString));
     cPtr->retry = iPtr->retry; // We take the Retry value from the protocol command
     cPtr->recvTimeout = iPtr->recvTimeout; // Same for the receive timeout
-    do {
-        ptr = sendPtr;
-        while (*ptr++) {
-            if ((*ptr == '$') || (*ptr == '\0')) {
-                break;
+    while (*sendPtr) {
+        ptr = strchr(sendPtr, '$');
+        if (!ptr) {
+            if (!append_bytes(&ePtr, eEnd, sendPtr, strlen(sendPtr))) {
+                logIT(LOG_ERR, "Expanded command %s is too long", cPtr->name);
+                return 0;
             }
-        }
-        bptr = ptr;
-        while (*bptr++) {
-            if ((*bptr == ' ') || (*bptr == ';') || (*bptr == '\0')) {
-                break;
-            }
+            break;
         }
         // Don't copy the converted string
-        strncpy(ePtr, sendPtr, ptr - sendPtr);
-        ePtr += ptr - sendPtr;
+        if (!append_bytes(&ePtr, eEnd, sendPtr, (size_t)(ptr - sendPtr))) {
+            logIT(LOG_ERR, "Expanded command %s is too long", cPtr->name);
+            return 0;
+        }
+        bptr = strpbrk(ptr + 1, " ;");
+        if (!bptr) {
+            bptr = ptr + strlen(ptr);
+        }
         memset(var, 0, sizeof(var));
-        strncpy(var, ptr + 1, bptr - ptr - 1);
+        size_t varlen = (size_t)(bptr - (ptr + 1));
+        if (varlen >= sizeof(var)) {
+            logIT(LOG_ERR, "Variable name in command %s is too long", cPtr->name);
+            return 0;
+        }
+        memcpy(var, ptr + 1, varlen);
         //snprintf(string, sizeof(string),"   Var: %s",var);
         //logIT(LOG_INFO,string);
         if (*var) {
@@ -505,35 +614,37 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
                 // Always two bytes
                 int i;
                 memset(string, 0, sizeof(string));
-                for (i = 0; i < strlen(cPtr->addr) - 1; i += 2) {
-                    strncpy(ePtr, cPtr->addr + i, 2);
-                    ePtr += 2;
-                    *ePtr++ = ' ';
+                for (i = 0; (size_t)i + 1 < strlen(cPtr->addr); i += 2) {
+                    if (!append_bytes(&ePtr, eEnd, cPtr->addr + i, 2) ||
+                            !append_bytes(&ePtr, eEnd, " ", 1)) {
+                        return 0;
+                    }
                 }
-                ePtr--;
+                if (ePtr > eString) *--ePtr = '\0';
             } else if (strstr(var, "len") == var) {
                 snprintf(string, sizeof(string), "%d", cPtr->len);
-                strncpy(ePtr, string, strlen(string));
-                ePtr += strlen(string);
+                if (!append_bytes(&ePtr, eEnd, string, strlen(string))) return 0;
             } else if (strstr(var, "hexlen") == var) {
                 snprintf(string, sizeof(string), "%02X", cPtr->len);
-                strncpy(ePtr, string, strlen(string));
-                ePtr += strlen(string);
+                if (!append_bytes(&ePtr, eEnd, string, strlen(string))) return 0;
             } else if (strstr(var, "unit") == var) {
                 if (cPtr->unit) {
-                    strncpy(ePtr, cPtr->unit, strlen(cPtr->unit));
-                    ePtr += strlen(cPtr->unit);
+                    if (!append_bytes(&ePtr, eEnd, cPtr->unit, strlen(cPtr->unit))) return 0;
                 }
             } else {
                 logIT(LOG_ERR, "Variable %s Unknown", var);
-                exit(3);
+                return 0;
             }
         }
         sendPtr = bptr;
-    } while (*sendPtr);
+    }
 
     logIT(LOG_INFO, "  After substitution: %s", eString);
     tmpPtr = calloc(strlen(eString) + 1, sizeof(char));
+    if (!tmpPtr) {
+        logIT1(LOG_ERR, "calloc failed");
+        return 0;
+    }
     strcpy(tmpPtr, eString);
 
     // 3. Expand the line as usual
@@ -542,48 +653,55 @@ int expand(commandPtr cPtr, protocolPtr pPtr)
     // We search for words and look if we have them as macros
     memset(eString, 0, sizeof(eString));
     ePtr = eString;
-    do {
-        ptr = sendPtr;
-        while (*ptr++) {
-            if ((*ptr == ' ') || (*ptr == ';') || (*ptr == '\0')) {
-                break;
-            }
+    while (*sendPtr) {
+        ptr = strpbrk(sendPtr, " ;");
+        if (!ptr) {
+            ptr = sendPtr + strlen(sendPtr);
         }
         memset(name, 0, sizeof(name));
-        strncpy(name, sendPtr, ptr - sendPtr);
+        size_t namelen = (size_t)(ptr - sendPtr);
+        if (namelen >= sizeof(name)) {
+            logIT(LOG_ERR, "Macro name in command %s is too long", cPtr->name);
+            free(tmpPtr);
+            return 0;
+        }
+        memcpy(name, sendPtr, namelen);
         if ((mFPtr = getMacroNode(pPtr->mPtr, name))) {
-            strncpy(ePtr, mFPtr->command, strlen(mFPtr->command));
-            ePtr += strlen(mFPtr->command);
-            *ePtr++ = *ptr;
+            if (!append_bytes(&ePtr, eEnd, mFPtr->command,
+                              strlen(mFPtr->command))) {
+                free(tmpPtr);
+                return 0;
+            }
         } else {
-            strncpy(ePtr, sendPtr, ptr - sendPtr + 1);
-            ePtr += ptr - sendPtr + 1;
+            if (!append_bytes(&ePtr, eEnd, sendPtr, namelen)) {
+                free(tmpPtr);
+                return 0;
+            }
         }
         if (*ptr == '\0') {
             break;
         }
+        if (!append_bytes(&ePtr, eEnd, ptr, 1)) {
+            free(tmpPtr);
+            return 0;
+        }
         sendPtr = ptr + 1;
-    } while (*sendPtr);
+    }
 
     free(tmpPtr);
     logIT(LOG_INFO, "   after EXPAND:%s", eString);
-    if (! (cPtr->send = calloc(strlen(eString) + 1, sizeof(char)))) {
-        logIT1(LOG_ERR, "calloc failed");
-        exit(1);
+    if (!replace_string(&cPtr->send, eString)) {
+        logIT1(LOG_ERR, "Could not allocate expanded command");
+        return 0;
     }
 
-    strcpy(cPtr->send, eString);
     return 1;
 }
 
 compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
 {
-    // Recursion
     if (!cPtr) {
         return 0;
-    }
-    if (cPtr->next) {
-        buildByteCode(cPtr->next, uPtr);
     }
 
     // If no address has been given, we do nothing
@@ -615,19 +733,32 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
     logIT(LOG_INFO, "BuildByteCode: %s", sendPtr);
     memset(eString, 0, sizeof(eString));
     do {
-        ptr = sendPtr;
-        while (*ptr++) {
-            if ((*ptr == '\0') || (*ptr == ';')) {
-                break;
-            }
+        ptr = strchr(sendPtr, ';');
+        if (!ptr) {
+            ptr = sendPtr + strlen(sendPtr);
         }
         memset(cmd, 0, sizeof(cmd));
-        strncpy(cmd, sendPtr, ptr - sendPtr);
+        size_t cmdlen = (size_t)(ptr - sendPtr);
+        if (cmdlen >= sizeof(cmd)) {
+            logIT(LOG_ERR, "Bytecode segment in command %s is too long", cPtr->name);
+            return NULL;
+        }
+        memcpy(cmd, sendPtr, cmdlen);
         hexlen = 0;
         memset(uSPtr, 0, sizeof(uString));
         token = parseLine(cmd, hex, &hexlen, uString, sizeof(uString));
         logIT(LOG_INFO, "        Token: %d Hexlen: %d, Unit: %s", token, hexlen, uSPtr);
+        if (!token && cmdlen > 0) {
+            logIT(LOG_ERR, "Unknown bytecode segment in command %s: %s",
+                  cPtr->name, cmd);
+            removeCompileList(cmpStartPtr);
+            return NULL;
+        }
         cmpPtr = newCompileNode(cmpStartPtr);
+        if (!cmpPtr) {
+            removeCompileList(cmpStartPtr);
+            return NULL;
+        }
 
         if (!cmpStartPtr) {
             cmpStartPtr = cmpPtr;
@@ -635,34 +766,47 @@ compilePtr buildByteCode(commandPtr cPtr, unitPtr uPtr)
         cmpPtr->token = token;
         cmpPtr->len = hexlen;
         cmpPtr->errStr = cPtr->errStr;
-        cmpPtr->send = calloc(hexlen, sizeof(char));
-        memcpy(cmpPtr->send, hex, hexlen);
+        if (hexlen > 0) {
+            cmpPtr->send = calloc((size_t)hexlen, sizeof(char));
+            if (!cmpPtr->send) {
+                logIT1(LOG_ERR, "calloc failed");
+                removeCompileList(cmpStartPtr);
+                return NULL;
+            }
+            memcpy(cmpPtr->send, hex, (size_t)hexlen);
+        }
 
         if (*uSPtr && !(cmpPtr->uPtr = getUnitNode(uPtr, uSPtr))) {
             logIT(LOG_ERR, "Unit %s not defined", uSPtr);
-            exit(3);
+            removeCompileList(cmpStartPtr);
+            return NULL;
         }
 
         if (*ptr == '\0') {
             break;
         }
-        sendPtr += strlen(cmd) + 1;
+        sendPtr = ptr + 1;
     } while (*sendPtr);
 
     cPtr->cmpPtr = cmpStartPtr;
     return cmpStartPtr;
 }
 
-void compileCommand(devicePtr dPtr, unitPtr uPtr)
+int compileCommand(devicePtr dPtr, unitPtr uPtr)
 {
-    if (! dPtr) {
-        return;
+    for (devicePtr device = dPtr; device; device = device->next) {
+        logIT(LOG_INFO, "Expanding command for device %s", device->id);
+        for (commandPtr command = device->cmdPtr; command; command = command->next) {
+            if (!command->addr) {
+                continue;
+            }
+            if (!expand(command, device->protoPtr) ||
+                    !buildByteCode(command, uPtr)) {
+                logIT(LOG_ERR, "Could not compile command %s for device %s",
+                      command->name, device->id);
+                return 0;
+            }
+        }
     }
-    if (dPtr->next) {
-        compileCommand(dPtr->next, uPtr);
-    }
-
-    logIT(LOG_INFO, "Expanding command for device %s", dPtr->id);
-    expand(dPtr->cmdPtr, dPtr->protoPtr);
-    buildByteCode(dPtr->cmdPtr, uPtr);
+    return 1;
 }
