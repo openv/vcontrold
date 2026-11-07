@@ -17,7 +17,10 @@ set(VERSION_H_GENERATED ${CMAKE_BINARY_DIR}/version.h)
 if (EXISTS ${BASE_DIR}/.git)
     # --> git:
     include (${CMAKE_CURRENT_LIST_DIR}/GitDescription.cmake)
-    git_get_description (VERSION GIT_ARGS --dirty)
+    # Forks and source mirrors do not necessarily carry the upstream tags.
+    # Keep tagged release descriptions where available and fall back to the
+    # abbreviated commit ID instead of producing an "unknown" CI build.
+    git_get_description (VERSION GIT_ARGS --always --dirty)
     if (NOT VERSION)
         set (VERSION "unknown")
     else()
