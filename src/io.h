@@ -5,12 +5,12 @@
 #ifndef IO_H
 #define IO_H
 
-int my_send(int fd, char *s_buf, int len);
+int my_send(int fd, const char *s_buf, int len);
 int receive(int fd, char *r_buf, int r_len, unsigned long *etime);
 int receive_nb(int fd, char *r_buf, int r_len, unsigned long *etime);
-int waitfor(int fd, char *w_buf, int w_len);
-int opentty(char *device);
-int openDevice(char *device);
+int waitfor(int fd, const char *w_buf, int w_len);
+int opentty(const char *device);
+int openDevice(const char *device);
 void closeDevice(int fd);
 
 // Interface parameters
