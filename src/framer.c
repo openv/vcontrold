@@ -451,11 +451,11 @@ int framer_receive(int fd, char *r_buf, int r_len, unsigned long *petime)
         }
         // if we have a P300 setaddr we do not get data back ...
         if (l_buf[P300_TYPE_OFFSET] == P300_RESPONSE) {
-            // OK
-            r_buf[rtmp] = 0x00;
+            // OK (the status goes into the first byte, which is what the caller evaluates)
+            r_buf[0] = 0x00;
         } else {
             // NOT OK
-            r_buf[rtmp] = 0x01;
+            r_buf[0] = 0x01;
         }
     } else {
         if (r_len != (l_buf[P300_RESP_LEN_OFFSET])) {
