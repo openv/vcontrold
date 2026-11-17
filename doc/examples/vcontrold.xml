@@ -51,6 +51,10 @@
 	   <abbrev>CT</abbrev>
 	   <type>cycletime</type>
 	</unit>
+	<unit name='Hex'>
+	   <abbrev>HX</abbrev>
+	   <type>hex</type>
+	</unit>
 	<unit name='ReturnStatus'>
 	   <abbrev>RT</abbrev>
 	   <type>enum</type>

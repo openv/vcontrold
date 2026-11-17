@@ -66,6 +66,55 @@ short text2Enum(enumPtr ptr, char *text, char **bytes, short *len);
 int getErrState(enumPtr ePtr, char *recv, int len, char *result);
 int getSysTime(char *recv, int len, char *result);
 int setSysTime(char *input, char *sendBuf);
+int getHexBytes(char *recv, int len, char *result, int resultSize);
+int setHexBytes(char *input, char *sendBuf, int sendBufSize);
+
+/*
+ * Type "hex": raw bytes without conversion, for values that have no numeric meaning,
+ * e.g. the time programs of newer controllers (one switching phase = start, end, level).
+ * Read:  the received bytes as hex string "31 B0 02 ..."
+ * Write: a hex string "31 B0 02 ..." is sent as these bytes
+ */
+int getHexBytes(char *recv, int len, char *result, int resultSize)
+{
+    int i;
+
+    if ((len < 1) || (len * 3 > resultSize)) {
+        sprintf(result, "Invalid byte count %d", len);
+        return 0;
+    }
+
+    result[0] = '\0';
+    for (i = 0; i < len; i++) {
+        sprintf(result + i * 3, "%02X ", (unsigned char) recv[i]);
+    }
+    result[len * 3 - 1] = '\0'; // remove trailing blank
+
+    return 1;
+}
+
+int setHexBytes(char *input, char *sendBuf, int sendBufSize)
+{
+    char *sptr;
+    char *end;
+    long value;
+    int count = 0;
+
+    for (sptr = strtok(input, " "); sptr; sptr = strtok(NULL, " ")) {
+        value = strtol(sptr, &end, 16);
+        if ((*end != '\0') || (end - sptr > 2) || (value < 0) || (value > 0xFF)) {
+            logIT(LOG_ERR, "Not a hex byte: %s", sptr);
+            return 0;
+        }
+        if (count >= sendBufSize) {
+            logIT(LOG_ERR, "Too many hex bytes (max. %d)", sendBufSize);
+            return 0;
+        }
+        sendBuf[count++] = (char) value;
+    }
+
+    return count;
+}
 
 int getCycleTime(char *recv, int len, char *result)
 {
@@ -373,6 +422,13 @@ int procGetUnit(unitPtr uPtr, char *recvBuf, int recvLen, char *result, char bit
         } else {
             return -1;
         }
+    } else if (strstr(uPtr->type, "hex") == uPtr->type) {
+        // Raw bytes as hex string, e.g. "31 B0 02 00 ..."
+        if (getHexBytes(recvBuf, recvLen, result, MAXBUF)) {
+            return 1;
+        } else {
+            return -1;
+        }
     } else if (strstr(uPtr->type, "enum") == uPtr->type) {
         // enum
         if (bytes2Enum(uPtr->ePtr, recvBuf, &tPtr, recvLen)) {
@@ -533,6 +589,13 @@ int procSetUnit(unitPtr uPtr, char *sendBuf, short *sendLen, char bitpos, char *
     if (strstr(uPtr->type, "systime") == uPtr->type) {
         // System time
         if (! (*sendLen = setSysTime(input, sendBuf))) {
+            return -1;
+        } else  {
+            return 1;
+        }
+    } else if (strstr(uPtr->type, "hex") == uPtr->type) {
+        // Raw bytes given as hex string, e.g. "31 B0 02 00 ..."
+        if (! (*sendLen = setHexBytes(input, sendBuf, *sendLen))) {
             return -1;
         } else  {
             return 1;
